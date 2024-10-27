@@ -1,12 +1,15 @@
 package koq.encoder.mvc;
 
 import java.awt.event.ActionEvent;
+import java.util.ArrayList;
+import java.util.List;
 import javax.swing.JButton;
 import javax.swing.JMenuItem;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.table.AbstractTableModel;
 
 /**
  *
@@ -35,7 +38,8 @@ public class Controller {
         this.model = model;
         this.view = view;
         
-        model.openFile();
+        JTable table = view.getTable();
+        table.setModel(model.getClassRecord());
         view.setStudentNameInEditor(model.getTableValueAtCurrentSelection());
         
         // New Table event
@@ -59,7 +63,6 @@ public class Controller {
         });
         
         // Row selection model
-        JTable table = view.getTable();
         ListSelectionModel selectionModel = table.getSelectionModel();
         selectionModel.setSelectionMode(ListSelectionModel.SINGLE_SELECTION); // Only allow single row selection
 
@@ -69,7 +72,7 @@ public class Controller {
             public void valueChanged(ListSelectionEvent e) {
                 // Ignore extra processing during value changes
                 if (!e.getValueIsAdjusting()) {
-                    int selectedRow = table.getSelectedRow();
+                    int selectedRow = view.getTable().getSelectedRow();
                     if (selectedRow != -1) {
                         // Change selection
                         model.setSelectedRow(selectedRow);
@@ -93,9 +96,9 @@ public class Controller {
             public void valueChanged(ListSelectionEvent e) {
                 // Ignore extra processing during value changes
                 if (!e.getValueIsAdjusting()) {
-                    int selectedColumn = table.getSelectedColumn();
+                    int selectedColumn = view.getTable().getSelectedColumn();
                     if (selectedColumn != -1) {
-                        String columnName = table.getColumnName(selectedColumn);
+                        String columnName = view.getTable().getColumnName(selectedColumn);
                         System.out.println("Selected Column: " + selectedColumn + ", Column Name: " + columnName);
                     }
                 }

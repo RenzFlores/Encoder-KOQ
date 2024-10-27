@@ -21,10 +21,6 @@ import koq.encoder.components.TableView;
  * the view does not do anything.
  */
 
-/**
- * TODO: 
- * @author KOQ
- */
 public class View {
 
     private final JFrame frame;
@@ -196,11 +192,14 @@ class MenuBar extends JMenuBar {
 
     JMenu menuFile;
     JMenu menuView;
+    JMenu menuHelp;
     JMenuItem menuNewTable;
     JMenuItem menuOpenFile;
     JMenuItem menuExportFile;
     JMenuItem menuExit;
     JMenuItem menuPref;
+    JMenuItem menuKeyboardShortcuts;
+    JMenuItem menuAbout;
     
     public MenuBar() {
         // Instantiate the first menu option(File) and its items
@@ -219,7 +218,7 @@ class MenuBar extends JMenuBar {
         menuFile.add(menuOpenFile);       
         menuFile.add(menuExportFile);
         menuFile.add(menuExit);
-
+        
         // Instantiate the second menu options(View) and its items
         menuView = new JMenu("View");
         menuPref = new JMenuItem("Preferences");
@@ -229,6 +228,15 @@ class MenuBar extends JMenuBar {
         
         menuView.add(menuPref);
         
+        // Instantiate the third menu options(Help) and its items
+        menuHelp = new JMenu("Help");
+        menuKeyboardShortcuts = new JMenuItem("Keyboard Shortcuts");
+        menuAbout = new JMenuItem("About");
+        
+        menuHelp.add(menuKeyboardShortcuts);
+        menuHelp.add(menuAbout);
+        
+        // Set actions to each JMenuItem
         menuNewTable.setName(Actions.NEWTABLE.name());
         menuOpenFile.setName(Actions.OPENFILE.name());
         menuExportFile.setName(Actions.EXPORTFILE.name());
@@ -237,6 +245,7 @@ class MenuBar extends JMenuBar {
         // Add all menus to menu bar
         add(menuFile);
         add(menuView);
+        add(menuHelp);
     }
 }
 

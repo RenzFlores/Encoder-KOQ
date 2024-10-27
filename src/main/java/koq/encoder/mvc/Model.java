@@ -1,44 +1,52 @@
 package koq.encoder.mvc;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import javax.swing.table.AbstractTableModel;
 
-/**
- *
- * @author KOQ
- */
 public class Model {
 
     private String txt;
-    private Object tableModel[][];
-    private String[] columns;
+    private String[] columnNames;
     private int selectedRow;
     private int selectedColumn;
+    private DatabaseConnection db;
+    private List<Student> studentList;
+    private List<Activity> activityList;
+    private ClassRecord record;
     
     public Model() {
         selectedRow = 0;
         selectedColumn = 0;
         
-        try (Connection connection = DatabaseConnection.getConnection()) {
-            String insertStudentSQL = "INSERT INTO students (first_name, last_name) VALUES (?, ?)";
-            
-            try (PreparedStatement preparedStatement = connection.prepareStatement(insertStudentSQL)) {
-                preparedStatement.setString(1, "John");
-                preparedStatement.setString(2, "Doe");
-                preparedStatement.executeUpdate();
-            }
+        try {
+            db = new DatabaseConnection("encoder_data");
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        
+        studentList = DatabaseConnection.getAllStudents();
+        
+        record = new ClassRecord("A", "Mathematics 10", "1st");
+
+    }
+    
+    public ClassRecord getClassRecord() {
+        return record;
+    }
+    
+    public List<Student> getStudentList() {
+        return studentList;
     }
 
+    /**
+     * TODO: Rework this part to conform to the new AbstractTableModel ClassRecord class
+     * 
+     */
     public String getTableValueAtCurrentSelection() {
-        return (String) getTableModel()[getSelectedRow()][getSelectedColumn()];
+        return (String) getClassRecord().getValueAt(getSelectedRow(), getSelectedColumn());
     }
-    
-    
     
     public void addActivityToTable() {
         /**
@@ -52,18 +60,16 @@ public class Model {
         }
         */
     }
-            
-    public void setTableModel(Object[][] data, String[] columns) {
+
+    /*
+    public void setTableModel(AbstractTableModel data, List<String> columnNames) {
         tableModel = data;
-        this.columns = columns;
+        this.columnNames = columnNames;
     }
+    */
     
     private String[] getTableHeaders() {
-        return columns;
-    }
-    
-    private Object[][] getTableModel() {
-        return tableModel;
+        return columnNames;
     }
     
     public int getSelectedRow() {
@@ -82,10 +88,8 @@ public class Model {
         selectedColumn = value;
     }
     
-    public void openFile() {
-        /**
-         * Dummy code
-         */
+    /*
+    public void loadTable() {        
         setTableModel(new Object [][] {
             {"Richard Sarmiento", "8", "13", "8", "8", "37"},
             {"Renz Flores", "6", "10", "6", "7", "42"},
@@ -95,14 +99,136 @@ public class Model {
             "Student Name", "Activity 1", "Activity 2", "Assignment 1", "Quiz 1", "Exam 1"
         });
     }
+    */
 }
 
-class DatabaseConnection {
-    public static Connection getConnection() throws SQLException {
-        String url = "jdbc:mysql://localhost:3306/test"; // Change as needed
-        String user = "root";
-        String password = "root";
+/**
+ * Class representing ClassRecord row data
+ * Contains Student object and a list of Activity objects
+ */
+class Row {
+    private Student student;
+    private List<Grade> gradesList;
+    private List<String> values;
+
+    public Row(Student student, List<Grade> gradesList) {
+        this.student = student;
+        this.gradesList = gradesList;
         
-        return DriverManager.getConnection(url, user, password);
+        values = new ArrayList<>();
+        values.add(student.getStudentName());
+        for (Grade g: gradesList) {
+            values.add(String.valueOf(g.getGrade()));
+        }
+    }
+    
+    public List<String> getValues() {
+        return values;
+    }
+    
+    public Student getStudent() {
+        return student;
+    }
+    
+    public List<Grade> getGrades() {
+        return gradesList;
+    }
+    
+    public void setGradesAt(int index, int value) {
+        gradesList.get(index).setGrade(value);
+    }
+
+    public int getActivityGrade(int index) {
+
+        /**
+         * TODO
+         * 
+        try {
+            Statement s = db.createStatement();
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        
+
+        return activities.get(index).getFormattedGrade();
+        */
+        return 0;
+    }
+}
+
+/**
+ * Custom table for representing a class record in the GUI
+ */
+class ClassRecord extends AbstractTableModel {
+    private List<Row> classList;
+    private List<String> columnNames;
+    // Class Record Metadata
+    private String className;
+    private String subjectName;
+    private String term;
+
+    public ClassRecord(String className, String subjectName, String term) {
+        this.className = className;
+        this.subjectName = subjectName;
+        this.term = term;
+        
+        classList = DatabaseConnection.getClassRecord(className, subjectName, term);
+        
+        columnNames = DatabaseConnection.getActivitiesInClassRecord(className, subjectName, term);
+        columnNames.add(0, "Student name");
+
+    }
+    
+    public ClassRecord() {
+        this.className = className;
+        this.subjectName = subjectName;
+        this.term = term;
+        classList = new ArrayList<>();
+        columnNames = new ArrayList<>();
+    }
+
+    public List<Row> getClassList() {
+        return classList;
+    }
+    
+    @Override
+    public int getRowCount() {
+        return classList.size();
+    }
+
+    @Override
+    public int getColumnCount() {
+        return columnNames.size();
+    }
+
+    @Override
+    public String getColumnName(int index) {
+        return columnNames.get(index);
+    }
+
+    @Override
+    public Object getValueAt(int row, int col) {
+        Row r = classList.get(row);
+        
+        switch (col) {
+            case 0: return r.getStudent().getStudentName();
+            case 1: return r.getGrades().get(col);
+            default: return null;
+        }
+    }
+
+    @Override
+    public boolean isCellEditable(int row, int col) {
+        return col > 0; // Make only certain columnNames editable
+    }
+
+    @Override
+    public void setValueAt(Object value, int row, int col) {
+        Row obj = classList.get(row); // Retrieve the object at this row
+        
+        obj.setGradesAt(col, (Integer) value);
+        
+        fireTableCellUpdated(row, col); // Notify JTable of data change
     }
 }
