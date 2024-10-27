@@ -11,6 +11,8 @@ import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import koq.encoder.mvc.Model.Actions;
+import koq.encoder.mvc.Model.Fields;
 import koq.encoder.mvc.View;
 
 /**
@@ -34,6 +36,7 @@ public class EditPanel extends JPanel {
     private final JComboBox outputNumberCombo;
     private final JLabel gradeLabel;
     private final JTextField gradeField;
+    private final JLabel maxGradeLabel;
     
     private final JButton prevButton;
     private final Box.Filler buttonFiller;
@@ -102,19 +105,21 @@ public class EditPanel extends JPanel {
         classLabel.setPreferredSize(new java.awt.Dimension(100, 24));
         containerPanel.add(classLabel);
 
-        classContent = new JLabel("CS21S2");
+        classContent = new JLabel();
         classContent.setPreferredSize(new java.awt.Dimension(100, 24));
         containerPanel.add(classContent);
 
         outputTypeLabel = new JLabel("Output Type:");
         outputTypeLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         outputTypeLabel.setPreferredSize(new java.awt.Dimension(100, 24));
-        containerPanel.add(outputTypeLabel);
+        // NOTE: OMITTED COMPONENT FOR NOW
+        // containerPanel.add(outputTypeLabel);
 
         outputTypeCombo = new JComboBox(new javax.swing.DefaultComboBoxModel<>(new String[] { "Activity", "Assignment", "Quiz", "Exam" }));
         outputTypeCombo.setMinimumSize(new java.awt.Dimension(100, 22));
         outputTypeCombo.setPreferredSize(new java.awt.Dimension(100, 24));
-        containerPanel.add(outputTypeCombo);
+        // NOTE: OMITTED COMPONENT FOR NOW
+        // containerPanel.add(outputTypeCombo);
 
         outputNumberLabel = new JLabel("Output Number:");
         outputNumberLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
@@ -128,20 +133,31 @@ public class EditPanel extends JPanel {
 
         gradeLabel = new JLabel("Grade:");
         gradeLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        gradeLabel.setPreferredSize(new java.awt.Dimension(100, 24));
+        gradeLabel.setPreferredSize(new java.awt.Dimension(120, 24));
         containerPanel.add(gradeLabel);
 
         gradeField = new JTextField();
-        gradeField.setPreferredSize(new java.awt.Dimension(100, 24));
+        gradeField.setPreferredSize(new java.awt.Dimension(50, 24));
         containerPanel.add(gradeField);
         
+        maxGradeLabel = new JLabel();
+        maxGradeLabel.setPreferredSize(new java.awt.Dimension(50, 24));
+        containerPanel.add(maxGradeLabel);
+        
         prevButton = new JButton("Previous");
-        prevButton.setPreferredSize(new java.awt.Dimension(100, 24));
+        prevButton.setPreferredSize(new java.awt.Dimension(80, 24));
         
         buttonFiller = new Box.Filler(new java.awt.Dimension(20, 20), new java.awt.Dimension(20, 20), new java.awt.Dimension(20, 20));
         
         nextButton = new JButton("Next");
-        nextButton.setPreferredSize(new java.awt.Dimension(100, 24));
+        nextButton.setPreferredSize(new java.awt.Dimension(80, 24));
+        
+        outputTypeCombo.setName(Fields.SELECT_ACTIVITY_TYPE.name());
+        outputNumberCombo.setName(Fields.SELECT_ACTIVITY.name());
+        gradeField.setName(Fields.EDIT_GRADE.name());
+        maxGradeLabel.setName(Fields.MAX_GRADE.name());
+        prevButton.setName(Actions.PREVIOUSSTUDENT.name());
+        nextButton.setName(Actions.NEXTSTUDENT.name());
         
         containerPanel.add(prevButton);
         containerPanel.add(buttonFiller);

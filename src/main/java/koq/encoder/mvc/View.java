@@ -8,7 +8,7 @@ import java.awt.FlowLayout;
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.Arrays;
-import koq.encoder.mvc.Controller.Actions;
+import koq.encoder.mvc.Model.Actions;
 import koq.encoder.components.EditPanel;
 import koq.encoder.components.FilterPanel;
 import koq.encoder.components.TableView;
@@ -241,6 +241,7 @@ class MenuBar extends JMenuBar {
         menuOpenFile.setName(Actions.OPENFILE.name());
         menuExportFile.setName(Actions.EXPORTFILE.name());
         menuExit.setName(Actions.EXIT.name());
+        menuAbout.setName(Actions.VIEWABOUT.name());
         
         // Add all menus to menu bar
         add(menuFile);

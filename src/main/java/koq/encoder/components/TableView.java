@@ -7,8 +7,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.table.AbstractTableModel;
-import javax.swing.table.DefaultTableModel;
-import koq.encoder.mvc.DatabaseConnection;
 
 /**
  *
@@ -43,6 +41,7 @@ public class TableView extends JTabbedPane {
         
         table.setName("table");
         table.setPreferredSize(new java.awt.Dimension(1000, 1000));
+        table.setRowHeight(30);
         table.getTableHeader().setReorderingAllowed(false);
         table.setColumnSelectionAllowed(true);
         

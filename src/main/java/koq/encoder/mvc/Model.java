@@ -11,14 +11,41 @@ public class Model {
     private String[] columnNames;
     private int selectedRow;
     private int selectedColumn;
+    private int selectedActivity;
     private DatabaseConnection db;
     private List<Student> studentList;
     private List<Activity> activityList;
     private ClassRecord record;
     
+    public static enum Fields {
+        EDIT_GRADE,
+        SELECT_ACTIVITY,
+        SELECT_ACTIVITY_TYPE,
+        MAX_GRADE
+    };
+    
+    public static enum Actions {
+        NEWTABLE,
+        OPENFILE,
+        EXPORTFILE,
+        EXIT,
+        ADDTOTABLE,
+        REMOVEFROMTABLE,
+        ADDACTIVITY,
+        ADDASSIGNMENT,
+        ADDPT,
+        ADDQUIZ,
+        ADDEXAM,
+        PREVIOUSSTUDENT,
+        NEXTSTUDENT,
+        VIEWABOUT
+    }
+    
     public Model() {
+        // NOTE: Placeholder values, change these later
         selectedRow = 0;
         selectedColumn = 0;
+        selectedActivity = 0;
         
         try {
             db = new DatabaseConnection("encoder_data");
@@ -45,7 +72,7 @@ public class Model {
      * 
      */
     public String getTableValueAtCurrentSelection() {
-        return (String) getClassRecord().getValueAt(getSelectedRow(), getSelectedColumn());
+        return String.valueOf(getClassRecord().getValueAt(getSelectedRow(), getSelectedColumn()));
     }
     
     public void addActivityToTable() {
@@ -88,6 +115,14 @@ public class Model {
         selectedColumn = value;
     }
     
+    public int getSelectedActivity() {
+        return selectedActivity;
+    }
+    
+    public void setSelectedActivity(int index) {
+        selectedActivity = index;
+    }
+    
     /*
     public void loadTable() {        
         setTableModel(new Object [][] {
@@ -109,21 +144,10 @@ public class Model {
 class Row {
     private Student student;
     private List<Grade> gradesList;
-    private List<String> values;
 
     public Row(Student student, List<Grade> gradesList) {
         this.student = student;
         this.gradesList = gradesList;
-        
-        values = new ArrayList<>();
-        values.add(student.getStudentName());
-        for (Grade g: gradesList) {
-            values.add(String.valueOf(g.getGrade()));
-        }
-    }
-    
-    public List<String> getValues() {
-        return values;
     }
     
     public Student getStudent() {
@@ -134,7 +158,7 @@ class Row {
         return gradesList;
     }
     
-    public void setGradesAt(int index, int value) {
+    public void setGradesAt(int index, double value) {
         gradesList.get(index).setGrade(value);
     }
 
@@ -181,13 +205,17 @@ class ClassRecord extends AbstractTableModel {
     }
     
     public ClassRecord() {
-        this.className = className;
-        this.subjectName = subjectName;
-        this.term = term;
+        this.className = "";
+        this.subjectName = "";
+        this.term = "";
         classList = new ArrayList<>();
         columnNames = new ArrayList<>();
     }
 
+    public Row getRowAt(int index) {
+        return classList.get(index);
+    }
+    
     public List<Row> getClassList() {
         return classList;
     }
@@ -211,10 +239,12 @@ class ClassRecord extends AbstractTableModel {
     public Object getValueAt(int row, int col) {
         Row r = classList.get(row);
         
-        switch (col) {
-            case 0: return r.getStudent().getStudentName();
-            case 1: return r.getGrades().get(col);
-            default: return null;
+        int colModulo = col % (columnNames.size());
+                
+        if (colModulo == 0) {
+            return r.getStudent().getStudentName();
+        } else {
+            return r.getGrades().get(colModulo-1).getGrade();
         }
     }
 
@@ -227,7 +257,12 @@ class ClassRecord extends AbstractTableModel {
     public void setValueAt(Object value, int row, int col) {
         Row obj = classList.get(row); // Retrieve the object at this row
         
-        obj.setGradesAt(col, (Integer) value);
+        int colModulo = col % (columnNames.size());
+                
+        if (colModulo != 0) {
+            obj.setGradesAt(colModulo-1, (Double) value);
+        }
+        
         
         fireTableCellUpdated(row, col); // Notify JTable of data change
     }

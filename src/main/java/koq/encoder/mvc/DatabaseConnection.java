@@ -162,6 +162,7 @@ public class DatabaseConnection {
                         rs.getInt("student_id"), 
                         rs.getInt("class_id"), 
                         rs.getInt("activity_id"), 
+                        Double.parseDouble(rs.getString("grade")),
                         Double.parseDouble(rs.getString("max_grade"))
                 );
                 

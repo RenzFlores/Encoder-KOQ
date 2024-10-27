@@ -5,7 +5,8 @@ public class Grade {
     private int studentId;    
     private int classId;       
     private int activityId;   
-    private double grade;       
+    private double grade;
+    private double maxGrade;
 
     /**
      * 
@@ -15,12 +16,13 @@ public class Grade {
      * @param activityId
      * @param grade 
      */
-    public Grade(int gradeId, int studentId, int classId, int activityId, double grade) {
+    public Grade(int gradeId, int studentId, int classId, int activityId, double grade, double maxGrade) {
         this.gradeId = gradeId;
         this.studentId = studentId;
         this.classId = classId;
         this.activityId = activityId;
         this.grade = grade;
+        this.maxGrade = maxGrade;
     }
 
     // Getter and setter methods
@@ -62,6 +64,10 @@ public class Grade {
 
     public void setGrade(double grade) {
         this.grade = grade;
+    }
+    
+    public double getMaxGrade() {
+        return maxGrade;
     }
 
     // Method to display grade information as a string
