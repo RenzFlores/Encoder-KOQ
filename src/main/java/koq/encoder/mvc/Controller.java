@@ -1,5 +1,7 @@
 package koq.encoder.mvc;
 
+import classes.Grade;
+import koq.encoder.components.AddStudentWindow;
 import java.awt.Component;
 import java.awt.Point;
 import java.awt.event.ActionEvent;

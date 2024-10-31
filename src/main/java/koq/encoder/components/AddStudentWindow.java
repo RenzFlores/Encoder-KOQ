@@ -1,4 +1,4 @@
-package koq.encoder.mvc;
+package koq.encoder.components;
 
 import java.awt.FlowLayout;
 import javax.swing.JButton;

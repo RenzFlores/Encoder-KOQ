@@ -1,4 +1,4 @@
-package koq.encoder.mvc;
+package classes;
 
 public class Grade {
     private int gradeId;     

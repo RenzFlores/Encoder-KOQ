@@ -1,5 +1,7 @@
 package koq.encoder.mvc;
 
+import classes.Grade;
+import classes.Student;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -49,7 +51,7 @@ import java.util.List;
 /** 
  * Class for all database-related functionalities
  */
-public class DatabaseConnection {
+public class DatabaseController {
     public static Connection connection;
     
     private Connection serverConn;
@@ -59,7 +61,7 @@ public class DatabaseConnection {
     private String password = "root";
     
     // Connect to a schema upon constructor call
-    public DatabaseConnection(String schema) throws SQLException {
+    public DatabaseController(String schema) throws SQLException {
         try {
             serverConn = DriverManager.getConnection(url, user, password);
             if (dbExists(schema)) {

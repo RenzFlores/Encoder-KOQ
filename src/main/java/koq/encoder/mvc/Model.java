@@ -1,5 +1,8 @@
 package koq.encoder.mvc;
 
+import classes.Activity;
+import classes.Grade;
+import classes.Student;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +15,7 @@ public class Model {
     private int selectedRow;
     private int selectedColumn;
     private int selectedActivity;
-    private DatabaseConnection db;
+    private DatabaseController db;
     private List<Student> studentList;
     private List<Activity> activityList;
     private ClassRecord record;
@@ -48,12 +51,12 @@ public class Model {
         selectedActivity = 0;
         
         try {
-            db = new DatabaseConnection("encoder_data");
+            db = new DatabaseController("encoder_data");
         } catch (SQLException e) {
             e.printStackTrace();
         }
         
-        studentList = DatabaseConnection.getAllStudents();
+        studentList = DatabaseController.getAllStudents();
         
         record = new ClassRecord("A", "Mathematics 10", "1st");
 
@@ -199,9 +202,9 @@ class ClassRecord extends AbstractTableModel {
         this.subjectName = subjectName;
         this.term = term;
         
-        classList = DatabaseConnection.getClassRecord(className, subjectName, term);
+        classList = DatabaseController.getClassRecord(className, subjectName, term);
         
-        columnNames = DatabaseConnection.getActivitiesInClassRecord(className, subjectName, term);
+        columnNames = DatabaseController.getActivitiesInClassRecord(className, subjectName, term);
         columnNames.add(0, "Student name");
 
     }
