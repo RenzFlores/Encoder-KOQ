@@ -5,7 +5,7 @@ public class Grade {
     private int studentId;    
     private int classId;       
     private int activityId;   
-    private double grade;
+    private Double grade;
     private double maxGrade;
 
     /**
@@ -16,13 +16,24 @@ public class Grade {
      * @param activityId
      * @param grade 
      */
-    public Grade(int gradeId, int studentId, int classId, int activityId, double grade, double maxGrade) {
+    public Grade(int gradeId, int studentId, int classId, int activityId, Double grade, double maxGrade) {
         this.gradeId = gradeId;
         this.studentId = studentId;
         this.classId = classId;
         this.activityId = activityId;
         this.grade = grade;
         this.maxGrade = maxGrade;
+    }
+    
+    // Constructor for a new Grade instance (no assigned gradeId yet)
+    public Grade(int studentId, int classId, int activityId, Double grade, double maxGrade) {
+        this.studentId = studentId;
+        this.classId = classId;
+        this.activityId = activityId;
+        this.grade = grade;
+        this.maxGrade = maxGrade;
+        
+        this.gradeId = 999;     // TODO: Change this later
     }
 
     // Getter and setter methods
@@ -58,11 +69,11 @@ public class Grade {
         this.activityId = activityId;
     }
 
-    public double getGrade() {
+    public Double getGrade() {
         return grade;
     }
 
-    public void setGrade(double grade) {
+    public void setGrade(Double grade) {
         this.grade = grade;
     }
     

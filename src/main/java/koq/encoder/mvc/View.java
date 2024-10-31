@@ -12,14 +12,8 @@ import koq.encoder.mvc.Model.Actions;
 import koq.encoder.components.EditPanel;
 import koq.encoder.components.FilterPanel;
 import koq.encoder.components.TableView;
+import koq.encoder.mvc.Model.Fields;
 
-/**
- * The View in the MVC Model will only do view things, which is
- * displaying the information needed for the user to see. It
- * should not manipulate any data(Controller) nor carry any data(Model).
- * It is just stupid in the matter that when you press a button(action),
- * the view does not do anything.
- */
 
 public class View {
 
@@ -54,7 +48,7 @@ public class View {
         frame.setLayout(new CardLayout());
         frame.setLocationRelativeTo(null);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setVisible(true);      
+        frame.setVisible(true);
         
         menuBar = new MenuBar();
         frame.setJMenuBar(menuBar);
@@ -148,6 +142,36 @@ public class View {
             addButton.getY() + (int) addButton.getPreferredSize().getHeight()/2);
     }
     
+    public void showAbout() {
+        JDialog dialog = new JDialog((java.awt.Frame) null, "About", true);
+            dialog.setSize(450, 400);
+            dialog.setLocationRelativeTo(null);
+            dialog.setLayout(new java.awt.BorderLayout());
+
+            dialog.add(new JLabel("""
+                <html>
+                  <body style="text-align:center">
+                  <h2>Technological Institute of the Philippines</h2>
+                  <h4>CS 002 - Advanced Object-Oriented Programming</h4>
+                  <h5>As part of the study:</h5>
+                  <h3><b>Development of a Grade Encoding System for the Assessment of Senior High School Students</b></h3>
+                    <p style="text-align:justify">This grade encoding program aims to facilitate Senior High School teachers that
+                       may face several challenges with the complexity of managing and encoding of student grades.
+                       By streamlining the grading process, this program seeks to support educators in
+                       efficiently adapting to the updated K-12 grading system.
+                    </i>
+                    </p>
+                  <h3><b>Developers</b></h3>
+                    <p>Lorenz Chiong</p>
+                    <p>Renz Ken Flores</p>
+                    <p>Richard Daniel Sarmiento</p></body>
+                </html>
+                """)
+            );
+            
+            dialog.setVisible(true);
+    }
+    
     public void setStudentNameInEditor(String name) {
         ( (EditPanel) editorWindow.getGradeEditor() ).getStudentNameContent().setText(name);
     }
@@ -160,28 +184,40 @@ public class View {
         return (String) ( (EditPanel) editorWindow.getGradeEditor() ).getOutputTypeCombo().getSelectedItem();
     }
     
-    public void setOutputTypeInEditor() {
-        ( (EditPanel) editorWindow.getGradeEditor() ).getOutputTypeCombo();
-        /**
-         * TODO: Set JComboBox according to number of existing activity types in JTable
-         */
-    }
-    
     public int getOutputNumberInEditor() {
         return (int) ( (EditPanel) editorWindow.getGradeEditor() ).getOutputNumberCombo().getSelectedItem();
     }
     
-    public void setOutputNumberInEditor() {
-        ( (EditPanel) editorWindow.getGradeEditor() ).getOutputNumberCombo();
-        /**
-         * TODO: Set JComboBox according to number of columns in JTable
-         */
+    public void setOutputNumberInEditor(int index) {
+        getOutputNumberComboBox().setSelectedIndex(index);
+    }
+    
+    public JComboBox getOutputNumberComboBox() {
+        return (JComboBox) getComponent(Model.Fields.SELECT_ACTIVITY.name());
     }
     
     public JTable getTable() {
         return ((EditorWindow) getEditorWindow()).getTable();
     }
     
+    public Double getGradeFieldValue() {
+        return Double.parseDouble(
+          ( (JTextField) getComponent(Fields.EDIT_GRADE.name()) ).getText()
+        );
+    }
+    
+    public void setGradeFieldValue(String value) {
+        ( (JTextField) getComponent(Fields.EDIT_GRADE.name()) ).setText(value);
+    }
+    
+    public void setMaxGradeLabel(String value) {
+        ( (JLabel) getComponent(Fields.MAX_GRADE.name()) ).setText("/" + value);
+    }
+    
+    public String getTableValueAt(int row, int col) {
+        return String.valueOf(getTable().getModel().getValueAt(row, col));
+    }
+            
     public EditorWindow getEditorWindow() {
         return editorWindow;
     }
@@ -393,3 +429,4 @@ class EditorWindow extends JPanel {
         add(filterPanel);
     }
 }
+

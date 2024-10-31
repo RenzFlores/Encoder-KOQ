@@ -5,9 +5,18 @@ public class Activity {
     private String activityName;
     private double maxGrade;
     private int activityTypeId;
-    private String term;
+    private int term;
 
-    public Activity(int activityId, String activityName, int activityTypeId, double maxGrade, String term) {
+    public Activity(int activityId, String activityName, int activityTypeId, double maxGrade, int term) {
+        this.activityId = activityId;
+        this.activityName = activityName;
+        this.maxGrade = maxGrade;
+        this.activityTypeId = activityTypeId;
+        this.term = term;
+    }
+    
+    // Constructor for new activities (No Activity ID yet)
+    public Activity(String activityName, int activityTypeId, double maxGrade, int term) {
         this.activityId = activityId;
         this.activityName = activityName;
         this.maxGrade = maxGrade;
@@ -43,11 +52,11 @@ public class Activity {
         return activityTypeId;
     }
     
-    public String getTerm() {
+    public int getTerm() {
         return term;
     }
 
-    public void setTerm(String term) {
+    public void setTerm(int term) {
         this.term = term;
     }
     

@@ -71,8 +71,8 @@ public class Model {
      * TODO: Rework this part to conform to the new AbstractTableModel ClassRecord class
      * 
      */
-    public String getTableValueAtCurrentSelection() {
-        return String.valueOf(getClassRecord().getValueAt(getSelectedRow(), getSelectedColumn()));
+    public Object getTableObjectAtCurrentSelection() {
+        return getClassRecord().getValueAt(getSelectedRow(), getSelectedColumn());
     }
     
     public void addActivityToTable() {
@@ -158,8 +158,10 @@ class Row {
         return gradesList;
     }
     
-    public void setGradesAt(int index, double value) {
-        gradesList.get(index).setGrade(value);
+    public void setGradesAt(int index, Double value) {
+        if (!(gradesList.get(index) == null)) {
+            gradesList.get(index).setGrade(value);
+        }
     }
 
     public int getActivityGrade(int index) {
@@ -234,16 +236,23 @@ class ClassRecord extends AbstractTableModel {
     public String getColumnName(int index) {
         return columnNames.get(index);
     }
+    
+    public List<String> getColumns() {
+        return columnNames;
+    }
 
     @Override
     public Object getValueAt(int row, int col) {
         Row r = classList.get(row);
         
         int colModulo = col % (columnNames.size());
-                
+        
         if (colModulo == 0) {
             return r.getStudent().getStudentName();
         } else {
+            if (r.getGrades().get(colModulo-1) == null) {
+                return null;
+            }
             return r.getGrades().get(colModulo-1).getGrade();
         }
     }
@@ -255,15 +264,18 @@ class ClassRecord extends AbstractTableModel {
 
     @Override
     public void setValueAt(Object value, int row, int col) {
-        Row obj = classList.get(row); // Retrieve the object at this row
+        Row obj = classList.get(row);
         
         int colModulo = col % (columnNames.size());
                 
         if (colModulo != 0) {
-            obj.setGradesAt(colModulo-1, (Double) value);
+            if (value == null) {
+                obj.setGradesAt(colModulo-1, null);
+            } else {
+                obj.setGradesAt(colModulo-1, (Double) value);
+            }
         }
         
-        
-        fireTableCellUpdated(row, col); // Notify JTable of data change
+        fireTableCellUpdated(row, col);
     }
 }
