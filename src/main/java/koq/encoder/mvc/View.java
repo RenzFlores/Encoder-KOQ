@@ -221,6 +221,53 @@ public class View {
     public EditorWindow getEditorWindow() {
         return editorWindow;
     }
+    
+    /**
+     * Set editor panel values
+     */
+    public void updateEditPanel(int selectedRowIndex, int selectedActivity, Row selectedRow) {
+        
+        setStudentNameInEditor(
+            getTableValueAt(selectedRowIndex, 0)
+        );
+        
+        System.out.println();
+        System.out.println(getTableValueAt(selectedRowIndex, 0));
+        
+        // TODO: Change index to conform with multiple tabs
+        setStudentClassInEditor((String) ((EditorWindow) getEditorWindow()).getTabNameAt(0));
+        
+        /**
+         * Set combo box to contain the list of activities in the current table
+         */
+        JComboBox selectActivity = getOutputNumberComboBox();
+        DefaultComboBoxModel comboModel = new DefaultComboBoxModel();
+        // Populate the combo box
+        for (int i = 1; i < getTable().getModel().getColumnCount(); i++) {
+            comboModel.addElement(getTable().getModel().getColumnName(i));
+        }
+        selectActivity.setModel(comboModel);
+        
+        // Set selected item in view
+        setOutputNumberInEditor(selectedActivity);
+        
+        // Update grade text field with the value of current selection
+        setGradeFieldValue(
+            getTableValueAt(selectedRowIndex, selectActivity.getSelectedIndex()+1)
+        );
+        
+        // Update the value of max grade with the value of current selected activity
+        String s;
+        if (selectedRow.getGrades().get(selectActivity.getSelectedIndex()) == null) {
+            s = "";
+        } else {
+            s = String.valueOf(selectedRow.getGrades().get(selectActivity.getSelectedIndex()).getMaxGrade());
+        }
+        
+        setMaxGradeLabel(s);
+        
+        System.out.println("edit panel updated");
+    }
 }
 
 // This class contains all the menu bar components
@@ -288,6 +335,11 @@ class MenuBar extends JMenuBar {
 
 class AddContextMenu extends JPopupMenu {
     public AddContextMenu() {
+        setName(Actions.ADDMENUCLICKED.name());
+        
+        JMenuItem addStudent = new JMenuItem("Student");
+        addStudent.setName(Actions.ADDSTUDENT.name());
+        
         JMenuItem addActivity = new JMenuItem("Activity");
         addActivity.setName(Actions.ADDACTIVITY.name());
         
@@ -304,6 +356,7 @@ class AddContextMenu extends JPopupMenu {
         addExam.setName(Actions.ADDEXAM.name());
         
         // Add components
+        add(addStudent);
         add(addActivity);
         add(addAssignment);
         add(addPT);
@@ -418,7 +471,7 @@ class EditorWindow extends JPanel {
     
     public EditorWindow() {
         setPreferredSize(new Dimension(1300, 720));
-        setBackground(new Color(20, 20, 60));
+        setBackground(new Color(20, 20, 60));           // DEBUG
         
         editPanel = new EditPanel();
         tableEditorPanel = new TableEditorPanel();

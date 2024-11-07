@@ -2,7 +2,7 @@ package classes;
 
 public class Grade {
     private int gradeId;     
-    private int studentId;    
+    private int studentId;
     private int classId;       
     private int activityId;   
     private Double grade;

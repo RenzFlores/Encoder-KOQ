@@ -1,10 +1,12 @@
 package koq.encoder.mvc;
 
 import classes.Grade;
+import koq.encoder.components.AddActivityWindow;
 import koq.encoder.components.AddStudentWindow;
 import java.awt.Component;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
@@ -12,21 +14,17 @@ import java.util.stream.Collectors;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
-import javax.swing.JFrame;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 import koq.encoder.mvc.Model.Actions;
 import koq.encoder.mvc.Model.Fields;
 
-/**
- *
- * @author KOQ
- */
 public class Controller {
     
     private final View view;
@@ -39,9 +37,10 @@ public class Controller {
         JTable table = view.getTable();
         table.getTableHeader().addMouseListener(new HeaderSelector(table));
         table.addMouseListener(new RowSelector(table));
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setModel(model.getClassRecord());
         table.setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
-        updateEditPanel();
+        view.updateEditPanel(model.getSelectedRow(), model.getSelectedActivity(), model.getClassRecord().getRowAt(model.getSelectedRow()));
         
         // New Table event
         ( (JMenuItem) view.getComponent(Actions.NEWTABLE.name()) ).addActionListener((ActionEvent ev) -> {
@@ -83,7 +82,7 @@ public class Controller {
             model.setSelectedActivity(
                 ((JComboBox) view.getComponent(Fields.SELECT_ACTIVITY.name())).getSelectedIndex()
             );
-            updateEditPanel();
+            view.updateEditPanel(model.getSelectedRow(), model.getSelectedActivity(), model.getClassRecord().getRowAt(model.getSelectedRow()));
         });
         
         // Grade text field DocumentListener
@@ -105,6 +104,22 @@ public class Controller {
             
             // BUG: MUST CREATE INSTANCE FIRST IF CELL IS NULL
             view.getTable().getModel().setValueAt(model.getClassRecord().getValueAt(row, col+1), row, col+1);
+        });
+        
+        table.getSelectionModel().addListSelectionListener(event -> {
+            // Check if the event is adjusting (to avoid double calls during selection changes)
+            if (!event.getValueIsAdjusting()) {
+                int selectedRow = table.getSelectedRow();
+        
+                if (selectedRow != -1) {  // Ensure a valid row is selected
+                    model.setSelectedRow(selectedRow);
+                    view.updateEditPanel(
+                        selectedRow, 
+                        model.getSelectedActivity(), 
+                        model.getClassRecord().getRowAt(selectedRow)
+                    );
+                }
+            }
         });
         
         // Add to Table button clicked event
@@ -136,26 +151,37 @@ public class Controller {
             }
         });
         
+        // Add ActionListener to menu items to detect clicks
+        ActionListener menuListener = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                AddActivityWindow activityWindow = new AddActivityWindow();
+                AddStudentWindow studentWindow = new AddStudentWindow();
+                JMenuItem source = (JMenuItem) e.getSource();
+                
+                if (source.getText().equals("Student")) {
+                    studentWindow.setVisible(true);
+                    
+                    studentWindow.getButton().addActionListener(new AddStudentWindowListener(studentWindow));
+                } else {
+                    activityWindow.setVisible(true);
+                    
+                    activityWindow.getButton().addActionListener(new AddActivityWindowListener(activityWindow, model));
+                }
+            }
+        };
+        
+        // Add Student event
+        ( (JMenuItem) view.getComponent(Actions.ADDSTUDENT.name()) ).addActionListener(menuListener);
         // Add Activity event
-        ( (JMenuItem) view.getComponent(Actions.ADDACTIVITY.name()) ).addActionListener((ActionEvent ev) -> {
-            // TODO: Add code
-        });
-        
+        ( (JMenuItem) view.getComponent(Actions.ADDACTIVITY.name()) ).addActionListener(menuListener);
         // Add Assignment event
-        ( (JMenuItem) view.getComponent(Actions.ADDASSIGNMENT.name()) ).addActionListener((ActionEvent ev) -> {
-            System.out.println("Add assignment");
-        });
-        
+        ( (JMenuItem) view.getComponent(Actions.ADDASSIGNMENT.name()) ).addActionListener(menuListener);
         // Add Performance Task event
-        ( (JMenuItem) view.getComponent(Actions.ADDPT.name()) ).addActionListener((ActionEvent ev) -> {
-            System.out.println("Add exam");
-        });
+        ( (JMenuItem) view.getComponent(Actions.ADDPT.name()) ).addActionListener(menuListener);
         
         // Add Quiz event
         ( (JMenuItem) view.getComponent(Actions.ADDQUIZ.name()) ).addActionListener((ActionEvent ev) -> {
-            JFrame window = new AddStudentWindow();
-            window.setVisible(true);
-            
             List<String> columns = model.getClassRecord().getColumns().stream()
                     .filter(e -> e.contains("Quiz")).collect(Collectors.toList());
             String newActivityName;
@@ -190,7 +216,7 @@ public class Controller {
                 r.getGrades().add(index, null);
             }
             
-            updateEditPanel();
+            view.updateEditPanel(model.getSelectedRow(), model.getSelectedActivity(), model.getClassRecord().getRowAt(model.getSelectedRow()));
         });
         
         // Add Exam event
@@ -227,53 +253,64 @@ public class Controller {
                 r.getGrades().add(index, null);
             }
             
-            updateEditPanel();
+            view.updateEditPanel(model.getSelectedRow(), model.getSelectedActivity(), model.getClassRecord().getRowAt(model.getSelectedRow()));
+        });
+        
+        // Action to move selected row up
+        ( (JButton) view.getComponent( Actions.MOVEROWUP.name() ) ).addActionListener((ActionEvent e) -> {
+            int selectedRow = table.getSelectedRow();
+            if (selectedRow > 0) {
+                model.getClassRecord().moveRow(selectedRow, selectedRow - 1);
+                table.setRowSelectionInterval(selectedRow - 1, selectedRow - 1);
+            }
+        });
+
+        // Action to move selected row down
+        ( (JButton) view.getComponent( Actions.MOVEROWDOWN.name() ) ).addActionListener((ActionEvent e) -> {
+            int selectedRow = table.getSelectedRow();
+            if (selectedRow < model.getClassRecord().getRowCount() - 1 && selectedRow >= 0) {
+                model.getClassRecord().moveRow(selectedRow, selectedRow + 1);
+                table.setRowSelectionInterval(selectedRow + 1, selectedRow + 1);
+            }
         });
         
     }
     
-    /**
-     * Set editor panel values
-     */
-    private void updateEditPanel() {
-        
-        view.setStudentNameInEditor(
-            view.getTableValueAt(model.getSelectedRow(), 0)
-        );
-        
-        // TODO: Change index to conform with multiple tabs
-        view.setStudentClassInEditor((String) ((EditorWindow) view.getEditorWindow()).getTabNameAt(0));
-        
-        /**
-         * Set combo box to contain the list of activities in the current table
-         */
-        JComboBox selectActivity = view.getOutputNumberComboBox();
-        DefaultComboBoxModel comboModel = new DefaultComboBoxModel();
-        // Populate the combo box
-        for (int i = 1; i < view.getTable().getModel().getColumnCount(); i++) {
-            comboModel.addElement(view.getTable().getModel().getColumnName(i));
+    // Listener for the confirmation button in AddStudentWindow
+    class AddStudentWindowListener implements ActionListener {
+
+        AddStudentWindow window;
+        boolean validForm;
+
+        public AddStudentWindowListener(AddStudentWindow window) {
+            this.window = window;
+            validForm = false;
         }
-        selectActivity.setModel(comboModel);
-        
-        // Set selected item in view
-        view.setOutputNumberInEditor(model.getSelectedActivity());
-        
-        // Update grade text field with the value of current selection
-        view.setGradeFieldValue(
-            view.getTableValueAt(model.getSelectedRow(), selectActivity.getSelectedIndex()+1)
-        );
-        
-        // Update the value of max grade with the value of current selected activity
-        String s;
-        Row r = (Row) model.getClassRecord().getRowAt(model.getSelectedRow());
-        if (r.getGrades().get(selectActivity.getSelectedIndex()) == null) {
-            s = "";
-        } else {
-            s = String.valueOf(r.getGrades().get(selectActivity.getSelectedIndex()).getMaxGrade());
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            String firstName = window.getFirstName();
+            String lastName = window.getLastName();
+            validForm = true;
+
+            if (firstName.isBlank() || lastName.isBlank()) {
+                JOptionPane.showMessageDialog(
+                    null,
+                    "Please provide the first and last name.",
+                    "Invalid form",
+                    JOptionPane.WARNING_MESSAGE
+                );
+                validForm = false;
+            }
+
+            if (validForm) {
+                model.addStudentToClassRecord(firstName, lastName);
+            }
         }
         
-        view.setMaxGradeLabel(s);
-        
+        public boolean isFormValid() {
+            return validForm;
+        }
     }
 }
 
@@ -321,7 +358,11 @@ class RowSelector extends MouseAdapter
         int row = tb.rowAtPoint(e.getPoint());
         table.setColumnSelectionAllowed(false);
         table.setRowSelectionAllowed(true);
-        table.setRowSelectionInterval(row, row);
+        
+        // Only select if a valid row was clicked
+        if (row != -1) {
+            table.setRowSelectionInterval(row, row);
+        }
     }
 }
 
@@ -342,5 +383,54 @@ class HeaderEditor
     public void showEditor(Component parent, int col, String currentValue)
     {
         System.out.println("header selected");
+    }
+}
+
+// Listener for the confirmation button in AddStudentWindow
+class AddActivityWindowListener implements ActionListener {
+    
+    AddActivityWindow window;
+    Model model;
+    
+    public AddActivityWindowListener(AddActivityWindow window, Model model) {
+        this.window = window;
+        this.model = model;
+    }
+    
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        String section = window.getSection();
+        String subject = window.getSubject();
+        String term = window.getTerm();
+        boolean validForm = true;
+        
+        if (section.isBlank() || subject.isBlank()) {
+            JOptionPane.showMessageDialog(
+                null,
+                "Please provide the class section and subject.",
+                "Invalid form",
+                JOptionPane.WARNING_MESSAGE
+            );
+            validForm = false;
+        }
+
+        switch (term) {
+            case "1st Quarter":
+                break;
+            case "2nd Quarter":
+                break;
+            case "3rd Quarter":
+                break;
+            case "4th Quarter":
+                break;
+        }
+        
+        if (validForm) {
+            /*
+            model.setActivitySection();
+            model.setActivitySubject();
+            model.setActivityTerm();
+            */
+        }
     }
 }

@@ -67,7 +67,7 @@ public class FilterPanel extends JPanel {
         outputTypeLabel.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
         outputTypeLabel.setPreferredSize(new java.awt.Dimension(100, 24));
 
-        outputTypeCombo = new JComboBox(new javax.swing.DefaultComboBoxModel<>(new String[] { "Activity", "Assignment", "Quiz", "Exam" }));
+        outputTypeCombo = new JComboBox(new javax.swing.DefaultComboBoxModel<>(new String[] {"All", "Activity", "Assignment", "Quiz", "Exam" }));
         outputTypeCombo.setMinimumSize(new java.awt.Dimension(100, 24));
         outputTypeCombo.setPreferredSize(new java.awt.Dimension(100, 24));
 

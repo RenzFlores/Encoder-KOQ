@@ -42,34 +42,9 @@ public class EditPanel extends JPanel {
     private final Box.Filler buttonFiller;
     private final JButton nextButton;
     
-    public JPanel getContainer() {
-        return containerPanel;
-    }
-    
-    public JLabel getStudentNameContent() {
-        return studentNameContent;
-    }
-    
-    public JLabel getStudentClassContent() {
-        return classContent;
-    }
-    
-    public JComboBox getOutputTypeCombo() {
-        return outputTypeCombo;
-    }
-    
-    public JComboBox getOutputNumberCombo() {
-        return outputNumberCombo;
-    }
-    
-    public JTextField getGradeField() {
-        return gradeField;
-    }
-    
-    void setStudentName(View v, int row) {
-        JTable selectedName = (JTable)v.getComponent("table");
-        studentNameContent.setText((String) selectedName.getValueAt(row , 0)); 
-    }
+    private final JLabel rearrangeLabel;
+    private final JButton moveDownButton;
+    private final JButton moveUpButton;
     
     public EditPanel() {
         setPreferredSize(new java.awt.Dimension(300, 710));
@@ -152,17 +127,56 @@ public class EditPanel extends JPanel {
         nextButton = new JButton("Next");
         nextButton.setPreferredSize(new java.awt.Dimension(80, 24));
         
+        rearrangeLabel = new JLabel("Rearrange:");
+        moveUpButton = new JButton("↑");
+        moveDownButton = new JButton("↓");
+        
         outputTypeCombo.setName(Fields.SELECT_ACTIVITY_TYPE.name());
         outputNumberCombo.setName(Fields.SELECT_ACTIVITY.name());
         gradeField.setName(Fields.EDIT_GRADE.name());
         maxGradeLabel.setName(Fields.MAX_GRADE.name());
         prevButton.setName(Actions.PREVIOUSSTUDENT.name());
         nextButton.setName(Actions.NEXTSTUDENT.name());
+        moveUpButton.setName(Actions.MOVEROWUP.name());
+        moveDownButton.setName(Actions.MOVEROWDOWN.name());
         
         containerPanel.add(prevButton);
         containerPanel.add(buttonFiller);
         containerPanel.add(nextButton);
         
+        containerPanel.add(rearrangeLabel);
+        containerPanel.add(moveUpButton);
+        containerPanel.add(moveDownButton);
+        
         add(containerPanel);
+    }
+    
+    public JPanel getContainer() {
+        return containerPanel;
+    }
+    
+    public JLabel getStudentNameContent() {
+        return studentNameContent;
+    }
+    
+    public JLabel getStudentClassContent() {
+        return classContent;
+    }
+    
+    public JComboBox getOutputTypeCombo() {
+        return outputTypeCombo;
+    }
+    
+    public JComboBox getOutputNumberCombo() {
+        return outputNumberCombo;
+    }
+    
+    public JTextField getGradeField() {
+        return gradeField;
+    }
+    
+    void setStudentName(View v, int row) {
+        JTable selectedName = (JTable)v.getComponent("table");
+        studentNameContent.setText((String) selectedName.getValueAt(row , 0)); 
     }
 }
