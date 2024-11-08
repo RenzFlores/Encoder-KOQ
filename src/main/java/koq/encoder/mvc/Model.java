@@ -11,7 +11,9 @@ import classes.Student;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableColumn;
 
 /**
  * Database objects for reference:
@@ -252,6 +254,125 @@ public class Model {
             getClassRecord().fireTableDataChanged();
             System.out.println("Row added");
         } catch (SQLException err) {}
+    }
+    
+    public void addSeatworkToTable() {
+        List<String> columns = getClassRecord().getColumns().stream()
+                .filter(e -> e.contains("Seatwork")).collect(Collectors.toList());
+        String newActivityName;
+        int index;
+
+        if (!columns.isEmpty()) {
+            String[] s = columns.getLast().split(" ");
+            newActivityName = s[0] + " " + (Integer.parseInt(s[s.length-1])+1);
+            index = getClassRecord().findColumn(columns.getLast());
+        } else {
+            newActivityName = "Seatwork 1";
+            columns = getClassRecord().getColumns().stream()
+                .filter(e -> e.contains("Student name")).collect(Collectors.toList());
+            index = getClassRecord().findColumn(columns.getLast());
+        }
+
+        // Get index
+        index = getClassRecord().findColumn(columns.getLast());
+        
+        getClassRecord().insertColumn(index, newActivityName);
+        
+        getClassRecord().fireTableStructureChanged();
+    }
+    
+    public void addHWToTable() {
+        List<String> columns = getClassRecord().getColumns().stream()
+                .filter(e -> e.contains("Assignment")).collect(Collectors.toList());
+        String newActivityName;
+        int index;
+
+        if (!columns.isEmpty()) {
+            String[] s = columns.getLast().split(" ");
+            newActivityName = s[0] + " " + (Integer.parseInt(s[s.length-1])+1);
+            index = getClassRecord().findColumn(columns.getLast());
+        } else {
+            newActivityName = "Assignment 1";
+            columns = getClassRecord().getColumns().stream()
+                .filter(e -> e.contains("Seatwork")).collect(Collectors.toList());
+            index = getClassRecord().findColumn(columns.getLast());
+        }
+
+        // Get index
+        index = getClassRecord().findColumn(columns.getLast());
+        
+        getClassRecord().insertColumn(index, newActivityName);
+        
+        getClassRecord().fireTableStructureChanged();
+    }
+    
+    public void addPTToTable() {
+        List<String> columns = getClassRecord().getColumns().stream()
+                .filter(e -> e.contains("Performance Task")).collect(Collectors.toList());
+        String newActivityName;
+        int index;
+
+        if (!columns.isEmpty()) {
+            String[] s = columns.getLast().split(" ");
+            newActivityName = s[0] + " " + s[1] + " " + (Integer.parseInt(s[s.length-1])+1);
+            index = getClassRecord().findColumn(columns.getLast());
+        } else {
+            newActivityName = "Performance Task 1";
+            columns = getClassRecord().getColumns().stream()
+                .filter(e -> e.contains("Assignment")).collect(Collectors.toList());
+            index = getClassRecord().findColumn(columns.getLast());
+        }
+
+        // Get index
+        index = getClassRecord().findColumn(columns.getLast());
+        
+        getClassRecord().insertColumn(index, newActivityName);
+        
+        getClassRecord().fireTableStructureChanged();
+    }
+    
+    public void addQuizToTable() {
+        List<String> columns = getClassRecord().getColumns().stream()
+                .filter(e -> e.contains("Quiz")).collect(Collectors.toList());
+        String newActivityName;
+        int index;
+
+        if (!columns.isEmpty()) {
+            String[] s = columns.getLast().split(" ");
+            newActivityName = s[0] + " " + (Integer.parseInt(s[s.length-1])+1);
+            index = getClassRecord().findColumn(columns.getLast());
+        } else {
+            newActivityName = "Quiz 1";
+            columns = getClassRecord().getColumns().stream()
+                .filter(e -> e.contains("Performance Task")).collect(Collectors.toList());
+            index = getClassRecord().findColumn(columns.getLast());
+        }
+
+        // Get index
+        index = getClassRecord().findColumn(columns.getLast());
+        
+        getClassRecord().insertColumn(index, newActivityName);
+        
+        getClassRecord().fireTableStructureChanged();
+    }
+    
+    public void addExamToTable() {
+        List<String> columns = getClassRecord().getColumns().stream()
+                .filter(e -> e.contains("Exam")).collect(Collectors.toList());
+        String newActivityName;
+        int index;
+
+        if (!columns.isEmpty()) {
+            String[] s = columns.getLast().split(" ");
+            newActivityName = s[0] + " " + (Integer.parseInt(s[s.length-1])+1);
+        } else {
+            newActivityName = "Exam 1";
+        }
+
+        // Get index
+        index = getClassRecord().findColumn(columns.getLast());
+        
+        getClassRecord().insertColumn(index, newActivityName);
     }
     
     // Connect to a database
@@ -746,6 +867,7 @@ class Row {
 
         return activities.get(index).getFormattedGrade();
         */
+        
         return 0;
     }
 }
@@ -775,6 +897,18 @@ class ClassRecord extends AbstractTableModel {
         this.term = null;
         classList = new ArrayList<>();
         columnNames = new ArrayList<>();
+    }
+    
+    public void insertColumn(int index, String value) {
+        // Insert new column
+        getColumns().add(index+1, value);
+
+        for (Row r: getClassList()) {
+            // Fill all cells inside column to be empty
+            r.getGrades().add(index, null);
+        }
+        
+        fireTableStructureChanged();
     }
     
     public int getClassId() {

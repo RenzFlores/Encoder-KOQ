@@ -8,6 +8,7 @@ import java.awt.FlowLayout;
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import javax.swing.table.TableColumn;
 import koq.encoder.mvc.Model.Actions;
 import koq.encoder.components.EditPanel;
 import koq.encoder.components.FilterPanel;

@@ -1,5 +1,7 @@
 koq\encoder\mvc\View.class
 koq\encoder\mvc\HeaderEditor.class
+koq\encoder\components\AddClassRecordWindow.class
+koq\encoder\mvc\Controller$AddActivityWindowListener.class
 koq\encoder\components\AddStudentWindow.class
 koq\encoder\mvc\MenuBar.class
 koq\encoder\components\EditPanel.class
@@ -15,10 +17,8 @@ koq\encoder\mvc\HeaderSelector.class
 classes\Student.class
 koq\encoder\mvc\Main.class
 koq\encoder\mvc\ClassRecord.class
-koq\encoder\mvc\AddActivityWindowListener.class
 koq\encoder\mvc\Model.class
 koq\encoder\mvc\RowSelector.class
-koq\encoder\components\AddActivityWindow.class
 koq\encoder\mvc\Controller$1.class
 koq\encoder\components\FilterPanel.class
 koq\encoder\mvc\EditorWindow.class

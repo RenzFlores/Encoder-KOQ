@@ -1,7 +1,7 @@
 package koq.encoder.mvc;
 
 import classes.Grade;
-import koq.encoder.components.AddActivityWindow;
+import koq.encoder.components.AddClassRecordWindow;
 import koq.encoder.components.AddStudentWindow;
 import java.awt.Component;
 import java.awt.Point;
@@ -11,7 +11,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JMenuItem;
@@ -155,7 +154,7 @@ public class Controller {
         ActionListener menuListener = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                AddActivityWindow activityWindow = new AddActivityWindow();
+                AddClassRecordWindow activityWindow = new AddClassRecordWindow();
                 AddStudentWindow studentWindow = new AddStudentWindow();
                 JMenuItem source = (JMenuItem) e.getSource();
                 
@@ -163,10 +162,30 @@ public class Controller {
                     studentWindow.setVisible(true);
                     
                     studentWindow.getButton().addActionListener(new AddStudentWindowListener(studentWindow));
-                } else {
+                } else if (source.getText().equals("Seatwork")) {
+                    /**
+                     * TODO: REFACTOR MO TO, WAG BOBO
+                     * 
+                     * 1. Create addActivityWindow that receives input (Activity type, Max grade)
+                     * 2. Create new column based on activity type
+                     * 3. Create new activity based on max_grade (and insert to db)
+                     * 4. Fill empty cells (Done)
+                     * 
+                     */
+                    
+                    /*
                     activityWindow.setVisible(true);
                     
-                    activityWindow.getButton().addActionListener(new AddActivityWindowListener(activityWindow, model));
+                    activityWindow.getButton().addActionListener(new AddActivityWindowListener(activityWindow));
+                    */
+                } else if (source.getText().equals("Assignment")) {
+                    
+                } else if (source.getText().equals("Performance Task")) {
+                    
+                } else if (source.getText().equals("Quiz")) {
+                    
+                } else if (source.getText().equals("Exam")) {
+                    
                 }
             }
         };
@@ -178,80 +197,21 @@ public class Controller {
         // Add Assignment event
         ( (JMenuItem) view.getComponent(Actions.ADDASSIGNMENT.name()) ).addActionListener(menuListener);
         // Add Performance Task event
-        ( (JMenuItem) view.getComponent(Actions.ADDPT.name()) ).addActionListener(menuListener);
+        ( (JMenuItem) view.getComponent(Actions.ADDPT.name()) ).addActionListener((ActionEvent ev) -> {
+            model.addPTToTable();
+            view.updateEditPanel(model.getSelectedRow(), model.getSelectedActivity(), model.getClassRecord().getRowAt(model.getSelectedRow()));
+        });
         
         // Add Quiz event
         ( (JMenuItem) view.getComponent(Actions.ADDQUIZ.name()) ).addActionListener((ActionEvent ev) -> {
-            List<String> columns = model.getClassRecord().getColumns().stream()
-                    .filter(e -> e.contains("Quiz")).collect(Collectors.toList());
-            String newActivityName;
-            int index;
-            
-            if (!columns.isEmpty()) {
-                String[] s = columns.getLast().split(" ");
-                newActivityName = s[0] + " " + (Integer.parseInt(s[s.length-1])+1);
-                index = model.getClassRecord().findColumn(columns.getLast());
-                
-                // new Activity(newActivityName, 5.0, 10.0, 1);       DUMMY CODE
-            } else {
-                newActivityName = "Quiz 1";
-                columns = model.getClassRecord().getColumns().stream()
-                    .filter(e -> e.contains("Performance Task")).collect(Collectors.toList());
-                index = model.getClassRecord().findColumn(columns.getLast());
-            }
-            
-            // Insert new column
-            model.getClassRecord().getColumns().add(index+1, newActivityName);
-            view.getTable().getColumnModel().addColumn(
-                    new TableColumn(index));
-            
-            // Set column names
-            for (var v: model.getClassRecord().getColumns()) { 
-                int i = model.getClassRecord().findColumn(v);
-                view.getTable().getColumnModel().getColumn(i).setHeaderValue(v);
-            }
+            model.addQuizToTable();
 
-            for (Row r: model.getClassRecord().getClassList()) {
-                // Fill all cells inside column to be empty
-                r.getGrades().add(index, null);
-            }
-            
             view.updateEditPanel(model.getSelectedRow(), model.getSelectedActivity(), model.getClassRecord().getRowAt(model.getSelectedRow()));
         });
         
         // Add Exam event
         ( (JMenuItem) view.getComponent(Actions.ADDEXAM.name()) ).addActionListener((ActionEvent ev) -> {
-            List<String> columns = model.getClassRecord().getColumns().stream()
-                    .filter(e -> e.contains("Exam")).collect(Collectors.toList());
-            String newActivityName;
-            
-            if (!columns.isEmpty()) {
-                String[] s = columns.getLast().split(" ");
-                newActivityName = s[0] + " " + (Integer.parseInt(s[s.length-1])+1);
-                
-                // new Activity(newActivityName, 5, 10.0, "1st");       DUMMY CODE
-            } else {
-                newActivityName = "Exam 1";
-            }
-            
-            // Get index
-            int index = model.getClassRecord().findColumn(columns.getLast());
-
-            // Insert new column
-            model.getClassRecord().getColumns().add(index+1, newActivityName);
-            view.getTable().getColumnModel().addColumn(
-                    new TableColumn(index));
-
-            // Set column names
-            for (var v: model.getClassRecord().getColumns()) { 
-                int i = model.getClassRecord().findColumn(v);
-                view.getTable().getColumnModel().getColumn(i).setHeaderValue(v);
-            }
-            
-            for (Row r: model.getClassRecord().getClassList()) {
-                // Fill all cells inside column to be empty
-                r.getGrades().add(index, null);
-            }
+            model.addExamToTable();
             
             view.updateEditPanel(model.getSelectedRow(), model.getSelectedActivity(), model.getClassRecord().getRowAt(model.getSelectedRow()));
         });
@@ -310,6 +270,50 @@ public class Controller {
         
         public boolean isFormValid() {
             return validForm;
+        }
+    }
+    
+    // Listener for the confirmation button in AddStudentWindow
+    class AddActivityWindowListener implements ActionListener {
+
+        AddClassRecordWindow window;
+
+        public AddActivityWindowListener(AddClassRecordWindow window) {
+            this.window = window;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            String section = window.getSection();
+            String subject = window.getSubject();
+            String term = window.getTerm();
+            String schoolYear = window.getSY();
+            boolean validForm = true;
+
+            if (section.isBlank() || subject.isBlank() || schoolYear.isBlank()) {
+                JOptionPane.showMessageDialog(
+                    null,
+                    "Please provide the class section and subject.",
+                    "Invalid form",
+                    JOptionPane.WARNING_MESSAGE
+                );
+                validForm = false;
+            }
+
+            switch (term) {
+                case "1st Quarter":
+                    break;
+                case "2nd Quarter":
+                    break;
+                case "3rd Quarter":
+                    break;
+                case "4th Quarter":
+                    break;
+            }
+
+            if (validForm) {
+                // TODO: ADD CODE 
+            }
         }
     }
 }
@@ -383,54 +387,5 @@ class HeaderEditor
     public void showEditor(Component parent, int col, String currentValue)
     {
         System.out.println("header selected");
-    }
-}
-
-// Listener for the confirmation button in AddStudentWindow
-class AddActivityWindowListener implements ActionListener {
-    
-    AddActivityWindow window;
-    Model model;
-    
-    public AddActivityWindowListener(AddActivityWindow window, Model model) {
-        this.window = window;
-        this.model = model;
-    }
-    
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        String section = window.getSection();
-        String subject = window.getSubject();
-        String term = window.getTerm();
-        boolean validForm = true;
-        
-        if (section.isBlank() || subject.isBlank()) {
-            JOptionPane.showMessageDialog(
-                null,
-                "Please provide the class section and subject.",
-                "Invalid form",
-                JOptionPane.WARNING_MESSAGE
-            );
-            validForm = false;
-        }
-
-        switch (term) {
-            case "1st Quarter":
-                break;
-            case "2nd Quarter":
-                break;
-            case "3rd Quarter":
-                break;
-            case "4th Quarter":
-                break;
-        }
-        
-        if (validForm) {
-            /*
-            model.setActivitySection();
-            model.setActivitySubject();
-            model.setActivityTerm();
-            */
-        }
     }
 }
