@@ -12,9 +12,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.swing.SwingWorker;
 import javax.swing.table.AbstractTableModel;
-import javax.swing.table.TableColumn;
 
 /**
  * Database objects for reference:
@@ -155,19 +153,6 @@ public class Model {
     public Object getTableObjectAtCurrentSelection() {
         return getClassRecord().getValueAt(getSelectedRow(), getSelectedColumn());
     }
-    
-    public void addActivityToTable() {
-        /**
-         * 1. Get table headers
-         * 2. Get the index
-         * 3. Get the activity number
-         * 4. Insert new column
-        
-        for (String s: getTableHeaders()) {
-            if (s)
-        }
-        */
-    }
 
     /*
     public void setTableModel(AbstractTableModel data, List<String> columnNames) {
@@ -175,10 +160,6 @@ public class Model {
         this.columnNames = columnNames;
     }
     */
-    
-    private String[] getTableHeaders() {
-        return columnNames;
-    }
     
     public int getSelectedRow() {
         return selectedRow;
@@ -239,12 +220,15 @@ public class Model {
             
             Student s = new Student(id, firstName, lastName);
             
+            addStudentToClass(s.getStudentId(), getClassRecord().getClassId());
+            
             Row row = new Row(s, new ArrayList<Grade>());
 
             for (Grade g: getCurrentClassRecord().getClassList().getFirst().getGrades()) {
                 addEmptyGradeToDB(s.getStudentId(), g.getClassId(), g.getActivityId());
             }
 
+            System.out.println("studentId: " + s.getStudentId() + "\tclassId: " + getCurrentClassRecord().getClassId());
             row.setGrades(getGrades(s.getStudentId(), getCurrentClassRecord().getClassId()));
             
             System.out.println("Size: " + row.getGrades().size());
@@ -343,7 +327,8 @@ public class Model {
     }
     
     public void addSeatworkToTable(double totalScore) {
-        List<String> columns = getClassRecord().getColumns().stream()
+        List<String> columns;
+        columns = getClassRecord().getColumns().stream()
                 .filter(e -> e.contains("Seatwork")).collect(Collectors.toList());
         String newActivityName;
         int index;
@@ -514,12 +499,14 @@ public class Model {
         
         try {
             PreparedStatement ps = getConnection().prepareStatement("""
-                SELECT DISTINCT a.activity_type_id, a.activity_name
-                FROM grades g
-                JOIN activities a ON g.activity_id = a.activity_id
-                JOIN classes c ON g.class_id = c.class_id
-                WHERE c.section = ? AND c.subject = ? AND a.term = ?
-                ORDER BY a.activity_type_id, a.activity_name;                                               
+                SELECT DISTINCT a.activity_name, a.activity_type_id
+                FROM activities a
+                LEFT JOIN grades g ON g.activity_id = a.activity_id
+                JOIN classes c ON a.class_id = c.class_id
+                WHERE c.section = ?
+                  AND c.subject = ?
+                  AND a.term = ?
+                ORDER BY a.activity_type_id, a.activity_name;;                                          
             """);
             ps.setString(1, className);
             ps.setString(2, subjectName);
@@ -541,8 +528,9 @@ public class Model {
         
         try {
             PreparedStatement ps = getConnection().prepareStatement("""
-                SELECT *
+                SELECT g.student_id, s.first_name, s.last_name, g.grade_id, g.class_id, g.activity_id, g.grade, a.max_grade
                 FROM grades g
+                JOIN student_classes sc ON g.student_id = sc.student_id AND g.class_id = sc.class_id
                 JOIN students s ON g.student_id = s.student_id
                 JOIN activities a ON g.activity_id = a.activity_id
                 JOIN classes c ON g.class_id = c.class_id
@@ -736,7 +724,17 @@ public class Model {
         }
         return false; // Student does not exist
     }
-
+    
+    public void addStudentToClass(int studentId, int classId) throws SQLException {
+        String insertQuery = "INSERT INTO student_classes (student_id, class_id) VALUES (?, ?)";
+        try (PreparedStatement pstmt = getConnection().prepareStatement(insertQuery)) {
+            pstmt.setInt(1, studentId);
+            pstmt.setInt(2, classId);
+            pstmt.executeUpdate();
+            System.out.println("Student added to class successfully.");
+        }
+    }
+    
     public void addStudent(String firstName, String lastName) throws SQLException {
         if (!studentExists(firstName, lastName)) {
             String insertQuery = "INSERT INTO students (first_name, last_name) VALUES (?, ?)";
@@ -751,12 +749,31 @@ public class Model {
         }
     }
     
-    public void deleteStudent(Student student) throws SQLException {
-        String insertQuery = "DELETE FROM students WHERE student_id = ?";
+    public void removeStudentFromClass(int studentId, int classId) throws SQLException {
+        String insertQuery = "DELETE FROM student_classes WHERE student_id = ? AND class_id = ?";
         try (PreparedStatement pstmt = getConnection().prepareStatement(insertQuery)) {
-            pstmt.setInt(1, student.getStudentId());
+            pstmt.setInt(1, studentId);
+            pstmt.setInt(2, classId);
             pstmt.executeUpdate();
-            System.out.println("Student deleted successfully.");
+            System.out.println("Student deleted from class successfully.");
+        }
+    }
+    
+    public void deleteActivity(int activityId) throws SQLException {
+        String insertQuery = "DELETE FROM activities WHERE activity_id = ?";
+        try (PreparedStatement pstmt = getConnection().prepareStatement(insertQuery)) {
+            pstmt.setInt(1, activityId);
+            pstmt.executeUpdate();
+            System.out.println("Activity deleted successfully.");
+        }
+    }
+    
+    public void deleteGradeInDB(Grade grade) throws SQLException {
+        String insertQuery = "DELETE FROM grades WHERE grade_id = ?";
+        try (PreparedStatement pstmt = getConnection().prepareStatement(insertQuery)) {
+            pstmt.setInt(1, grade.getGradeId());
+            pstmt.executeUpdate();
+            System.out.println("Grade deleted successfully.");
         }
     }
     
@@ -826,7 +843,7 @@ public class Model {
                 } else {
                     throw new SQLException("Error: Student does not exist.");
                 }
-            }  
+            }
         } else {
             throw new SQLException("Error: Student does not exist.");
         }
@@ -858,10 +875,10 @@ public class Model {
     
     public List<Grade> getGrades(int studentId, int classId) {
         String query = 
-                "SELECT grade_id, student_id, class_id, g.activity_id, grade, max_grade " +
+                "SELECT g.grade_id, g.student_id, g.class_id, g.activity_id, grade, a.max_grade " +
                 "FROM grades g " + 
                 "JOIN activities a ON g.activity_id = a.activity_id " +
-                "WHERE student_id = ? AND class_id = ?;";
+                "WHERE g.student_id = ? AND g.class_id = ?;";
         
         List<Grade> gradeList = new ArrayList();
         Double grade;
@@ -979,10 +996,14 @@ class ClassRecord extends AbstractTableModel {
     }
     */
     
+    // Insert new column
     public void insertColumn(int index, String value) {
-        // Insert new column
         getColumns().add(index+1, value);
-
+        fireTableStructureChanged();
+    }
+    
+     public void deleteColumn(int index) {
+        getColumns().remove(index);
         fireTableStructureChanged();
     }
     

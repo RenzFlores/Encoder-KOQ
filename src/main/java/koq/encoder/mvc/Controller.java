@@ -9,6 +9,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JMenuItem;
@@ -162,20 +164,77 @@ public class Controller {
         
         // Remove from Table button clicked event
         ( (JButton) view.getComponent(Actions.REMOVEFROMTABLE.name()) ).addActionListener((ActionEvent ev) -> {
-            int response = JOptionPane.showConfirmDialog(
-                null,
-                "This action cannot be undone, are you sure?",
-                "Confirmation",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.QUESTION_MESSAGE
-            );
+            int response = -1;
+            boolean deleteStudent = false;
             
-            if (response == JOptionPane.YES_OPTION) {
-                System.out.println("User chose Yes.");
-                // HANDLE EVENT HERE
-            } else {
-                System.out.println("User closed the dialog without making a choice.");
-                // HANDLE EVENT HERE
+            // Check if only row selection is allowed
+            if (table.getRowSelectionAllowed() && !table.getColumnSelectionAllowed()) {
+                response = JOptionPane.showConfirmDialog(
+                    null,
+                    model.getClassRecord().getClassList().get(table.getSelectedRow()).getStudent().getStudentName() + 
+                        " will be deleted from this class record and all their recorded grades.\n" + 
+                        "This action cannot be undone, confirm?",
+                    "Warning",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE
+                );
+                deleteStudent = true;
+            }
+
+            // Check if only column selection is allowed
+            if (!table.getRowSelectionAllowed() && table.getColumnSelectionAllowed()) {
+                if (table.getSelectedColumn() > 1) {
+                    response = JOptionPane.showConfirmDialog(
+                        null,
+                        model.getClassRecord().getColumnName(table.getSelectedColumn()) + 
+                            " will be deleted from this class record and all recorded grades in this activity.\n" + 
+                            "This action cannot be undone, confirm?",
+                        "Warning",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.WARNING_MESSAGE
+                    );
+                    deleteStudent = false;
+                }
+            }
+            
+            // Delete student
+            if (response == JOptionPane.YES_OPTION && deleteStudent) {
+                try {
+                    System.out.println("Deleting student...");
+                    Row row = model.getClassRecord().getClassList().get(table.getSelectedRow());
+                    model.removeStudentFromClass(row.getStudent().getStudentId(), model.getClassRecord().getClassId());
+                    for (Grade g: row.getGrades()) {
+                        model.deleteGradeInDB(g);
+                    }
+                    model.getClassRecord().getClassList().remove(row);
+                    model.getClassRecord().fireTableRowsDeleted(table.getSelectedRow(), table.getSelectedRow());
+                } catch (SQLException e) {}
+                
+            } 
+            // Delete activity
+            else if (response == JOptionPane.YES_OPTION && !deleteStudent) {
+                try {
+                    int activityId = model.getClassRecord().getClassList().get(0).getGrades().get(table.getSelectedColumn()-2).getActivityId();
+                    
+                    // List to hold the grades to delete
+                    ArrayList<Grade> gradesToRemove = new ArrayList<>();
+                    
+                    for (Row r: model.getClassRecord().getClassList())  {
+                        Grade g = r.getGrades().get(table.getSelectedColumn()-2);
+                        model.deleteGradeInDB(g);
+                        gradesToRemove.add(g);      // Collect grade for removal after iteration
+                    }
+                    
+                    // Now remove the grades from each row after collecting them
+                    for (Row r : model.getClassRecord().getClassList()) {
+                        r.getGrades().removeAll(gradesToRemove); // Safely remove all grades at once
+                    }
+                    model.deleteActivity(activityId);
+                    
+                    // Remove column from table
+                    model.getClassRecord().deleteColumn(table.getSelectedColumn());
+                    
+                } catch (SQLException e) {}
             }
         });
         
@@ -192,16 +251,6 @@ public class Controller {
                     
                     studentWindow.getButton().addActionListener(new AddStudentWindowListener(studentWindow));
                 } else if (source.getText().equals("Activity")) {
-                    /**
-                     * TODO: REFACTOR MO TO, WAG BOBO
-                     * 
-                     * 1. Create addActivityWindow that receives input (Activity type, Max grade) (Done)
-                     * 2. Create new column based on activity type (Done)
-                     * 3. Create new activity based on max_grade (and insert to db)
-                     * 4. Fill empty cells (Done)
-                     * 
-                     */
-                    
                     activityWindow.setVisible(true);
                     activityWindow.getButton().addActionListener(new AddActivityWindowListener(activityWindow));
                 }
