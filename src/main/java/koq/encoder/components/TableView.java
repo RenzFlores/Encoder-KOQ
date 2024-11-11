@@ -51,6 +51,6 @@ public class TableView extends JTabbedPane {
 
         // Add scrollpane to tabel
         tab.add(viewport);
-        addTab("Class 1A", tab);
+        addTab("11 - Newton", tab);
     }
 }

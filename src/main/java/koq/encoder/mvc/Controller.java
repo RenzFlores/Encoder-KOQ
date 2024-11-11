@@ -9,8 +9,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.List;
-import java.util.stream.Collectors;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JMenuItem;
@@ -18,9 +16,15 @@ import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
+import javax.swing.border.LineBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.JTableHeader;
-import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
+import koq.encoder.components.AddActivityWindow;
 import koq.encoder.mvc.Model.Actions;
 import koq.encoder.mvc.Model.Fields;
 
@@ -39,11 +43,14 @@ public class Controller {
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setModel(model.getClassRecord());
         table.setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
+        view.resizeTableHeaders();
         view.updateEditPanel(model.getSelectedRow(), model.getSelectedActivity(), model.getClassRecord().getRowAt(model.getSelectedRow()));
         
         // New Table event
         ( (JMenuItem) view.getComponent(Actions.NEWTABLE.name()) ).addActionListener((ActionEvent ev) -> {
-            System.out.println("new table event");
+            AddClassRecordWindow window = new AddClassRecordWindow();
+            window.setVisible(true);
+            window.setLocationRelativeTo(null);
         });
         
         // Open File event
@@ -51,10 +58,9 @@ public class Controller {
             System.out.println("open file event");
         });
         
-        // Export File event
-        ( (JMenuItem) view.getComponent(Actions.EXPORTFILE.name()) ).addActionListener((ActionEvent ev) -> {
-            System.out.println("export file event");
-        });
+        /** Export File event (UNUSED)
+        ( (JMenuItem) view.getComponent(Actions.EXPORTFILE.name()) ).addActionListener((ActionEvent ev) -> {});
+        */
         
         // Exit event
         ( (JMenuItem) view.getComponent(Actions.EXIT.name()) ).addActionListener((ActionEvent ev) -> {
@@ -91,19 +97,37 @@ public class Controller {
             String value = ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).getText();
            
             Grade grade = model.getClassRecord().getRowAt(row).getGrades().get(col);
-            if (grade == null) {
-                // TODO: Create new Grade instance
-                System.out.println("TODO: Create a new Grade instance here");
-                // model.getClassRecord().getRowAt(row).getGrades().get(col) = new Grade(1, 1, 1, );
-            } else if (value.isBlank()) {
+            // Empty field will set grade value to null
+            if (value.isBlank()) {
                 grade.setGrade(null);
-            } else {
-                grade.setGrade(Double.parseDouble(value));
+            } 
+            // Input exceeds range and will feedback an error
+            else if (Double.parseDouble(value) > grade.getMaxGrade() || Double.parseDouble(value) < 0) {
+                // Set border color to Red
+                ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).setBorder(new LineBorder(java.awt.Color.RED, 1));
+                System.out.println("Error: Input must be between 0 and " + grade.getMaxGrade());
+            } 
+            else {
+                // Input accepted
+                try {
+                    // Clear border color
+                    ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).setBorder(null);
+                    grade.setGrade(Double.parseDouble(value));
+                } 
+                // An input of only '.' will result in an exception, relay an error if this happens
+                catch (java.lang.NumberFormatException e) {
+                    // Set border color to Red
+                    ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).setBorder(new LineBorder(java.awt.Color.RED, 1));
+                    System.out.println("Error: Invalid input");
+                }
             }
             
-            // BUG: MUST CREATE INSTANCE FIRST IF CELL IS NULL
-            view.getTable().getModel().setValueAt(model.getClassRecord().getValueAt(row, col+1), row, col+1);
+            // Update the table in view
+            model.getClassRecord().fireTableRowsUpdated(row, row);
         });
+        
+        // Custom DocumentListener for numeric input
+        ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).getDocument().addDocumentListener(new NumericDocumentListener());
         
         table.getSelectionModel().addListSelectionListener(event -> {
             // Check if the event is adjusting (to avoid double calls during selection changes)
@@ -154,7 +178,7 @@ public class Controller {
         ActionListener menuListener = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                AddClassRecordWindow activityWindow = new AddClassRecordWindow();
+                AddActivityWindow activityWindow = new AddActivityWindow();
                 AddStudentWindow studentWindow = new AddStudentWindow();
                 JMenuItem source = (JMenuItem) e.getSource();
                 
@@ -162,7 +186,7 @@ public class Controller {
                     studentWindow.setVisible(true);
                     
                     studentWindow.getButton().addActionListener(new AddStudentWindowListener(studentWindow));
-                } else if (source.getText().equals("Seatwork")) {
+                } else if (source.getText().equals("Activity")) {
                     /**
                      * TODO: REFACTOR MO TO, WAG BOBO
                      * 
@@ -173,20 +197,17 @@ public class Controller {
                      * 
                      */
                     
-                    /*
                     activityWindow.setVisible(true);
-                    
                     activityWindow.getButton().addActionListener(new AddActivityWindowListener(activityWindow));
-                    */
-                } else if (source.getText().equals("Assignment")) {
-                    
-                } else if (source.getText().equals("Performance Task")) {
-                    
-                } else if (source.getText().equals("Quiz")) {
-                    
-                } else if (source.getText().equals("Exam")) {
-                    
                 }
+            }
+        };
+        
+        // ActionListener for "Add New Class Record" Window
+        ActionListener addClassRecordWindowListener = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                
             }
         };
         
@@ -194,27 +215,6 @@ public class Controller {
         ( (JMenuItem) view.getComponent(Actions.ADDSTUDENT.name()) ).addActionListener(menuListener);
         // Add Activity event
         ( (JMenuItem) view.getComponent(Actions.ADDACTIVITY.name()) ).addActionListener(menuListener);
-        // Add Assignment event
-        ( (JMenuItem) view.getComponent(Actions.ADDASSIGNMENT.name()) ).addActionListener(menuListener);
-        // Add Performance Task event
-        ( (JMenuItem) view.getComponent(Actions.ADDPT.name()) ).addActionListener((ActionEvent ev) -> {
-            model.addPTToTable();
-            view.updateEditPanel(model.getSelectedRow(), model.getSelectedActivity(), model.getClassRecord().getRowAt(model.getSelectedRow()));
-        });
-        
-        // Add Quiz event
-        ( (JMenuItem) view.getComponent(Actions.ADDQUIZ.name()) ).addActionListener((ActionEvent ev) -> {
-            model.addQuizToTable();
-
-            view.updateEditPanel(model.getSelectedRow(), model.getSelectedActivity(), model.getClassRecord().getRowAt(model.getSelectedRow()));
-        });
-        
-        // Add Exam event
-        ( (JMenuItem) view.getComponent(Actions.ADDEXAM.name()) ).addActionListener((ActionEvent ev) -> {
-            model.addExamToTable();
-            
-            view.updateEditPanel(model.getSelectedRow(), model.getSelectedActivity(), model.getClassRecord().getRowAt(model.getSelectedRow()));
-        });
         
         // Action to move selected row up
         ( (JButton) view.getComponent( Actions.MOVEROWUP.name() ) ).addActionListener((ActionEvent e) -> {
@@ -234,6 +234,44 @@ public class Controller {
             }
         });
         
+    }
+    
+    class NumericDocumentListener implements DocumentListener {
+        @Override
+        public void insertUpdate(DocumentEvent e) {
+            filterInput(e);
+        }
+
+        @Override
+        public void removeUpdate(DocumentEvent e) {
+            // No need to filter on remove
+        }
+
+        @Override
+        public void changedUpdate(DocumentEvent e) {
+            // Not needed for plain text components
+        }
+
+        private void filterInput(DocumentEvent e) {
+            Document doc = e.getDocument();
+            try {
+                String text = doc.getText(0, doc.getLength());
+
+                // Check if input is numeric with at most one decimal point
+                if (!text.matches("\\d*\\.?\\d*")) {
+                    SwingUtilities.invokeLater(() -> {
+                        try {
+                            // Remove last entered character if it’s invalid
+                            doc.remove(e.getOffset(), e.getLength());
+                        } catch (BadLocationException ex) {
+                            ex.printStackTrace();
+                        }
+                    });
+                }
+            } catch (BadLocationException ex) {
+                ex.printStackTrace();
+            }
+        }
     }
     
     // Listener for the confirmation button in AddStudentWindow
@@ -265,6 +303,7 @@ public class Controller {
 
             if (validForm) {
                 model.addStudentToClassRecord(firstName, lastName);
+                window.dispose();
             }
         }
         
@@ -276,9 +315,57 @@ public class Controller {
     // Listener for the confirmation button in AddStudentWindow
     class AddActivityWindowListener implements ActionListener {
 
+        AddActivityWindow window;
+
+        public AddActivityWindowListener(AddActivityWindow window) {
+            this.window = window;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            String activityType = window.getActivityType();
+            String totalScore = window.getTotalScore();
+            boolean validForm = true;
+
+            if (totalScore.isBlank()) {
+                JOptionPane.showMessageDialog(
+                    null,
+                    "Please provide the total score.",
+                    "Invalid form",
+                    JOptionPane.WARNING_MESSAGE
+                );
+                validForm = false;
+            }
+
+            if (validForm) {
+                switch(activityType) {
+                    case "Seatwork":
+                        model.addSeatworkToTable();
+                        break;
+                    case "Homework":
+                        model.addHWToTable();
+                        break;
+                    case "Performance Task":
+                        model.addPTToTable();
+                        break;
+                    case "Quiz":
+                        model.addQuizToTable();
+                        break;
+                    case "Exam":
+                        model.addExamToTable();
+                        break;
+                }
+                window.dispose();
+            }
+        }
+    }
+    
+    // Listener for the confirmation button in AddStudentWindow
+    class AddClassRecordWindowListener implements ActionListener {
+
         AddClassRecordWindow window;
 
-        public AddActivityWindowListener(AddClassRecordWindow window) {
+        public AddClassRecordWindowListener(AddClassRecordWindow window) {
             this.window = window;
         }
 

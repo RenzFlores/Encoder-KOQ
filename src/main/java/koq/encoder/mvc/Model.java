@@ -119,7 +119,8 @@ public class Model {
         
         List<Row> rows = getClassRecordInDB("A", "Mathematics 10", 1);
         List<String> cols = getActivityNamesInClassRecord("A", "Mathematics 10", 1);
-        cols.add(0, "Student name");
+        cols.add(0, "#");
+        cols.add(1, "Student name");
         
         record = new ClassRecord("A", "Mathematics 10", 1, rows, cols);
         
@@ -681,6 +682,15 @@ public class Model {
         }
     }
     
+    public void deleteStudent(Student student) throws SQLException {
+        String insertQuery = "DELETE FROM students WHERE student_id = ?";
+        try (PreparedStatement pstmt = getConnection().prepareStatement(insertQuery)) {
+            pstmt.setInt(1, student.getStudentId());
+            pstmt.executeUpdate();
+            System.out.println("Student deleted successfully.");
+        }
+    }
+    
     public Grade getGradeById(int id) {
         String query = 
                 "SELECT grade_id, student_id, class_id, g.activity_id, grade, max_grade" + 
@@ -902,10 +912,12 @@ class ClassRecord extends AbstractTableModel {
     public void insertColumn(int index, String value) {
         // Insert new column
         getColumns().add(index+1, value);
+        
+        System.out.println("index: " + index);
 
         for (Row r: getClassList()) {
             // Fill all cells inside column to be empty
-            r.getGrades().add(index, null);
+            r.getGrades().add(index-1, null);
         }
         
         fireTableStructureChanged();
@@ -973,12 +985,14 @@ class ClassRecord extends AbstractTableModel {
         int colModulo = col % (columnNames.size());
         
         if (colModulo == 0) {
-            return r.getStudent().getStudentName();
+            return classList.indexOf(r)+1;
+        } else if (colModulo == 1) {
+            return r.getStudent().getStudentNameFormatted();
         } else {
-            if (r.getGrades().get(colModulo-1) == null) {
+            if (r.getGrades().get(colModulo-2) == null) {
                 return null;
             }
-            return r.getGrades().get(colModulo-1).getGrade();
+            return r.getGrades().get(colModulo-2).getGrade();
         }
     }
 
@@ -993,11 +1007,11 @@ class ClassRecord extends AbstractTableModel {
         
         int colModulo = col % (columnNames.size());
                 
-        if (colModulo != 0) {
+        if (colModulo > 1) {
             if (value == null) {
                 obj.setGradesAt(colModulo-1, null);
             } else {
-                obj.setGradesAt(colModulo-1, (Double) value);
+                obj.setGradesAt(colModulo-1, Double.parseDouble( (String) value ));
             }
         }
         

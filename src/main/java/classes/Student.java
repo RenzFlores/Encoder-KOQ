@@ -31,4 +31,7 @@ public class Student {
     public String getStudentName() { 
         return firstName + " " + lastName;
     }
+    public String getStudentNameFormatted() { 
+        return lastName + ", " + firstName;
+    }
 }

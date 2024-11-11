@@ -223,17 +223,21 @@ public class View {
         return editorWindow;
     }
     
+        
+    public void resizeTableHeaders() {
+        getTable().getColumnModel().getColumn(0).setMaxWidth(20);
+        getTable().getColumnModel().getColumn(1).setMinWidth(100);
+        System.out.println("width set");
+    }
+    
     /**
      * Set editor panel values
      */
     public void updateEditPanel(int selectedRowIndex, int selectedActivity, Row selectedRow) {
         
         setStudentNameInEditor(
-            getTableValueAt(selectedRowIndex, 0)
+            getTableValueAt(selectedRowIndex, 1)
         );
-        
-        System.out.println();
-        System.out.println(getTableValueAt(selectedRowIndex, 0));
         
         // TODO: Change index to conform with multiple tabs
         setStudentClassInEditor((String) ((EditorWindow) getEditorWindow()).getTabNameAt(0));
@@ -244,7 +248,7 @@ public class View {
         JComboBox selectActivity = getOutputNumberComboBox();
         DefaultComboBoxModel comboModel = new DefaultComboBoxModel();
         // Populate the combo box
-        for (int i = 1; i < getTable().getModel().getColumnCount(); i++) {
+        for (int i = 2; i < getTable().getModel().getColumnCount(); i++) {
             comboModel.addElement(getTable().getModel().getColumnName(i));
         }
         selectActivity.setModel(comboModel);
@@ -253,9 +257,12 @@ public class View {
         setOutputNumberInEditor(selectedActivity);
         
         // Update grade text field with the value of current selection
-        setGradeFieldValue(
-            getTableValueAt(selectedRowIndex, selectActivity.getSelectedIndex()+1)
-        );
+        String value = getTableValueAt(selectedRowIndex, selectActivity.getSelectedIndex()+2);
+        if (value.equals("null")) {
+            setGradeFieldValue("");
+        } else {
+            setGradeFieldValue(value);
+        }
         
         // Update the value of max grade with the value of current selected activity
         String s;
@@ -300,7 +307,7 @@ class MenuBar extends JMenuBar {
         
         menuFile.add(menuNewTable);
         menuFile.add(menuOpenFile);       
-        menuFile.add(menuExportFile);
+        //menuFile.add(menuExportFile);         UNUSED
         menuFile.add(menuExit);
         
         // Instantiate the second menu options(View) and its items
@@ -359,10 +366,12 @@ class AddContextMenu extends JPopupMenu {
         // Add components
         add(addStudent);
         add(addActivity);
+        /*
         add(addAssignment);
         add(addPT);
         add(addQuiz);
         add(addExam);
+        */
     }
 }
 
