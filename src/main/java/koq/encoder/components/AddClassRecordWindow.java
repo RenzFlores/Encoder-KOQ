@@ -123,6 +123,10 @@ public class AddClassRecordWindow extends JFrame {
         setLocationRelativeTo(null);
     }
     
+    public String getGradeLevel() {
+        return (String) jComboBox2.getSelectedItem();
+    }
+    
     public JButton getButton() {
         return jButton2;
     }
@@ -132,7 +136,7 @@ public class AddClassRecordWindow extends JFrame {
     }
     
     public String getSubject() {
-        return jTextField3.getText();
+        return (String) jComboBox3.getSelectedItem();
     }
     
     public String getTerm() {

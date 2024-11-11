@@ -12,7 +12,6 @@ koq\encoder\components\TableView.class
 koq\encoder\mvc\Model$Actions.class
 koq\encoder\mvc\Row.class
 classes\Activity.class
-koq\encoder\mvc\Controller$NumericDocumentListener.class
 classes\Grade.class
 koq\encoder\mvc\Controller$2.class
 koq\encoder\mvc\Controller$AddStudentWindowListener.class
@@ -20,8 +19,10 @@ koq\encoder\mvc\HeaderSelector.class
 classes\Student.class
 koq\encoder\mvc\Main.class
 koq\encoder\mvc\ClassRecord.class
+koq\encoder\mvc\RemoveContextMenu.class
 koq\encoder\mvc\Model.class
 koq\encoder\mvc\RowSelector.class
+koq\encoder\components\NumericDocumentListener.class
 koq\encoder\components\AddActivityWindow.class
 koq\encoder\mvc\Controller$1.class
 koq\encoder\components\FilterPanel.class

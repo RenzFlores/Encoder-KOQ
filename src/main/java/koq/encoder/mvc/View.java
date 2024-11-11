@@ -375,6 +375,40 @@ class AddContextMenu extends JPopupMenu {
     }
 }
 
+class RemoveContextMenu extends JPopupMenu {
+    public RemoveContextMenu() {
+        //setName(Actions.ADDMENUCLICKED.name());
+        
+        JMenuItem addStudent = new JMenuItem("Student");
+        addStudent.setName(Actions.ADDSTUDENT.name());
+        
+        JMenuItem addActivity = new JMenuItem("Activity");
+        addActivity.setName(Actions.ADDACTIVITY.name());
+        
+        JMenuItem addAssignment = new JMenuItem("Assignment");
+        addAssignment.setName(Actions.ADDASSIGNMENT.name());
+        
+        JMenuItem addPT = new JMenuItem("Performance Task");
+        addPT.setName(Actions.ADDPT.name());
+        
+        JMenuItem addQuiz = new JMenuItem("Quiz");
+        addQuiz.setName(Actions.ADDQUIZ.name());
+        
+        JMenuItem addExam = new JMenuItem("Exam");
+        addExam.setName(Actions.ADDEXAM.name());
+        
+        // Add components
+        add(addStudent);
+        add(addActivity);
+        /*
+        add(addAssignment);
+        add(addPT);
+        add(addQuiz);
+        add(addExam);
+        */
+    }
+}
+
 class Toolbar extends JPanel {
     
     JPanel containerPanel;

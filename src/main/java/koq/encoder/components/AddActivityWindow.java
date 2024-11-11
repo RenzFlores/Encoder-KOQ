@@ -37,6 +37,8 @@ public class AddActivityWindow extends JFrame {
         totalScoreField = new JTextField();
         totalScoreField.setPreferredSize(new java.awt.Dimension(100, 22));
 
+        totalScoreField.getDocument().addDocumentListener(new NumericDocumentListener());
+        
         confirmButton = new JButton("OK");
         
         add(contextLabel);
@@ -45,7 +47,7 @@ public class AddActivityWindow extends JFrame {
         add(totalScoreLabel);
         add(totalScoreField);
         add(confirmButton);
-                
+        
         setSize(250, 150);
         setLocationRelativeTo(null);
     }

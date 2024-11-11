@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.swing.SwingWorker;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.TableColumn;
 
@@ -122,7 +123,7 @@ public class Model {
         cols.add(0, "#");
         cols.add(1, "Student name");
         
-        record = new ClassRecord("A", "Mathematics 10", 1, rows, cols);
+        record = new ClassRecord("A", "Mathematics 10", 1, "2024-2025", rows, cols);
         
         currentClassRecord = record;
         
@@ -234,14 +235,14 @@ public class Model {
         try {
             addStudent(firstName, lastName);
             
-            int id = getStudentId(firstName, lastName);
+            int id = getStudentIdInDB(firstName, lastName);
             
             Student s = new Student(id, firstName, lastName);
             
             Row row = new Row(s, new ArrayList<Grade>());
 
             for (Grade g: getCurrentClassRecord().getClassList().getFirst().getGrades()) {
-                addEmptyGrade(s.getStudentId(), g.getClassId(), g.getActivityId());
+                addEmptyGradeToDB(s.getStudentId(), g.getClassId(), g.getActivityId());
             }
 
             row.setGrades(getGrades(s.getStudentId(), getCurrentClassRecord().getClassId()));
@@ -257,7 +258,91 @@ public class Model {
         } catch (SQLException err) {}
     }
     
-    public void addSeatworkToTable() {
+    public void addNewActivity(int index, String name, Double totalScore, int activityTypeId) {
+        int activityId;
+        int gradeId;
+        
+        try {
+            addActivityToDB(getClassRecord().getClassId(), name, totalScore, activityTypeId, getClassRecord().getTerm());
+            activityId = getActivityIdInDB(
+                getClassRecord().getClassId(),
+                name,
+                getClassRecord().getTerm(),
+                getClassRecord().getSY()
+            );
+            System.out.println("New activity added to DB");
+            
+            getClassRecord().insertColumn(index+1, name);
+            
+            for (Row r: getClassRecord().getClassList()) {
+                addEmptyGradeToDB(
+                    r.getStudent().getStudentId(),
+                    r.getGrades().get(0).getClassId(),
+                    activityId
+                );
+                
+                gradeId = getGradeIdInDB(
+                    r.getStudent().getStudentId(),
+                    r.getGrades().get(0).getClassId(),
+                    activityId
+                );
+                
+                Grade grade = new Grade(
+                    r.getStudent().getStudentId(),      // student_id
+                    r.getGrades().get(0).getClassId(),  // class_id
+                    activityId,                         // activity_id
+                    null,                               // grade
+                    totalScore                          // max_grade
+                );
+                // Fill all cells inside column to be empty
+                r.getGrades().add(index, grade);
+            }
+        } catch (SQLException e) {}            
+    }
+    
+    public int getActivityIdInDB(int classId, String name, int term, String schoolYear) throws SQLException {
+        String insertQuery = 
+            "SELECT activity_id " +
+            "FROM activities a " +
+            "JOIN classes c ON c.class_id = a.class_id " +
+            "WHERE a.class_id = ? AND a.activity_name = ? AND a.term = ? AND c.academic_year = ?;";
+            
+        System.out.println("classId: " + classId + ", " + "name: " + name + ", " + "term: " + term + ", " + "schoolYear: " + schoolYear);
+        
+        try (PreparedStatement pstmt = getConnection().prepareStatement(insertQuery)) {
+            pstmt.setInt(1, classId);
+            pstmt.setString(2, name);
+            pstmt.setInt(3, term);
+            pstmt.setString(4, schoolYear);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("activity_id");
+            } else {
+                throw new SQLException("Error: Activity does not exist.");
+            }
+        }
+    }
+    
+    public int getGradeIdInDB(int studentId, int classId, int activityId) throws SQLException {
+        String insertQuery = 
+            "SELECT grade_id " +
+            "FROM grades g " +
+            "WHERE g.student_id = ? AND g.class_id = ? AND g.activity_id = ?;";
+        
+        try (PreparedStatement pstmt = getConnection().prepareStatement(insertQuery)) {
+            pstmt.setInt(1, studentId);
+            pstmt.setInt(2, classId);
+            pstmt.setInt(3, activityId);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("grade_id");
+            } else {
+                throw new SQLException("Error: Grade does not exist.");
+            }
+        }
+    }
+    
+    public void addSeatworkToTable(double totalScore) {
         List<String> columns = getClassRecord().getColumns().stream()
                 .filter(e -> e.contains("Seatwork")).collect(Collectors.toList());
         String newActivityName;
@@ -266,23 +351,19 @@ public class Model {
         if (!columns.isEmpty()) {
             String[] s = columns.getLast().split(" ");
             newActivityName = s[0] + " " + (Integer.parseInt(s[s.length-1])+1);
-            index = getClassRecord().findColumn(columns.getLast());
         } else {
             newActivityName = "Seatwork 1";
             columns = getClassRecord().getColumns().stream()
                 .filter(e -> e.contains("Student name")).collect(Collectors.toList());
-            index = getClassRecord().findColumn(columns.getLast());
         }
 
         // Get index
         index = getClassRecord().findColumn(columns.getLast());
         
-        getClassRecord().insertColumn(index, newActivityName);
-        
-        getClassRecord().fireTableStructureChanged();
+        addNewActivity(index-1, newActivityName, totalScore, 1);
     }
     
-    public void addHWToTable() {
+    public void addHWToTable(double totalScore) {
         List<String> columns = getClassRecord().getColumns().stream()
                 .filter(e -> e.contains("Assignment")).collect(Collectors.toList());
         String newActivityName;
@@ -291,23 +372,19 @@ public class Model {
         if (!columns.isEmpty()) {
             String[] s = columns.getLast().split(" ");
             newActivityName = s[0] + " " + (Integer.parseInt(s[s.length-1])+1);
-            index = getClassRecord().findColumn(columns.getLast());
         } else {
             newActivityName = "Assignment 1";
             columns = getClassRecord().getColumns().stream()
                 .filter(e -> e.contains("Seatwork")).collect(Collectors.toList());
-            index = getClassRecord().findColumn(columns.getLast());
         }
 
         // Get index
         index = getClassRecord().findColumn(columns.getLast());
         
-        getClassRecord().insertColumn(index, newActivityName);
-        
-        getClassRecord().fireTableStructureChanged();
+        addNewActivity(index-1, newActivityName, totalScore, 2);
     }
     
-    public void addPTToTable() {
+    public void addPTToTable(double totalScore) {
         List<String> columns = getClassRecord().getColumns().stream()
                 .filter(e -> e.contains("Performance Task")).collect(Collectors.toList());
         String newActivityName;
@@ -316,23 +393,19 @@ public class Model {
         if (!columns.isEmpty()) {
             String[] s = columns.getLast().split(" ");
             newActivityName = s[0] + " " + s[1] + " " + (Integer.parseInt(s[s.length-1])+1);
-            index = getClassRecord().findColumn(columns.getLast());
         } else {
             newActivityName = "Performance Task 1";
             columns = getClassRecord().getColumns().stream()
                 .filter(e -> e.contains("Assignment")).collect(Collectors.toList());
-            index = getClassRecord().findColumn(columns.getLast());
         }
 
         // Get index
         index = getClassRecord().findColumn(columns.getLast());
         
-        getClassRecord().insertColumn(index, newActivityName);
-        
-        getClassRecord().fireTableStructureChanged();
+        addNewActivity(index-1, newActivityName, totalScore, 3);
     }
     
-    public void addQuizToTable() {
+    public void addQuizToTable(double totalScore) {
         List<String> columns = getClassRecord().getColumns().stream()
                 .filter(e -> e.contains("Quiz")).collect(Collectors.toList());
         String newActivityName;
@@ -341,23 +414,19 @@ public class Model {
         if (!columns.isEmpty()) {
             String[] s = columns.getLast().split(" ");
             newActivityName = s[0] + " " + (Integer.parseInt(s[s.length-1])+1);
-            index = getClassRecord().findColumn(columns.getLast());
         } else {
             newActivityName = "Quiz 1";
             columns = getClassRecord().getColumns().stream()
                 .filter(e -> e.contains("Performance Task")).collect(Collectors.toList());
-            index = getClassRecord().findColumn(columns.getLast());
         }
 
         // Get index
         index = getClassRecord().findColumn(columns.getLast());
         
-        getClassRecord().insertColumn(index, newActivityName);
-        
-        getClassRecord().fireTableStructureChanged();
+        addNewActivity(index-1, newActivityName, totalScore, 4);
     }
     
-    public void addExamToTable() {
+    public void addExamToTable(double totalScore) {
         List<String> columns = getClassRecord().getColumns().stream()
                 .filter(e -> e.contains("Exam")).collect(Collectors.toList());
         String newActivityName;
@@ -372,8 +441,8 @@ public class Model {
 
         // Get index
         index = getClassRecord().findColumn(columns.getLast());
-        
-        getClassRecord().insertColumn(index, newActivityName);
+
+        addNewActivity(index-1, newActivityName, totalScore, 5);
     }
     
     // Connect to a database
@@ -691,6 +760,19 @@ public class Model {
         }
     }
     
+    public void addActivityToDB(int classId, String activity_name, double maxGrade, int activityTypeId, int term) {
+        String insertQuery = "INSERT INTO activities (class_id, activity_name, max_grade, activity_type_id, term) " +
+                             "VALUES (?, ?, ?, ?, ?);";
+        try (PreparedStatement pstmt = getConnection().prepareStatement(insertQuery)) {
+                pstmt.setInt(1, classId);
+                pstmt.setString(2, activity_name);
+                pstmt.setDouble(3, maxGrade);
+                pstmt.setInt(4, activityTypeId);
+                pstmt.setInt(5, term);
+                pstmt.executeUpdate();
+        } catch (SQLException e) {}
+    }
+    
     public Grade getGradeById(int id) {
         String query = 
                 "SELECT grade_id, student_id, class_id, g.activity_id, grade, max_grade" + 
@@ -732,7 +814,7 @@ public class Model {
         return id;
     }
     
-    public int getStudentId(String firstName, String lastName) throws SQLException {
+    public int getStudentIdInDB(String firstName, String lastName) throws SQLException {
         if (studentExists(firstName, lastName)) {
             String insertQuery = "SELECT student_id FROM students s WHERE s.first_name = ? AND s.last_name = ?";
             try (PreparedStatement pstmt = getConnection().prepareStatement(insertQuery)) {
@@ -750,7 +832,7 @@ public class Model {
         }
     }
     
-    private void addGrade(int studentId, int classId, int activity_id, Double grade) {
+    private void addGradeToDB(int studentId, int classId, int activity_id, Double grade) {
         String insertQuery = "INSERT INTO grades (student_id, class_id, activity_id, grade) VALUES (?, ?, ?, ?)";
         try (PreparedStatement pstmt = getConnection().prepareStatement(insertQuery)) {
             pstmt.setInt(1, studentId);
@@ -763,13 +845,12 @@ public class Model {
         } catch (SQLException e) {}
     }
     
-    public void addEmptyGrade(int studentId, int classId, int activity_id) {
+    public void addEmptyGradeToDB(int studentId, int classId, int activity_id) {
         String insertQuery = "INSERT INTO grades (student_id, class_id, activity_id) VALUES (?, ?, ?)";
         try (PreparedStatement pstmt = getConnection().prepareStatement(insertQuery)) {
             pstmt.setInt(1, studentId);
             pstmt.setInt(2, classId);
             pstmt.setInt(3, activity_id);
-            
             pstmt.executeUpdate();
             System.out.println("Empty grade added successfully.");
         } catch (SQLException e) {}
@@ -800,34 +881,18 @@ public class Model {
                 }
                 
                 gradeList.add(new Grade(
-                        rs.getInt("grade_id"), 
-                        rs.getInt("student_id"), 
-                        rs.getInt("class_id"), 
-                        rs.getInt("activity_id"), 
-                        grade,
-                        Double.parseDouble(rs.getString("max_grade"))
+                    rs.getInt("grade_id"), 
+                    rs.getInt("student_id"), 
+                    rs.getInt("class_id"), 
+                    rs.getInt("activity_id"), 
+                    grade,
+                    Double.parseDouble(rs.getString("max_grade"))
                 ));
             }
         } catch (SQLException e) {}
         
         System.out.println("GradeList size: " + gradeList.size());
         return gradeList;
-    }
-    
-    private ClassRecord getClassRecordDetailsInDB() {
-        ClassRecord record = new ClassRecord();
-        
-        List<Row> rowList = new ArrayList<>();
-
-        
-        try {
-            Statement s = getConnection().createStatement();
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return record;
     }
 }
 
@@ -892,34 +957,32 @@ class ClassRecord extends AbstractTableModel {
     private String section;
     private String subject;
     private Integer term;
+    private String schoolYear;
 
-    public ClassRecord(String section, String subject, int term, List<Row> classList, List<String> columnNames) {
+    public ClassRecord(String section, String subject, int term, String schoolYear, List<Row> classList, List<String> columnNames) {
         this.section = section;
         this.subject = subject;
         this.term = term;
+        this.schoolYear = schoolYear;
         this.classList = classList;
         this.columnNames = columnNames;
     }
     
+    /* UNUSED CODE
     public ClassRecord() {
         this.section = "";
         this.subject = "";
         this.term = null;
+        this.schoolYear = "";
         classList = new ArrayList<>();
         columnNames = new ArrayList<>();
     }
+    */
     
     public void insertColumn(int index, String value) {
         // Insert new column
         getColumns().add(index+1, value);
-        
-        System.out.println("index: " + index);
 
-        for (Row r: getClassList()) {
-            // Fill all cells inside column to be empty
-            r.getGrades().add(index-1, null);
-        }
-        
         fireTableStructureChanged();
     }
     
@@ -935,6 +998,9 @@ class ClassRecord extends AbstractTableModel {
     }
     public int getTerm() {
         return term;
+    }
+    public String getSY() {
+        return schoolYear;
     }
     public String getFormattedTerm() {
         switch(term) {

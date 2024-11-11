@@ -18,15 +18,12 @@ import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.LineBorder;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumnModel;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Document;
 import koq.encoder.components.AddActivityWindow;
 import koq.encoder.mvc.Model.Actions;
 import koq.encoder.mvc.Model.Fields;
+import koq.encoder.components.NumericDocumentListener;
 
 public class Controller {
     
@@ -42,9 +39,12 @@ public class Controller {
         table.addMouseListener(new RowSelector(table));
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setModel(model.getClassRecord());
-        table.setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
         view.resizeTableHeaders();
         view.updateEditPanel(model.getSelectedRow(), model.getSelectedActivity(), model.getClassRecord().getRowAt(model.getSelectedRow()));
+        
+        // Set the row selection after all setup is complete
+        SwingUtilities.invokeLater(() -> table.setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow()));
+        table.requestFocus(); // Ensure the table has focus to highlight the selection
         
         // New Table event
         ( (JMenuItem) view.getComponent(Actions.NEWTABLE.name()) ).addActionListener((ActionEvent ev) -> {
@@ -74,12 +74,20 @@ public class Controller {
         
         // Select previous student event
         ( (JButton) view.getComponent(Actions.PREVIOUSSTUDENT.name()) ).addActionListener((ActionEvent ev) -> {
-            System.out.println("select previous student event");
+            int row = model.getSelectedRow();
+            if (row > 0) {
+                model.setSelectedRow(row-1);
+                table.setRowSelectionInterval(row-1, row-1);
+            }
         });
         
         // Select next student event
         ( (JButton) view.getComponent(Actions.NEXTSTUDENT.name()) ).addActionListener((ActionEvent ev) -> {
-            System.out.println("select next student event");
+            int row = model.getSelectedRow();
+            if (row < model.getClassRecord().getClassList().size()-1) {
+                model.setSelectedRow(row+1);
+                table.setRowSelectionInterval(row+1, row+1);
+            }
         });
         
         // Activity selection listener
@@ -126,7 +134,7 @@ public class Controller {
             model.getClassRecord().fireTableRowsUpdated(row, row);
         });
         
-        // Custom DocumentListener for numeric input
+        // Add document listener so this field can only receive numeric and floating-point values
         ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).getDocument().addDocumentListener(new NumericDocumentListener());
         
         table.getSelectionModel().addListSelectionListener(event -> {
@@ -165,9 +173,6 @@ public class Controller {
             if (response == JOptionPane.YES_OPTION) {
                 System.out.println("User chose Yes.");
                 // HANDLE EVENT HERE
-            } else if (response == JOptionPane.NO_OPTION) {
-                System.out.println("User chose No.");
-                // HANDLE EVENT HERE
             } else {
                 System.out.println("User closed the dialog without making a choice.");
                 // HANDLE EVENT HERE
@@ -190,8 +195,8 @@ public class Controller {
                     /**
                      * TODO: REFACTOR MO TO, WAG BOBO
                      * 
-                     * 1. Create addActivityWindow that receives input (Activity type, Max grade)
-                     * 2. Create new column based on activity type
+                     * 1. Create addActivityWindow that receives input (Activity type, Max grade) (Done)
+                     * 2. Create new column based on activity type (Done)
                      * 3. Create new activity based on max_grade (and insert to db)
                      * 4. Fill empty cells (Done)
                      * 
@@ -207,7 +212,7 @@ public class Controller {
         ActionListener addClassRecordWindowListener = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                
+                // TODO: ADD CODE
             }
         };
         
@@ -233,45 +238,6 @@ public class Controller {
                 table.setRowSelectionInterval(selectedRow + 1, selectedRow + 1);
             }
         });
-        
-    }
-    
-    class NumericDocumentListener implements DocumentListener {
-        @Override
-        public void insertUpdate(DocumentEvent e) {
-            filterInput(e);
-        }
-
-        @Override
-        public void removeUpdate(DocumentEvent e) {
-            // No need to filter on remove
-        }
-
-        @Override
-        public void changedUpdate(DocumentEvent e) {
-            // Not needed for plain text components
-        }
-
-        private void filterInput(DocumentEvent e) {
-            Document doc = e.getDocument();
-            try {
-                String text = doc.getText(0, doc.getLength());
-
-                // Check if input is numeric with at most one decimal point
-                if (!text.matches("\\d*\\.?\\d*")) {
-                    SwingUtilities.invokeLater(() -> {
-                        try {
-                            // Remove last entered character if it’s invalid
-                            doc.remove(e.getOffset(), e.getLength());
-                        } catch (BadLocationException ex) {
-                            ex.printStackTrace();
-                        }
-                    });
-                }
-            } catch (BadLocationException ex) {
-                ex.printStackTrace();
-            }
-        }
     }
     
     // Listener for the confirmation button in AddStudentWindow
@@ -325,8 +291,10 @@ public class Controller {
         public void actionPerformed(ActionEvent e) {
             String activityType = window.getActivityType();
             String totalScore = window.getTotalScore();
+            int activityTypeId;
             boolean validForm = true;
 
+            // Empty field will show an error
             if (totalScore.isBlank()) {
                 JOptionPane.showMessageDialog(
                     null,
@@ -335,25 +303,55 @@ public class Controller {
                     JOptionPane.WARNING_MESSAGE
                 );
                 validForm = false;
+            } 
+            // Input is negative and will feedback an error
+            else if (Double.parseDouble(totalScore) <= 0) {
+                JOptionPane.showMessageDialog(
+                    null,
+                    "Total score must be more than 0.",
+                    "Invalid form",
+                    JOptionPane.WARNING_MESSAGE
+                );
+                validForm = false;
+            } 
+            else {
+                // Input accepted
+                try {
+                    validForm = true;
+                } 
+                // An input of only '.' will result in an exception, relay an error if this happens
+                catch (java.lang.NumberFormatException exception) {
+                    JOptionPane.showMessageDialog(
+                        null,
+                        "Invalid input.",
+                        "Invalid form",
+                        JOptionPane.WARNING_MESSAGE
+                    );
+                    validForm = false;
+                }
             }
-
+            
             if (validForm) {
                 switch(activityType) {
                     case "Seatwork":
-                        model.addSeatworkToTable();
+                        model.addSeatworkToTable(Double.parseDouble(totalScore));
+                        activityTypeId = 1;
                         break;
                     case "Homework":
-                        model.addHWToTable();
+                        model.addHWToTable(Double.parseDouble(totalScore));
+                        activityTypeId = 2;
                         break;
                     case "Performance Task":
-                        model.addPTToTable();
+                        model.addPTToTable(Double.parseDouble(totalScore));
+                        activityTypeId = 3;
                         break;
                     case "Quiz":
-                        model.addQuizToTable();
+                        model.addQuizToTable(Double.parseDouble(totalScore));
+                        activityTypeId = 4;
                         break;
-                    case "Exam":
-                        model.addExamToTable();
-                        break;
+                    default:
+                        model.addExamToTable(Double.parseDouble(totalScore));
+                        activityTypeId = 5;
                 }
                 window.dispose();
             }
@@ -371,16 +369,17 @@ public class Controller {
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            String gradeLevel = window.getGradeLevel();
             String section = window.getSection();
             String subject = window.getSubject();
             String term = window.getTerm();
             String schoolYear = window.getSY();
             boolean validForm = true;
 
-            if (section.isBlank() || subject.isBlank() || schoolYear.isBlank()) {
+            if (section.isBlank() || schoolYear.isBlank()) {
                 JOptionPane.showMessageDialog(
                     null,
-                    "Please provide the class section and subject.",
+                    "Please provide the class section and school year.",
                     "Invalid form",
                     JOptionPane.WARNING_MESSAGE
                 );
