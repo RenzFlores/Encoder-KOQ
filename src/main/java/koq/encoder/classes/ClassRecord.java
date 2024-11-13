@@ -30,10 +30,10 @@ public class ClassRecord extends AbstractTableModel implements Serializable {
         this.subject = subject;
         this.term = term;
         this.schoolYear = schoolYear;
-        this.classList = new ArrayList<Row>();          // Empty rows
-        this.columnNames = new ArrayList<String>();     // Empty columns
+        this.classList = null;          // Empty rows
+        this.columnNames = null;     // Empty columns
     }
-    
+   
     // Insert new column
     public void insertColumn(int index, String value) {
         getColumns().add(index+1, value);
@@ -193,5 +193,15 @@ public class ClassRecord extends AbstractTableModel implements Serializable {
         // Notify the table about the data change
         fireTableRowsDeleted(fromIndex, fromIndex);
         fireTableRowsInserted(toIndex, toIndex);
+    }
+    
+    public String toString() {
+        return String.format("%d | %s | %s | %s | %s", 
+                getGradeLevel(),
+                getSection(),
+                getFormattedTerm(),
+                getSY(),
+                getSubject()
+        );
     }
 }

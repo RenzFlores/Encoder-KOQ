@@ -198,6 +198,10 @@ public class View {
         return (JComboBox) getComponent(Model.Fields.SELECT_ACTIVITY.name());
     }
     
+    public void setWindowTitle(String title) {
+        frame.setTitle(title);
+    }
+    
     public JTable getTable() {
         return ((EditorWindow) getEditorWindow()).getTable();
     }
@@ -225,34 +229,36 @@ public class View {
     }
         
     public void resizeTable() {
-        WrappedHeaderRenderer headerRenderer = new WrappedHeaderRenderer();
-        StudentNameRenderer studentNameRenderer = new StudentNameRenderer();
-        
-        for (int i = 0; i < getTable().getColumnModel().getColumnCount(); i++) {
-            getTable().getColumnModel().getColumn(i).setHeaderRenderer(headerRenderer);
-        }
-        
-        if (getTable().getColumnModel().getColumnCount() > 0) {
-            
-            getTable().getColumnModel().getColumn(1).setCellRenderer(studentNameRenderer);
+        if (getTable().getTableHeader() != null) {
+            WrappedHeaderRenderer headerRenderer = new WrappedHeaderRenderer();
+            StudentNameRenderer studentNameRenderer = new StudentNameRenderer();
 
-            getTable().getTableHeader().setBackground(Color.LIGHT_GRAY);
+            for (int i = 0; i < getTable().getColumnModel().getColumnCount(); i++) {
+                getTable().getColumnModel().getColumn(i).setHeaderRenderer(headerRenderer);
+            }
 
-            getTable().getColumnModel().getColumn(0).setPreferredWidth(20);
-            getTable().getColumnModel().getColumn(0).setMaxWidth(20);
-            getTable().getColumnModel().getColumn(1).setPreferredWidth(150);
-            getTable().getColumnModel().getColumn(1).setMaxWidth(150);
+            if (getTable().getColumnModel().getColumnCount() > 0) {
 
-            getTable().setRowHeight(30);
+                getTable().getColumnModel().getColumn(1).setCellRenderer(studentNameRenderer);
+
+                getTable().getTableHeader().setBackground(Color.LIGHT_GRAY);
+
+                getTable().getColumnModel().getColumn(0).setPreferredWidth(20);
+                getTable().getColumnModel().getColumn(0).setMaxWidth(20);
+                getTable().getColumnModel().getColumn(1).setPreferredWidth(150);
+                getTable().getColumnModel().getColumn(1).setMaxWidth(150);
+
+                getTable().setRowHeight(30);
+            }
+
+            // Set each column to be unresizable
+            for (int i = 0; i < getTable().getColumnModel().getColumnCount(); i++) {
+                getTable().getColumnModel().getColumn(i).setResizable(false);
+            }
+
+            getTable().revalidate();
+            getTable().repaint();
         }
-        
-        // Set each column to be unresizable
-        for (int i = 0; i < getTable().getColumnModel().getColumnCount(); i++) {
-            getTable().getColumnModel().getColumn(i).setResizable(false);
-        }
-        
-        getTable().revalidate();
-        getTable().repaint();
     }
     
     /**
@@ -362,6 +368,7 @@ class MenuBar extends JMenuBar {
         menuOpenFile.setName(Actions.OPEN_RECORD.name());
         menuExportFile.setName(Actions.EXPORTFILE.name());
         menuExit.setName(Actions.EXIT.name());
+        menuKeyboardShortcuts.setName(Actions.VIEWSHORTCUTS.name());
         menuAbout.setName(Actions.VIEWABOUT.name());
         
         // Add all menus to menu bar

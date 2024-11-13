@@ -29,6 +29,7 @@ import koq.encoder.components.AddActivityWindow;
 import koq.encoder.mvc.Model.Actions;
 import koq.encoder.mvc.Model.Fields;
 import koq.encoder.components.NumericDocumentListener;
+import koq.encoder.components.SetGradeWeightsWindow;
 
 public class Controller {
     
@@ -40,16 +41,12 @@ public class Controller {
         this.view = view;
         
         JTable table = view.getTable();
-        // Attach listeners to the table
-        table.getTableHeader().addMouseListener(new HeaderSelector(table));
-        table.addMouseListener(new RowSelector(table));
-        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         
         // New Table event
         ( (JMenuItem) view.getComponent(Actions.NEW_RECORD.name()) ).addActionListener((ActionEvent ev) -> {
             AddClassRecordWindow window = new AddClassRecordWindow();
             window.setVisible(true);
-            window.setLocationRelativeTo(null);
+            window.getButton().addActionListener(new AddClassRecordWindowListener(window));
         });
         
         // Open File event
@@ -70,8 +67,9 @@ public class Controller {
                 model.setClassRecord(model.deserializeClassRecord(fileChooser.getSelectedFile()));
                 model.getClassRecord().initClassList();             // Initialize arrayList
                 model.initClassRecord(model.getClassRecord());      // Populate arrayList
-                model.initTable(table, model.getClassRecord());     // Set table model
+                model.initTable(view.getTable(), model.getClassRecord());     // Set table model
                 view.resizeTable();                                 // Setup table
+                view.setWindowTitle(model.getClassRecord().toString());
                 System.out.println("Class Record set to " + fileChooser.getSelectedFile().getName());
             }
         });
@@ -88,6 +86,11 @@ public class Controller {
         // View about event
         ( (JMenuItem) view.getComponent(Actions.VIEWABOUT.name()) ).addActionListener((ActionEvent ev) -> {
             view.showAbout();
+        });
+        
+        // View keyboard shortcuts event
+        ( (JMenuItem) view.getComponent(Actions.VIEWSHORTCUTS.name()) ).addActionListener((ActionEvent ev) -> {
+            // TODO: Add code
         });
         
         // Select previous student event
@@ -178,8 +181,10 @@ public class Controller {
         
         // Add to Table button clicked event
         ( (JButton) view.getComponent(Actions.ADD_TO_TABLE.name()) ).addActionListener((ActionEvent e) -> {
-            // Show context menu right below the button, centered
-            view.showContextMenu();
+            if (model.getClassRecord() != null) {
+                // Show context menu right below the button, centered
+                view.showContextMenu();
+            }
         });
         
         // Remove from Table button clicked event
@@ -281,18 +286,21 @@ public class Controller {
             }
         };
         
-        // ActionListener for "Add New Class Record" Window
-        ActionListener addClassRecordWindowListener = new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // TODO: ADD CODE
-            }
-        };
-        
         // Add Student event
         ( (JMenuItem) view.getComponent(Actions.ADDSTUDENT.name()) ).addActionListener(menuListener);
         // Add Activity event
         ( (JMenuItem) view.getComponent(Actions.ADDACTIVITY.name()) ).addActionListener(menuListener);
+        
+        ( (JButton) view.getComponent(Actions.EDIT_GRADE_WEIGHTS.name()) ).addActionListener(new ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                if (model.getClassRecord() != null) {
+                    SetGradeWeightsWindow gradeWeightsWindow = new SetGradeWeightsWindow();
+
+                    gradeWeightsWindow.setVisible(true);
+                    gradeWeightsWindow.getButton().addActionListener(new SetGradeWeightsWindowListener(gradeWeightsWindow));
+                }
+            }
+        });
         
         // Action to move selected row up (UNUSED COMPONENT)
         /*
@@ -356,7 +364,7 @@ public class Controller {
         }
     }
     
-    // Listener for the confirmation button in AddStudentWindow
+    // Listener for the confirmation button in AddActivitytWindow
     class AddActivityWindowListener implements ActionListener {
 
         AddActivityWindow window;
@@ -437,6 +445,28 @@ public class Controller {
         }
     }
     
+    // Listener for the confirmation button in SetGradeWeightsWindow
+    class SetGradeWeightsWindowListener implements ActionListener {
+
+        SetGradeWeightsWindow window;
+
+        public SetGradeWeightsWindowListener(SetGradeWeightsWindow window) {
+            this.window = window;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            // TODO: Set variables
+            boolean validForm = true;
+
+            // TODO: CODE LOGIC
+
+            if (validForm) {
+                // TODO: ADD CODE 
+            }
+        }
+    }
+    
     // Listener for the confirmation button in AddStudentWindow
     class AddClassRecordWindowListener implements ActionListener {
 
@@ -448,10 +478,10 @@ public class Controller {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            String gradeLevel = window.getGradeLevel();
+            int gradeLevel = Integer.parseInt(window.getGradeLevel());
             String section = window.getSection();
             String subject = window.getSubject();
-            String term = window.getTerm();
+            int term = window.getTerm();
             String schoolYear = window.getSY();
             boolean validForm = true;
 
@@ -465,19 +495,32 @@ public class Controller {
                 validForm = false;
             }
 
-            switch (term) {
-                case "1st Quarter":
-                    break;
-                case "2nd Quarter":
-                    break;
-                case "3rd Quarter":
-                    break;
-                case "4th Quarter":
-                    break;
-            }
-
             if (validForm) {
-                // TODO: ADD CODE 
+                if (!model.classRecordExists(gradeLevel, section, subject, term, schoolYear)) {
+                    model.addClassRecordInDB(gradeLevel, section, subject, term, schoolYear);
+                    int classId = model.getClassIdInDB(gradeLevel, section, subject, term, schoolYear);
+
+                    try {
+                        model.setClassRecord(model.getClassRecordInDB(classId));
+                    } catch (SQLException err) { err.printStackTrace(); }
+
+                    model.serializeClassRecord(model.getClassRecord());         // Serialize class record
+
+                    model.getClassRecord().initClassList();                     // Initialize arrayList
+                    model.initClassRecord(model.getClassRecord());              // Populate arrayList
+                    model.initTable(view.getTable(), model.getClassRecord());   // Set table model
+                    view.resizeTable();                                         // Setup table
+                    view.setWindowTitle(model.getClassRecord().toString());     // Set window title
+                    System.out.println("Class Record set");
+                    window.dispose();
+                } else {
+                    JOptionPane.showMessageDialog(
+                        null,
+                        "Class record already exists.",
+                        "Invalid form",
+                        JOptionPane.WARNING_MESSAGE
+                    );
+                }
             }
         }
     }
@@ -532,25 +575,5 @@ class RowSelector extends MouseAdapter
         if (row != -1) {
             table.setRowSelectionInterval(row, row);
         }
-    }
-}
-
-class HeaderEditor
-{
-    HeaderSelector selector;
-    String[] items;
-  
-    public HeaderEditor(HeaderSelector hs)
-    {
-        items = new String[5];
-        for(int j = 0; j < items.length; j++)
-        {
-            items[j] = "item " + j;
-        }
-    }
-  
-    public void showEditor(Component parent, int col, String currentValue)
-    {
-        System.out.println("header selected");
     }
 }

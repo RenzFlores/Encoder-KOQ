@@ -139,8 +139,8 @@ public class AddClassRecordWindow extends JFrame {
         return (String) jComboBox3.getSelectedItem();
     }
     
-    public String getTerm() {
-        return (String) jComboBox1.getSelectedItem();
+    public int getTerm() {
+        return jComboBox1.getSelectedIndex()+1;
     }
     
     public String getSY() {

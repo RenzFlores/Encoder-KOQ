@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
 import koq.encoder.classes.ClassRecord;
 import koq.encoder.classes.Row;
 
@@ -73,7 +74,8 @@ public class Model {
         NEXT_STUDENT,
         MOVE_ROW_DOWN,
         MOVE_ROW_UP,
-        VIEWABOUT
+        VIEWABOUT,
+        VIEWSHORTCUTS
     }
     
     public Model() {
@@ -125,7 +127,7 @@ public class Model {
             System.out.println("Student records retrieved. Size: " + record.getClassList().size());
         } catch(SQLException e) { e.printStackTrace(); }
         
-        getClassRecordInDB(record.getClassList(), record.getClassId());
+        getGradeRecordsInDB(record.getClassList(), record.getClassId());
         System.out.println("Grade records retrieved");
         
         record.setColumnNames(getActivityNamesInClassRecord(record.getClassId()));
@@ -207,7 +209,7 @@ public class Model {
         return addActivityTerm;
     }
     
-    public void serializeClassRecord(ClassRecord record) {
+    public String serializeClassRecord(ClassRecord record) {
         String fileName = String.format("%d_%s_Q%d_%s_%s.ser", 
             record.getGradeLevel(), record.getSection(), 
             record.getTerm(), record.getSY(), record.getSubject()
@@ -217,15 +219,29 @@ public class Model {
             ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
             out.writeObject(record);
             System.out.println("Object serialized to " + fileName);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+            
+        } catch (IOException e) { e.printStackTrace(); }
+        return fileName;
     }
     
     public ClassRecord deserializeClassRecord(File file) {
         ClassRecord record = null;
 
         try (FileInputStream fileIn = new FileInputStream(file);
+             ObjectInputStream in = new ObjectInputStream(fileIn)) {
+            record = (ClassRecord) in.readObject();
+            System.out.println("Object deserialized: class_id = " + record.getClassId());
+        } catch (IOException | ClassNotFoundException i) {
+            i.printStackTrace();
+        }
+        
+        return record;
+    }
+    
+     public ClassRecord deserializeClassRecord(String fileName) {
+        ClassRecord record = null;
+
+        try (FileInputStream fileIn = new FileInputStream(DATA_DIRECTORY + fileName);
              ObjectInputStream in = new ObjectInputStream(fileIn)) {
             record = (ClassRecord) in.readObject();
             System.out.println("Object deserialized: class_id = " + record.getClassId());
@@ -558,6 +574,11 @@ public class Model {
     
     public void initTable(JTable table, ClassRecord clsRec) {
         table.setModel(clsRec);
+        
+        table.getTableHeader().addMouseListener(new HeaderSelector(table));
+        table.addMouseListener(new RowSelector(table));
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        
         System.out.println("Table model set");
     }
     
@@ -566,7 +587,6 @@ public class Model {
      * Returns a list of rows with all the student objects and empty grades list.
      * Must call getClassRecordInDB() to populate the grades.
      * Must call getComputedGradesInDB() to populate the computed grades
-     * NOTE: Currently unused
      */
     private List<Row> fetchStudentsInClassRecord(int classId) throws SQLException {
         List<Row> rows = new ArrayList<>();
@@ -602,10 +622,65 @@ public class Model {
     }
     
     /**
-     * Retrieve grades from database given the student list
-     * Note: Currently unused
+     * Add a class record into the database. Must call getClassId() to get the corresponding class_id
      */
-    private void getClassRecordInDB(List<Row> rows, int classId) {
+    public void addClassRecordInDB(int gradeLevel, String section, String subject, int term, String schoolYear) {
+        try {
+            PreparedStatement ps = getConnection().prepareStatement("""
+                INSERT INTO classes
+                (grade_level, section, subject, term, academic_year)
+                VALUES
+                (?, ?, ?, ?, ?);
+            """);
+            ps.setInt(1, gradeLevel);
+            ps.setString(2, section);
+            ps.setString(3, subject);
+            ps.setInt(4, term);
+            ps.setString(5, schoolYear);
+            ps.executeUpdate();
+            System.out.println("Added class record to database");
+        } catch (SQLException e) { e.printStackTrace(); }
+    }
+    
+    /**
+     * Retrieves a class record from the database
+     */
+    public ClassRecord getClassRecordInDB(int classId) throws SQLException {
+        ClassRecord record = null;
+        
+        try {
+            PreparedStatement ps = getConnection().prepareStatement("""
+                SELECT *
+                FROM classes
+                WHERE class_id = ?;
+            """);
+            ps.setInt(1, classId);
+            ResultSet rs = ps.executeQuery();
+            
+            if (rs.next()) {
+                record = new ClassRecord(
+                    rs.getInt("class_id"), 
+                    rs.getInt("grade_level"),
+                    rs.getString("section"), 
+                    rs.getString("subject"), 
+                    rs.getInt("term"), 
+                    rs.getString("academic_year")
+                );
+                System.out.println("Retrieved class record details. Class record object created");
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        
+        if (record != null) {
+            return record;
+        } else {
+            throw new SQLException("Class record with class_id = " + classId + " not found");
+        }
+    }
+    
+    /**
+     * Retrieve grades from database given the student list
+     */
+    private void getGradeRecordsInDB(List<Row> rows, int classId) {
         try {
             for (Row r: rows) {                
                 PreparedStatement ps = getConnection().prepareStatement("""
@@ -863,6 +938,36 @@ public class Model {
     }
     
     /**
+     * Check if class record already exists in the database
+     */
+    public boolean classRecordExists(int gradeLevel, String section, String subject, int term, String schoolYear) {
+        String checkQuery = """
+           SELECT class_id FROM classes c 
+           WHERE 
+                c.grade_level = ? AND
+                c.section = ? AND 
+                c.subject = ? AND 
+                c.term = ? AND 
+                c.academic_year = ?
+        """;
+        
+        try (PreparedStatement pstmt = getConnection().prepareStatement(checkQuery)) {
+            pstmt.setInt(1, gradeLevel);
+            pstmt.setString(2, section);
+            pstmt.setString(3, subject);
+            pstmt.setInt(4, term);
+            pstmt.setString(5, schoolYear);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                return rs.getInt(1) > 0; // If count > 0, class record exists
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        
+        return false; // Class record does not exist
+    }
+    
+    /**
      * Removes a student-class relation in the database (i.e., student no longer in the class).
      * Student and class will not be affected
      */
@@ -982,24 +1087,30 @@ public class Model {
      * Retrieve a ClassRecord's class_id from the database
      * Note: Currently unused.
      */
-    public int getClassId(String section, String subject, int term, String schoolYear) {
+    public int getClassIdInDB(int gradeLevel, String section, String subject, int term, String schoolYear) {
         int id = -1;
         
         String query = """
-                       SELECT class_id FROM classes c 
-                       WHERE 
-                            c.section = ? AND 
-                            c.subject = ? AND 
-                            c.term = ? AND 
-                            c.academic_year = ?
-                       """;
+           SELECT class_id FROM classes c 
+           WHERE 
+                c.grade_level = ? AND
+                c.section = ? AND 
+                c.subject = ? AND 
+                c.term = ? AND 
+                c.academic_year = ?
+        """;
+        
         try (PreparedStatement pstmt = getConnection().prepareStatement(query)) {
-            pstmt.setString(1, section);
-            pstmt.setString(2, subject);
-            pstmt.setInt(3, term);
-            pstmt.setString(4, schoolYear);
+            pstmt.setInt(1, gradeLevel);
+            pstmt.setString(2, section);
+            pstmt.setString(3, subject);
+            pstmt.setInt(4, term);
+            pstmt.setString(5, schoolYear);
             ResultSet rs = pstmt.executeQuery();
-            id = rs.getInt("class_id");
+            
+            if (rs.next()) {
+                id = rs.getInt("class_id");
+            }
         } catch (SQLException e) { e.printStackTrace(); }
         
         if (id == -1) {

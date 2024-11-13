@@ -1,7 +1,6 @@
 koq\encoder\classes\GradeWeights.class
 koq\encoder\classes\Row.class
 koq\encoder\mvc\Controller$AddClassRecordWindowListener.class
-koq\encoder\mvc\HeaderEditor.class
 koq\encoder\components\AddClassRecordWindow.class
 koq\encoder\mvc\Controller$AddActivityWindowListener.class
 koq\encoder\components\AddStudentWindow.class
@@ -14,7 +13,9 @@ koq\encoder\mvc\HeaderSelector.class
 koq\encoder\mvc\Main.class
 koq\encoder\classes\ClassRecord.class
 koq\encoder\classes\ActivityType.class
+koq\encoder\components\SetGradeWeightsWindow.class
 koq\encoder\mvc\RowSelector.class
+koq\encoder\mvc\Controller$SetGradeWeightsWindowListener.class
 koq\encoder\components\WrappedHeaderRenderer.class
 koq\encoder\components\NumericDocumentListener.class
 koq\encoder\classes\Activity.class
