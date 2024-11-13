@@ -1,5 +1,11 @@
 package koq.encoder.mvc;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -17,50 +23,12 @@ import javax.swing.JTable;
 import koq.encoder.classes.ClassRecord;
 import koq.encoder.classes.Row;
 
-/**
- * Database objects for reference:
- * 
- * students: 
- *      student_id (PRIMARY), 
- *      first_name (VARCHAR), 
- *      last_name (VARCHAR)
- * 
- * classes: 
- *      class_id (PRIMARY),
- *      section (VARCHAR),
- *      subject (VARCHAR)
- * 
- * activities:
- *      activity_id (PRIMARY),
- *      activity_name (VARCHAR),
- *      max_grade (DECIMAL 4,2),
- *      activity_type_id (FOREIGN)
- * 
- * activity_types:
- *      activity_type_id (PRIMARY)
- *      activity_type_name (VARCHAR)
- * 
- * grades:
- *      grade_id (PRIMARY),
- *      student_id (FOREIGN), 
- *      class_id (FOREIGN),
- *      activity_id (FOREIGN),
- *      grade (DECIMAL 4,2),
- *      term (VARCHAR)
- * 
- * student_classes: (Junction table)
- *      student_id (FOREIGN), 
- *      class_id (FOREIGN)
- */
-
 public class Model {
 
-    private String[] columnNames;
     private int selectedRow;
     private int selectedColumn;
     private int selectedActivity;
     private List<Student> studentList;
-    private List<Activity> activityList;
     private ClassRecord record;
     private ClassRecord currentClassRecord;
     
@@ -75,6 +43,8 @@ public class Model {
     private String url = "jdbc:mysql://localhost:3306/";
     private String user = "root";
     private String password = "root";
+    
+    public String DATA_DIRECTORY = System.getProperty("user.dir") + "\\resources\\data\\";
     
     public static enum Fields {
         EDIT_GRADE,
@@ -107,6 +77,17 @@ public class Model {
     }
     
     public Model() {
+        // Create data directory if it doesn't exist
+        File directory = new File(DATA_DIRECTORY);
+        if (!directory.exists()) {
+            boolean created = directory.mkdir(); // Creates the directory
+            if (created) {
+                System.out.println("Directory created successfully.");
+            } else {
+                System.out.println("Failed to create directory.");
+            }
+        }
+        
         // NOTE: Placeholder values, change these later
         selectedRow = 0;
         selectedColumn = 0;
@@ -119,22 +100,11 @@ public class Model {
             db = connectToDB("encoder_data");
         } catch (SQLException e) { e.printStackTrace(); }
         
-        studentList = getAllStudents();
+        studentList = getAllStudents();         // UNUSED
         
-        record = new ClassRecord(1, 12, "A", "General Math", 1, "2024-2025");
-        
-        try {
-            record.setClassList(fetchStudentsInClassRecord(1));
-        } catch(SQLException e) {}
-        
-        getClassRecordInDB(record.getClassList(), 1);
-        
-        
-        record.setColumnNames(getActivityNamesInClassRecord(1));
+        record = null;
         
         currentClassRecord = record;
-        
-        activityList = getActivitiesInClassRecord("A", "Mathematics 10", 1);
     }
     
     private Connection getConnection() {
@@ -143,6 +113,23 @@ public class Model {
     
     public ClassRecord getClassRecord() {
         return record;
+    }
+    
+    public void setClassRecord(ClassRecord record) {
+        this.record = record;
+    }
+    
+    public void initClassRecord(ClassRecord record) {
+        try {
+            record.setClassList(fetchStudentsInClassRecord(record.getClassId()));
+            System.out.println("Student records retrieved. Size: " + record.getClassList().size());
+        } catch(SQLException e) { e.printStackTrace(); }
+        
+        getClassRecordInDB(record.getClassList(), record.getClassId());
+        System.out.println("Grade records retrieved");
+        
+        record.setColumnNames(getActivityNamesInClassRecord(record.getClassId()));
+        System.out.println("Column names set. No. of columns: " + record.getColumnCount());
     }
     
     public ClassRecord getCurrentClassRecord() {
@@ -220,6 +207,35 @@ public class Model {
         return addActivityTerm;
     }
     
+    public void serializeClassRecord(ClassRecord record) {
+        String fileName = String.format("%d_%s_Q%d_%s_%s.ser", 
+            record.getGradeLevel(), record.getSection(), 
+            record.getTerm(), record.getSY(), record.getSubject()
+        );
+        
+        try (FileOutputStream fileOut = new FileOutputStream(DATA_DIRECTORY + fileName);
+            ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
+            out.writeObject(record);
+            System.out.println("Object serialized to " + fileName);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    public ClassRecord deserializeClassRecord(File file) {
+        ClassRecord record = null;
+
+        try (FileInputStream fileIn = new FileInputStream(file);
+             ObjectInputStream in = new ObjectInputStream(fileIn)) {
+            record = (ClassRecord) in.readObject();
+            System.out.println("Object deserialized: class_id = " + record.getClassId());
+        } catch (IOException | ClassNotFoundException i) {
+            i.printStackTrace();
+        }
+        
+        return record;
+    }
+    
     /**
      * Add student to database, retrieve their data, create a Student object and add it
      * to the current ClassRecord
@@ -243,7 +259,7 @@ public class Model {
                 }
             }
             
-            row.setGrades(getGrades(s.getStudentId(), getCurrentClassRecord().getClassId()));
+            row.setGrades(getGrades(s.getStudentId(), getClassRecord().getClassId()));
             
             for (Grade g: row.getGrades()) {
                 System.out.println(g.getActivityId());
@@ -542,6 +558,7 @@ public class Model {
     
     public void initTable(JTable table, ClassRecord clsRec) {
         table.setModel(clsRec);
+        System.out.println("Table model set");
     }
     
     /**

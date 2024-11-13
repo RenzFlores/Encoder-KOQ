@@ -1,5 +1,6 @@
 package koq.encoder.classes;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.table.AbstractTableModel;
@@ -7,9 +8,13 @@ import javax.swing.table.AbstractTableModel;
 /**
  * Custom table for representing a class record in the GUI
  */
-public class ClassRecord extends AbstractTableModel {
-    private List<Row> classList;
-    private List<String> columnNames;
+public class ClassRecord extends AbstractTableModel implements Serializable {
+    private static final long serialVersionUID = 1L;
+    
+    // Table model contents
+    private transient List<Row> classList;
+    private transient List<String> columnNames;
+    
     // Class Record Metadata
     private int classId;
     private int gradeLevel;
@@ -43,6 +48,9 @@ public class ClassRecord extends AbstractTableModel {
     // Getters
     public int getClassId() {
         return classId;
+    }
+    public int getGradeLevel() {
+        return gradeLevel;
     }
     public String getSection() {
         return section;
@@ -84,6 +92,10 @@ public class ClassRecord extends AbstractTableModel {
         cols.add("Computed Raw Grades");
         
         columnNames = cols;
+    }
+    public void initClassList() {
+        classList = new ArrayList<>();
+        columnNames = new ArrayList<>();
     }
 
     public Row getRowAt(int index) {

@@ -226,21 +226,25 @@ public class View {
         
     public void resizeTable() {
         WrappedHeaderRenderer headerRenderer = new WrappedHeaderRenderer();
+        StudentNameRenderer studentNameRenderer = new StudentNameRenderer();
+        
         for (int i = 0; i < getTable().getColumnModel().getColumnCount(); i++) {
             getTable().getColumnModel().getColumn(i).setHeaderRenderer(headerRenderer);
         }
         
-        StudentNameRenderer studentNameRenderer = new StudentNameRenderer();
-        getTable().getColumnModel().getColumn(1).setCellRenderer(studentNameRenderer);
-        
-        getTable().getTableHeader().setBackground(Color.LIGHT_GRAY);
-        
-        getTable().getColumnModel().getColumn(0).setPreferredWidth(20);
-        getTable().getColumnModel().getColumn(0).setMaxWidth(20);
-        getTable().getColumnModel().getColumn(1).setPreferredWidth(150);
-        getTable().getColumnModel().getColumn(1).setMaxWidth(150);
-        
-        getTable().setRowHeight(30);
+        if (getTable().getColumnModel().getColumnCount() > 0) {
+            
+            getTable().getColumnModel().getColumn(1).setCellRenderer(studentNameRenderer);
+
+            getTable().getTableHeader().setBackground(Color.LIGHT_GRAY);
+
+            getTable().getColumnModel().getColumn(0).setPreferredWidth(20);
+            getTable().getColumnModel().getColumn(0).setMaxWidth(20);
+            getTable().getColumnModel().getColumn(1).setPreferredWidth(150);
+            getTable().getColumnModel().getColumn(1).setMaxWidth(150);
+
+            getTable().setRowHeight(30);
+        }
         
         // Set each column to be unresizable
         for (int i = 0; i < getTable().getColumnModel().getColumnCount(); i++) {

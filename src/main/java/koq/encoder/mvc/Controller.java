@@ -9,16 +9,19 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.LineBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumnModel;
 import koq.encoder.classes.Row;
@@ -37,11 +40,10 @@ public class Controller {
         this.view = view;
         
         JTable table = view.getTable();
+        // Attach listeners to the table
         table.getTableHeader().addMouseListener(new HeaderSelector(table));
         table.addMouseListener(new RowSelector(table));
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        model.initTable(table, model.getClassRecord());
-        view.resizeTable();
         
         // New Table event
         ( (JMenuItem) view.getComponent(Actions.NEW_RECORD.name()) ).addActionListener((ActionEvent ev) -> {
@@ -52,7 +54,26 @@ public class Controller {
         
         // Open File event
         ( (JMenuItem) view.getComponent(Actions.OPEN_RECORD.name()) ).addActionListener((ActionEvent ev) -> {
-            System.out.println("open file event");
+            JFileChooser fileChooser = new JFileChooser();
+
+            // Set the current directory to the project's data directory
+            File dir = new File(model.DATA_DIRECTORY);
+            fileChooser.setCurrentDirectory(dir);
+            
+            // Set File filter
+            fileChooser.setFileFilter(new FileNameExtensionFilter("Java Serialized Object (.ser)", "ser"));
+
+            // Show the save dialog
+            int returnValue = fileChooser.showOpenDialog(null);
+
+            if (returnValue == JFileChooser.APPROVE_OPTION) {
+                model.setClassRecord(model.deserializeClassRecord(fileChooser.getSelectedFile()));
+                model.getClassRecord().initClassList();             // Initialize arrayList
+                model.initClassRecord(model.getClassRecord());      // Populate arrayList
+                model.initTable(table, model.getClassRecord());     // Set table model
+                view.resizeTable();                                 // Setup table
+                System.out.println("Class Record set to " + fileChooser.getSelectedFile().getName());
+            }
         });
         
         /** Export File event (UNUSED)
@@ -72,18 +93,22 @@ public class Controller {
         // Select previous student event
         ( (JButton) view.getComponent(Actions.PREVIOUS_STUDENT.name()) ).addActionListener((ActionEvent ev) -> {
             int row = model.getSelectedRow();
-            if (row > 0) {
-                model.setSelectedRow(row-1);
-                table.setRowSelectionInterval(row-1, row-1);
+            if (model.getClassRecord() != null) {
+                if (row > 0) {
+                    model.setSelectedRow(row-1);
+                    table.setRowSelectionInterval(row-1, row-1);
+                }
             }
         });
         
         // Select next student event
         ( (JButton) view.getComponent(Actions.NEXT_STUDENT.name()) ).addActionListener((ActionEvent ev) -> {
             int row = model.getSelectedRow();
-            if (row < model.getClassRecord().getClassList().size()-1) {
-                model.setSelectedRow(row+1);
-                table.setRowSelectionInterval(row+1, row+1);
+            if (model.getClassRecord() != null) {
+                if (row < model.getClassRecord().getClassList().size()-1) {
+                    model.setSelectedRow(row+1);
+                    table.setRowSelectionInterval(row+1, row+1);
+                }
             }
         });
         
@@ -101,33 +126,35 @@ public class Controller {
             int col = model.getSelectedActivity();
             String value = ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).getText();
            
-            Grade grade = model.getClassRecord().getRowAt(row).getGrades().get(col);
-            // Empty field will set grade value to null
-            if (value.isBlank()) {
-                grade.setGrade(null);
-            } 
-            // An input of only '.' will result in an exception, relay an error if this happens
-            else if (value.equals(".")) {
-                // Set border color to Red
-                ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).setBorder(new LineBorder(java.awt.Color.RED, 1));
-                System.out.println("Error: Invalid input");
+            if (model.getClassRecord() != null) {
+                Grade grade = model.getClassRecord().getRowAt(row).getGrades().get(col);
+                // Empty field will set grade value to null
+                if (value.isBlank()) {
+                    grade.setGrade(null);
+                } 
+                // An input of only '.' will result in an exception, relay an error if this happens
+                else if (value.equals(".")) {
+                    // Set border color to Red
+                    ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).setBorder(new LineBorder(java.awt.Color.RED, 1));
+                    System.out.println("Error: Invalid input");
+                }
+                // Input exceeds range and will feedback an error
+                else if (Double.parseDouble(value) > grade.getMaxGrade() || Double.parseDouble(value) < 0) {
+                    // Set border color to Red
+                    ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).setBorder(new LineBorder(java.awt.Color.RED, 1));
+                    System.out.println("Error: Input must be between 0 and " + grade.getMaxGrade());
+                } 
+                // Input accepted
+                else {
+                    // Clear border color
+                    ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).setBorder(null);
+                    grade.setGrade(Double.parseDouble(value));
+                    model.updateGrade(grade.getGradeId(), Double.parseDouble(value));
+                }
+
+                // Update the table in view
+                model.getClassRecord().fireTableRowsUpdated(row, row);
             }
-            // Input exceeds range and will feedback an error
-            else if (Double.parseDouble(value) > grade.getMaxGrade() || Double.parseDouble(value) < 0) {
-                // Set border color to Red
-                ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).setBorder(new LineBorder(java.awt.Color.RED, 1));
-                System.out.println("Error: Input must be between 0 and " + grade.getMaxGrade());
-            } 
-            // Input accepted
-            else {
-                // Clear border color
-                ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).setBorder(null);
-                grade.setGrade(Double.parseDouble(value));
-                model.updateGrade(grade.getGradeId(), Double.parseDouble(value));
-            }
-            
-            // Update the table in view
-            model.getClassRecord().fireTableRowsUpdated(row, row);
         });
         
         // Add document listener so this field can only receive numeric and floating-point values
