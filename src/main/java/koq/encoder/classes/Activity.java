@@ -1,4 +1,4 @@
-package classes;
+package koq.encoder.classes;
 
 public class Activity {
     private int activityId;

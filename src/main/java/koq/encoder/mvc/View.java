@@ -3,23 +3,21 @@ package koq.encoder.mvc;
 import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.Arrays;
-import javax.swing.table.TableColumn;
+import koq.encoder.classes.Row;
 import koq.encoder.mvc.Model.Actions;
 import koq.encoder.components.EditPanel;
+import koq.encoder.components.EditorWindow;
 import koq.encoder.components.FilterPanel;
-import koq.encoder.components.TableView;
+import koq.encoder.components.StudentNameRenderer;
+import koq.encoder.components.WrappedHeaderRenderer;
 import koq.encoder.mvc.Model.Fields;
-
 
 public class View {
 
     private final JFrame frame;
-    // private JPanel editPanel;
 
     private final MenuBar menuBar;
     private final EditorWindow editorWindow;
@@ -76,15 +74,16 @@ public class View {
         componentList.addAll(Arrays.asList(
                 ( (EditPanel) editorWindow.getGradeEditor() ).getContainer().getComponents()));
         
-        TableEditorPanel tableEditor = (TableEditorPanel) editorWindow.getTableEditor();
+        componentList.addAll(Arrays.asList(
+                editorWindow.getToolbar().getComponents()));
         
         // Table editor
-        componentList.addAll(Arrays.asList(
-                tableEditor.getContainer().getComponents()));
+        //componentList.addAll(Arrays.asList(
+        //        tableEditor.getContainer().getComponents()));
         
         // Toolbar
-        componentList.addAll(Arrays.asList(
-                ( (Toolbar) tableEditor.getToolbar()).getContainer().getComponents()));
+        //componentList.addAll(Arrays.asList(
+        //        ( (Toolbar) tableEditor.getToolbar()).getComponents()));
         
         // Table view
         // componentList.add(( (TableView) tableEditor).getTab());
@@ -137,7 +136,7 @@ public class View {
     }
     
     public void showContextMenu() {
-        JButton addButton = (JButton) getComponent(Actions.ADDTOTABLE.name());
+        JButton addButton = (JButton) getComponent(Actions.ADD_TO_TABLE.name());
         addContextMenu.show(addButton,
             addButton.getX() + (int) addButton.getPreferredSize().getWidth()/2, 
             addButton.getY() + (int) addButton.getPreferredSize().getHeight()/2);
@@ -177,9 +176,11 @@ public class View {
         ( (EditPanel) editorWindow.getGradeEditor() ).getStudentNameContent().setText(name);
     }
     
+    /* TODO: Change
     public void setStudentClassInEditor(String name) {
         ( (EditPanel) editorWindow.getGradeEditor() ).getStudentClassContent().setText(name);
     }
+    */
     
     public String getOutputTypeInEditor() {
         return (String) ( (EditPanel) editorWindow.getGradeEditor() ).getOutputTypeCombo().getSelectedItem();
@@ -222,12 +223,32 @@ public class View {
     public EditorWindow getEditorWindow() {
         return editorWindow;
     }
-    
         
-    public void resizeTableHeaders() {
+    public void resizeTable() {
+        WrappedHeaderRenderer headerRenderer = new WrappedHeaderRenderer();
+        for (int i = 0; i < getTable().getColumnModel().getColumnCount(); i++) {
+            getTable().getColumnModel().getColumn(i).setHeaderRenderer(headerRenderer);
+        }
+        
+        StudentNameRenderer studentNameRenderer = new StudentNameRenderer();
+        getTable().getColumnModel().getColumn(1).setCellRenderer(studentNameRenderer);
+        
+        getTable().getTableHeader().setBackground(Color.LIGHT_GRAY);
+        
+        getTable().getColumnModel().getColumn(0).setPreferredWidth(20);
         getTable().getColumnModel().getColumn(0).setMaxWidth(20);
-        getTable().getColumnModel().getColumn(1).setMinWidth(100);
-        System.out.println("width set");
+        getTable().getColumnModel().getColumn(1).setPreferredWidth(150);
+        getTable().getColumnModel().getColumn(1).setMaxWidth(150);
+        
+        getTable().setRowHeight(30);
+        
+        // Set each column to be unresizable
+        for (int i = 0; i < getTable().getColumnModel().getColumnCount(); i++) {
+            getTable().getColumnModel().getColumn(i).setResizable(false);
+        }
+        
+        getTable().revalidate();
+        getTable().repaint();
     }
     
     /**
@@ -235,12 +256,14 @@ public class View {
      */
     public void updateEditPanel(int selectedRowIndex, int selectedActivity, Row selectedRow) {
         
-        setStudentNameInEditor(
-            getTableValueAt(selectedRowIndex, 1)
-        );
+        if (selectedRow == null) {
+            setStudentNameInEditor("");
+        } else {
+            setStudentNameInEditor(getTableValueAt(selectedRowIndex, 1));
+        }
         
-        // TODO: Change index to conform with multiple tabs
-        setStudentClassInEditor((String) ((EditorWindow) getEditorWindow()).getTabNameAt(0));
+        // UNUSED, might remove later
+        // setStudentClassInEditor((String) ((EditorWindow) getEditorWindow()).getTabNameAt(0));
         
         /**
          * Set combo box to contain the list of activities in the current table
@@ -248,13 +271,15 @@ public class View {
         JComboBox selectActivity = getOutputNumberComboBox();
         DefaultComboBoxModel comboModel = new DefaultComboBoxModel();
         // Populate the combo box
-        for (int i = 2; i < getTable().getModel().getColumnCount(); i++) {
+        for (int i = 2; i < getTable().getModel().getColumnCount()-1; i++) {
             comboModel.addElement(getTable().getModel().getColumnName(i));
         }
         selectActivity.setModel(comboModel);
         
         // Set selected item in view
-        setOutputNumberInEditor(selectedActivity);
+        try {
+            setOutputNumberInEditor(selectedActivity);
+        } catch (java.lang.IllegalArgumentException e) {}       // Ignore and do nothing instead
         
         // Update grade text field with the value of current selection
         String value = getTableValueAt(selectedRowIndex, selectActivity.getSelectedIndex()+2);
@@ -266,15 +291,14 @@ public class View {
         
         // Update the value of max grade with the value of current selected activity
         String s;
-        if (selectedRow.getGrades().get(selectActivity.getSelectedIndex()) == null) {
-            s = "";
-        } else {
-            s = String.valueOf(selectedRow.getGrades().get(selectActivity.getSelectedIndex()).getMaxGrade());
-        }
-        
-        setMaxGradeLabel(s);
-        
-        System.out.println("edit panel updated");
+        try {
+            if (selectedRow.getGrades().get(selectActivity.getSelectedIndex()) == null) {
+                s = "";
+            } else {
+                s = String.valueOf(selectedRow.getGrades().get(selectActivity.getSelectedIndex()).getMaxGrade());
+            }
+            setMaxGradeLabel(s);
+        } catch (java.lang.IndexOutOfBoundsException e) {}
     }
 }
 
@@ -282,22 +306,23 @@ public class View {
 class MenuBar extends JMenuBar {
 
     JMenu menuFile;
-    JMenu menuView;
+    JMenu menuEdit;
     JMenu menuHelp;
     JMenuItem menuNewTable;
     JMenuItem menuOpenFile;
     JMenuItem menuExportFile;
     JMenuItem menuExit;
-    JMenuItem menuPref;
+    JMenuItem menuEditGradeWeights;
+    JMenuItem menuCreateReportCard;
     JMenuItem menuKeyboardShortcuts;
     JMenuItem menuAbout;
     
     public MenuBar() {
         // Instantiate the first menu option(File) and its items
         menuFile = new JMenu("File");
-        menuNewTable  = new JMenuItem("New Table");
-        menuOpenFile  = new JMenuItem("Open File");
-        menuExportFile  = new JMenuItem("Export File");
+        menuNewTable  = new JMenuItem("New Class Record");
+        menuOpenFile  = new JMenuItem("Open Class Record");
+        menuExportFile  = new JMenuItem("Export File");                         // UNUSED
         menuExit  = new JMenuItem("Exit");
         
         // Set keystrokes
@@ -311,13 +336,14 @@ class MenuBar extends JMenuBar {
         menuFile.add(menuExit);
         
         // Instantiate the second menu options(View) and its items
-        menuView = new JMenu("View");
-        menuPref = new JMenuItem("Preferences");
+        menuEdit = new JMenu("Edit");                                           // UNUSED
+        menuEditGradeWeights = new JMenuItem("Edit Grade Weights");             // UNUSED
+        menuCreateReportCard = new JMenuItem("Create Student Report Card");     // UNUSED
 
         // Set keystrokes
-        menuPref.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_P, java.awt.event.InputEvent.CTRL_DOWN_MASK));
+        //menuEditGradeWeights.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_P, java.awt.event.InputEvent.CTRL_DOWN_MASK));
         
-        menuView.add(menuPref);
+        //menuEdit.add(menuEditGradeWeights);
         
         // Instantiate the third menu options(Help) and its items
         menuHelp = new JMenu("Help");
@@ -328,22 +354,22 @@ class MenuBar extends JMenuBar {
         menuHelp.add(menuAbout);
         
         // Set actions to each JMenuItem
-        menuNewTable.setName(Actions.NEWTABLE.name());
-        menuOpenFile.setName(Actions.OPENFILE.name());
+        menuNewTable.setName(Actions.NEW_RECORD.name());
+        menuOpenFile.setName(Actions.OPEN_RECORD.name());
         menuExportFile.setName(Actions.EXPORTFILE.name());
         menuExit.setName(Actions.EXIT.name());
         menuAbout.setName(Actions.VIEWABOUT.name());
         
         // Add all menus to menu bar
         add(menuFile);
-        add(menuView);
+        //add(menuEdit);        // UNUSED
         add(menuHelp);
     }
 }
 
 class AddContextMenu extends JPopupMenu {
     public AddContextMenu() {
-        setName(Actions.ADDMENUCLICKED.name());
+        setName(Actions.ADD_MENU_CLICKED.name());
         
         JMenuItem addStudent = new JMenuItem("Student");
         addStudent.setName(Actions.ADDSTUDENT.name());
@@ -351,6 +377,7 @@ class AddContextMenu extends JPopupMenu {
         JMenuItem addActivity = new JMenuItem("Activity");
         addActivity.setName(Actions.ADDACTIVITY.name());
         
+        /** UNUSED CODE
         JMenuItem addAssignment = new JMenuItem("Assignment");
         addAssignment.setName(Actions.ADDASSIGNMENT.name());
         
@@ -362,168 +389,10 @@ class AddContextMenu extends JPopupMenu {
         
         JMenuItem addExam = new JMenuItem("Exam");
         addExam.setName(Actions.ADDEXAM.name());
+        */
         
         // Add components
         add(addStudent);
         add(addActivity);
-        /*
-        add(addAssignment);
-        add(addPT);
-        add(addQuiz);
-        add(addExam);
-        */
     }
 }
-
-class RemoveContextMenu extends JPopupMenu {
-    public RemoveContextMenu() {
-        //setName(Actions.ADDMENUCLICKED.name());
-        
-        JMenuItem addStudent = new JMenuItem("Student");
-        addStudent.setName(Actions.ADDSTUDENT.name());
-        
-        JMenuItem addActivity = new JMenuItem("Activity");
-        addActivity.setName(Actions.ADDACTIVITY.name());
-        
-        JMenuItem addAssignment = new JMenuItem("Assignment");
-        addAssignment.setName(Actions.ADDASSIGNMENT.name());
-        
-        JMenuItem addPT = new JMenuItem("Performance Task");
-        addPT.setName(Actions.ADDPT.name());
-        
-        JMenuItem addQuiz = new JMenuItem("Quiz");
-        addQuiz.setName(Actions.ADDQUIZ.name());
-        
-        JMenuItem addExam = new JMenuItem("Exam");
-        addExam.setName(Actions.ADDEXAM.name());
-        
-        // Add components
-        add(addStudent);
-        add(addActivity);
-        /*
-        add(addAssignment);
-        add(addPT);
-        add(addQuiz);
-        add(addExam);
-        */
-    }
-}
-
-class Toolbar extends JPanel {
-    
-    JPanel containerPanel;
-    JButton addButton;
-    JButton removeButton;
-    
-    public JPanel getContainer() {
-        return containerPanel;
-    }
-    
-    public Toolbar() {
-        setPreferredSize(new java.awt.Dimension(670, 80));
-        setLayout(new CardLayout());
-        
-        containerPanel = new JPanel();
-        containerPanel.setPreferredSize(new java.awt.Dimension(250, 500));
-        
-        FlowLayout containerLayout = new FlowLayout(FlowLayout.LEFT, 10, 20);
-        containerLayout.setAlignOnBaseline(true);
-        
-        containerPanel.setLayout(containerLayout);
-        
-        addButton = new JButton("Add");
-        addButton.setName(Actions.ADDTOTABLE.name());
-        addButton.setPreferredSize(new java.awt.Dimension(90, 40));
-        
-        removeButton = new JButton("Remove");
-        removeButton.setName(Actions.REMOVEFROMTABLE.name());
-        removeButton.setPreferredSize(new java.awt.Dimension(90, 40));
-        
-        containerPanel.add(addButton);
-        containerPanel.add(removeButton);
-        
-        add(containerPanel);
-    }
-}
-
-class TableEditorPanel extends JPanel {
-    
-    JPanel containerPanel;
-    Toolbar toolbar;
-    TableView tableView;
-    
-    public JPanel getToolbar() {
-        return toolbar;
-    }
-    
-    public JTable getTable() {
-        return ((TableView) tableView).getTable();
-    }
-    
-    public String getTabNameAt(int index) {
-        return ((TableView) tableView).getTitleAt(index);
-    }
-    
-    public JPanel getContainer() {
-        return containerPanel;
-    }
-    
-    public TableEditorPanel() {
-        setPreferredSize(new java.awt.Dimension(680, 710));
-        setLayout(new CardLayout());
-        
-        containerPanel = new JPanel();
-        containerPanel.setPreferredSize(new java.awt.Dimension(250, 500));
-        containerPanel.setLayout(new FlowLayout());
-        containerPanel.setBackground(new Color(200, 200, 240));
-        
-        toolbar = new Toolbar();
-        containerPanel.add(toolbar);
-        
-        tableView = new TableView();
-        containerPanel.add(tableView);
-        
-        add(containerPanel);
-    }    
-}
-
-class EditorWindow extends JPanel {
-    
-    private final EditPanel editPanel;
-    private final TableEditorPanel tableEditorPanel;
-    private final FilterPanel filterPanel;
-    
-    public JPanel getGradeEditor() {
-        return editPanel;
-    }
-    
-    public JPanel getTableEditor() {
-        return tableEditorPanel;
-    }
-    
-    public JTable getTable() {
-        return ((TableEditorPanel) getTableEditor()).getTable();
-    }
-    
-    public JPanel getFilter() {
-        return filterPanel;
-    }
-    
-    public String getTabNameAt(int index) {
-        return ( (TableEditorPanel) getTableEditor() ).getTabNameAt(index);
-    }
-    
-    public EditorWindow() {
-        setPreferredSize(new Dimension(1300, 720));
-        setBackground(new Color(20, 20, 60));           // DEBUG
-        
-        editPanel = new EditPanel();
-        tableEditorPanel = new TableEditorPanel();
-        filterPanel = new FilterPanel();
-        
-        add(editPanel);
-        add(tableEditorPanel);
-        add(filterPanel);
-    }
-}
-

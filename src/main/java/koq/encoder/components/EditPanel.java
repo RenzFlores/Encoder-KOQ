@@ -11,15 +11,10 @@ import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.border.LineBorder;
 import koq.encoder.mvc.Model.Actions;
 import koq.encoder.mvc.Model.Fields;
 import koq.encoder.mvc.View;
 
-/**
- *
- * @author KOQ
- */
 public class EditPanel extends JPanel {
     
     private final JPanel containerPanel;
@@ -49,47 +44,49 @@ public class EditPanel extends JPanel {
     private final JButton moveUpButton;
     
     public EditPanel() {
-        setPreferredSize(new java.awt.Dimension(300, 710));
+        setPreferredSize(new java.awt.Dimension(200, 710));
         setLayout(new CardLayout());
         
         containerPanel = new JPanel();
-        containerPanel.setPreferredSize(new java.awt.Dimension(250, 500));
-        containerPanel.setLayout(new FlowLayout(java.awt.FlowLayout.CENTER, 10, 5));
+        containerPanel.setPreferredSize(new java.awt.Dimension(180, 500));
+        containerPanel.setLayout(new FlowLayout(java.awt.FlowLayout.LEFT, 10, 5));
         containerPanel.setBackground(new Color(200, 200, 240));
 
         windowLabel = new JLabel("Encode Grades for:");
-        windowLabel.setPreferredSize(new java.awt.Dimension(200, 24));
+        windowLabel.setPreferredSize(new java.awt.Dimension(180, 24));
         containerPanel.add(windowLabel);
 
         windowTitleSeparator = new JSeparator();
-        windowTitleSeparator.setPreferredSize(new java.awt.Dimension(200, 10));
+        windowTitleSeparator.setPreferredSize(new java.awt.Dimension(180, 10));
         containerPanel.add(windowTitleSeparator);
 
         containerPanel.setMinimumSize(new java.awt.Dimension(200, 300));
         containerPanel.setPreferredSize(new java.awt.Dimension(250, 170));
 
         studentNameLabel = new JLabel("Student name:");
-        studentNameLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        //studentNameLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         studentNameLabel.setPreferredSize(new java.awt.Dimension(100, 24));
         //studentNameLabel.setBorder(new LineBorder(java.awt.Color.RED, 1));    // DEBUG
         containerPanel.add(studentNameLabel);
 
         studentNameContent = new JLabel();
-        studentNameContent.setPreferredSize(new java.awt.Dimension(100, 24));
+        studentNameContent.setPreferredSize(new java.awt.Dimension(180, 24));
+        //studentNameContent.setBorder(new LineBorder(java.awt.Color.RED, 1));          // DEBUG
         containerPanel.add(studentNameContent);
 
         classLabel = new JLabel("Class:");
-        classLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        //classLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         classLabel.setPreferredSize(new java.awt.Dimension(100, 24));
         //classLabel.setBorder(new LineBorder(java.awt.Color.RED, 1));          // DEBUG
-        containerPanel.add(classLabel);
+        //containerPanel.add(classLabel);           UNUSED
 
         classContent = new JLabel();
         classContent.setPreferredSize(new java.awt.Dimension(100, 24));
-        containerPanel.add(classContent);
+        //classContent.setBorder(new LineBorder(java.awt.Color.RED, 1));          // DEBUG
+        //containerPanel.add(classContent);         UNUSED
 
         outputTypeLabel = new JLabel("Output Type:");
-        outputTypeLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        //outputTypeLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         outputTypeLabel.setPreferredSize(new java.awt.Dimension(100, 24));
         //outputTypeLabel.setBorder(new LineBorder(java.awt.Color.RED, 1));     // DEBUG
         // NOTE: OMITTED COMPONENT FOR NOW
@@ -102,7 +99,7 @@ public class EditPanel extends JPanel {
         // containerPanel.add(outputTypeCombo);
 
         outputNumberLabel = new JLabel("Output Number:");
-        outputNumberLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        //outputNumberLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         outputNumberLabel.setPreferredSize(new java.awt.Dimension(100, 24));
         //outputNumberLabel.setBorder(new LineBorder(java.awt.Color.RED, 1));   // DEBUG
         containerPanel.add(outputNumberLabel);
@@ -113,8 +110,8 @@ public class EditPanel extends JPanel {
         containerPanel.add(outputNumberCombo);
 
         gradeLabel = new JLabel("Grade:");
-        gradeLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        gradeLabel.setPreferredSize(new java.awt.Dimension(130, 24));
+        //gradeLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
+        gradeLabel.setPreferredSize(new java.awt.Dimension(150, 24));
         //gradeLabel.setBorder(new LineBorder(java.awt.Color.RED, 1));          // DEBUG
         containerPanel.add(gradeLabel);
 
@@ -147,19 +144,21 @@ public class EditPanel extends JPanel {
         outputNumberCombo.setName(Fields.SELECT_ACTIVITY.name());
         gradeField.setName(Fields.EDIT_GRADE.name());
         maxGradeLabel.setName(Fields.MAX_GRADE.name());
-        prevButton.setName(Actions.PREVIOUSSTUDENT.name());
-        nextButton.setName(Actions.NEXTSTUDENT.name());
-        moveUpButton.setName(Actions.MOVEROWUP.name());
-        moveDownButton.setName(Actions.MOVEROWDOWN.name());
+        prevButton.setName(Actions.PREVIOUS_STUDENT.name());
+        nextButton.setName(Actions.NEXT_STUDENT.name());
+        moveUpButton.setName(Actions.MOVE_ROW_UP.name());
+        moveDownButton.setName(Actions.MOVE_ROW_DOWN.name());
         
         //containerPanel.add(buttonFiller1);
         containerPanel.add(prevButton);
         containerPanel.add(buttonFiller2);
         containerPanel.add(nextButton);
         
+        /* UNUSED COMPONENTS
         containerPanel.add(rearrangeLabel);
         containerPanel.add(moveUpButton);
         containerPanel.add(moveDownButton);
+        */
         
         add(containerPanel);
     }

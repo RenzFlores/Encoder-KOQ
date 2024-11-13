@@ -4,16 +4,13 @@ import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
 
-/**
- *
- * @author KOQ
- */
 public class FilterPanel extends JPanel {
 
     private final JLabel windowLabel;
@@ -30,24 +27,26 @@ public class FilterPanel extends JPanel {
     private final JTextField gradeMinField;
     private final JComboBox outputTypeCombo;
     
+    private final JButton searchButton;
+    
     public JPanel getContainer() {
         return containerPanel;
     }
     
     public FilterPanel() {
-        setPreferredSize(new java.awt.Dimension(300, 710));
+        setPreferredSize(new java.awt.Dimension(200, 710));
         setLayout(new CardLayout());
         
         containerPanel = new JPanel();
-        containerPanel.setPreferredSize(new java.awt.Dimension(250, 500));
-        containerPanel.setLayout(new FlowLayout());
+        containerPanel.setPreferredSize(new java.awt.Dimension(180, 500));
+        containerPanel.setLayout(new FlowLayout(FlowLayout.LEFT, 10, 5));
         containerPanel.setBackground(new Color(200, 200, 240));
 
         windowLabel = new JLabel("Filter");
-        windowLabel.setPreferredSize(new java.awt.Dimension(200, 24));
+        windowLabel.setPreferredSize(new java.awt.Dimension(180, 24));
 
         editPanelSeparator = new JSeparator();
-        editPanelSeparator.setPreferredSize(new Dimension(200, 10));
+        editPanelSeparator.setPreferredSize(new Dimension(180, 10));
 
         studentNameLabel = new JLabel("Student name:");
         studentNameLabel.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
@@ -85,12 +84,15 @@ public class FilterPanel extends JPanel {
         gradeMinField = new JTextField();
         gradeMinField.setPreferredSize(new java.awt.Dimension(100, 24));
         
+        searchButton = new JButton("Search");
+        searchButton.setPreferredSize(new java.awt.Dimension(100, 24));
+                
         containerPanel.add(windowLabel);
         containerPanel.add(editPanelSeparator);
         containerPanel.add(studentNameLabel);
         containerPanel.add(studentNameField);
-        containerPanel.add(classLabel);               // NO USE FOR NOW
-        containerPanel.add(classField);               //
+        //containerPanel.add(classLabel);               // UNUSED
+        //containerPanel.add(classField);               // COMPONENTS
         containerPanel.add(outputTypeLabel);          
         containerPanel.add(outputTypeCombo);
         containerPanel.add(gradeMinLabel);
@@ -99,6 +101,7 @@ public class FilterPanel extends JPanel {
         containerPanel.add(gradeMaxField);
         containerPanel.add(gradeMaxField);
         containerPanel.add(gradeMaxField);
+        containerPanel.add(searchButton);
         
         add(containerPanel);
     }

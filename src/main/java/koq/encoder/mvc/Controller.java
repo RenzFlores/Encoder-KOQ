@@ -1,6 +1,6 @@
 package koq.encoder.mvc;
 
-import classes.Grade;
+import koq.encoder.classes.Grade;
 import koq.encoder.components.AddClassRecordWindow;
 import koq.encoder.components.AddStudentWindow;
 import java.awt.Component;
@@ -18,10 +18,10 @@ import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
-import javax.swing.SwingUtilities;
 import javax.swing.border.LineBorder;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumnModel;
+import koq.encoder.classes.Row;
 import koq.encoder.components.AddActivityWindow;
 import koq.encoder.mvc.Model.Actions;
 import koq.encoder.mvc.Model.Fields;
@@ -40,23 +40,18 @@ public class Controller {
         table.getTableHeader().addMouseListener(new HeaderSelector(table));
         table.addMouseListener(new RowSelector(table));
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.setModel(model.getClassRecord());
-        view.resizeTableHeaders();
-        view.updateEditPanel(model.getSelectedRow(), model.getSelectedActivity(), model.getClassRecord().getRowAt(model.getSelectedRow()));
-        
-        // Set the row selection after all setup is complete
-        SwingUtilities.invokeLater(() -> table.setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow()));
-        table.requestFocus(); // Ensure the table has focus to highlight the selection
+        model.initTable(table, model.getClassRecord());
+        view.resizeTable();
         
         // New Table event
-        ( (JMenuItem) view.getComponent(Actions.NEWTABLE.name()) ).addActionListener((ActionEvent ev) -> {
+        ( (JMenuItem) view.getComponent(Actions.NEW_RECORD.name()) ).addActionListener((ActionEvent ev) -> {
             AddClassRecordWindow window = new AddClassRecordWindow();
             window.setVisible(true);
             window.setLocationRelativeTo(null);
         });
         
         // Open File event
-        ( (JMenuItem) view.getComponent(Actions.OPENFILE.name()) ).addActionListener((ActionEvent ev) -> {
+        ( (JMenuItem) view.getComponent(Actions.OPEN_RECORD.name()) ).addActionListener((ActionEvent ev) -> {
             System.out.println("open file event");
         });
         
@@ -75,7 +70,7 @@ public class Controller {
         });
         
         // Select previous student event
-        ( (JButton) view.getComponent(Actions.PREVIOUSSTUDENT.name()) ).addActionListener((ActionEvent ev) -> {
+        ( (JButton) view.getComponent(Actions.PREVIOUS_STUDENT.name()) ).addActionListener((ActionEvent ev) -> {
             int row = model.getSelectedRow();
             if (row > 0) {
                 model.setSelectedRow(row-1);
@@ -84,7 +79,7 @@ public class Controller {
         });
         
         // Select next student event
-        ( (JButton) view.getComponent(Actions.NEXTSTUDENT.name()) ).addActionListener((ActionEvent ev) -> {
+        ( (JButton) view.getComponent(Actions.NEXT_STUDENT.name()) ).addActionListener((ActionEvent ev) -> {
             int row = model.getSelectedRow();
             if (row < model.getClassRecord().getClassList().size()-1) {
                 model.setSelectedRow(row+1);
@@ -111,25 +106,24 @@ public class Controller {
             if (value.isBlank()) {
                 grade.setGrade(null);
             } 
+            // An input of only '.' will result in an exception, relay an error if this happens
+            else if (value.equals(".")) {
+                // Set border color to Red
+                ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).setBorder(new LineBorder(java.awt.Color.RED, 1));
+                System.out.println("Error: Invalid input");
+            }
             // Input exceeds range and will feedback an error
             else if (Double.parseDouble(value) > grade.getMaxGrade() || Double.parseDouble(value) < 0) {
                 // Set border color to Red
                 ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).setBorder(new LineBorder(java.awt.Color.RED, 1));
                 System.out.println("Error: Input must be between 0 and " + grade.getMaxGrade());
             } 
+            // Input accepted
             else {
-                // Input accepted
-                try {
-                    // Clear border color
-                    ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).setBorder(null);
-                    grade.setGrade(Double.parseDouble(value));
-                } 
-                // An input of only '.' will result in an exception, relay an error if this happens
-                catch (java.lang.NumberFormatException e) {
-                    // Set border color to Red
-                    ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).setBorder(new LineBorder(java.awt.Color.RED, 1));
-                    System.out.println("Error: Invalid input");
-                }
+                // Clear border color
+                ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).setBorder(null);
+                grade.setGrade(Double.parseDouble(value));
+                model.updateGrade(grade.getGradeId(), Double.parseDouble(value));
             }
             
             // Update the table in view
@@ -156,14 +150,13 @@ public class Controller {
         });
         
         // Add to Table button clicked event
-        JButton addButton = (JButton) view.getComponent(Actions.ADDTOTABLE.name());
-        addButton.addActionListener((ActionEvent e) -> {
+        ( (JButton) view.getComponent(Actions.ADD_TO_TABLE.name()) ).addActionListener((ActionEvent e) -> {
             // Show context menu right below the button, centered
             view.showContextMenu();
         });
         
         // Remove from Table button clicked event
-        ( (JButton) view.getComponent(Actions.REMOVEFROMTABLE.name()) ).addActionListener((ActionEvent ev) -> {
+        ( (JButton) view.getComponent(Actions.REMOVE_FROM_TABLE.name()) ).addActionListener((ActionEvent ev) -> {
             int response = -1;
             boolean deleteStudent = false;
             
@@ -209,12 +202,15 @@ public class Controller {
                     model.getClassRecord().getClassList().remove(row);
                     model.getClassRecord().fireTableRowsDeleted(table.getSelectedRow(), table.getSelectedRow());
                 } catch (SQLException e) {}
-                
             } 
             // Delete activity
             else if (response == JOptionPane.YES_OPTION && !deleteStudent) {
                 try {
-                    int activityId = model.getClassRecord().getClassList().get(0).getGrades().get(table.getSelectedColumn()-2).getActivityId();
+                    // BUG: java.lang.IndexOutOfBoundsException when there are no student entries
+                    int activityId = model.getActivityIdInDB(
+                        model.getClassRecord().getClassId(), 
+                        model.getClassRecord().getColumnName(table.getSelectedColumn())
+                    );
                     
                     // List to hold the grades to delete
                     ArrayList<Grade> gradesToRemove = new ArrayList<>();
@@ -234,6 +230,7 @@ public class Controller {
                     // Remove column from table
                     model.getClassRecord().deleteColumn(table.getSelectedColumn());
                     
+                    view.resizeTable();
                 } catch (SQLException e) {}
             }
         });
@@ -248,12 +245,12 @@ public class Controller {
                 
                 if (source.getText().equals("Student")) {
                     studentWindow.setVisible(true);
-                    
                     studentWindow.getButton().addActionListener(new AddStudentWindowListener(studentWindow));
                 } else if (source.getText().equals("Activity")) {
                     activityWindow.setVisible(true);
                     activityWindow.getButton().addActionListener(new AddActivityWindowListener(activityWindow));
                 }
+                view.resizeTable();
             }
         };
         
@@ -270,23 +267,27 @@ public class Controller {
         // Add Activity event
         ( (JMenuItem) view.getComponent(Actions.ADDACTIVITY.name()) ).addActionListener(menuListener);
         
-        // Action to move selected row up
-        ( (JButton) view.getComponent( Actions.MOVEROWUP.name() ) ).addActionListener((ActionEvent e) -> {
+        // Action to move selected row up (UNUSED COMPONENT)
+        /*
+        ( (JButton) view.getComponent( Actions.MOVE_ROW_UP.name() ) ).addActionListener((ActionEvent e) -> {
             int selectedRow = table.getSelectedRow();
             if (selectedRow > 0) {
                 model.getClassRecord().moveRow(selectedRow, selectedRow - 1);
                 table.setRowSelectionInterval(selectedRow - 1, selectedRow - 1);
             }
         });
+        */
 
-        // Action to move selected row down
-        ( (JButton) view.getComponent( Actions.MOVEROWDOWN.name() ) ).addActionListener((ActionEvent e) -> {
+        // Action to move selected row down (UNUSED COMPONENT)
+        /*
+        ( (JButton) view.getComponent( Actions.MOVE_ROW_DOWN.name() ) ).addActionListener((ActionEvent e) -> {
             int selectedRow = table.getSelectedRow();
             if (selectedRow < model.getClassRecord().getRowCount() - 1 && selectedRow >= 0) {
                 model.getClassRecord().moveRow(selectedRow, selectedRow + 1);
                 table.setRowSelectionInterval(selectedRow + 1, selectedRow + 1);
             }
         });
+        */
     }
     
     // Listener for the confirmation button in AddStudentWindow
@@ -318,6 +319,7 @@ public class Controller {
 
             if (validForm) {
                 model.addStudentToClassRecord(firstName, lastName);
+                view.resizeTable();
                 window.dispose();
             }
         }
@@ -402,6 +404,7 @@ public class Controller {
                         model.addExamToTable(Double.parseDouble(totalScore));
                         activityTypeId = 5;
                 }
+                view.resizeTable();
                 window.dispose();
             }
         }
