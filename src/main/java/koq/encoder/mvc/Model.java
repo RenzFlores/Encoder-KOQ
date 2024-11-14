@@ -43,7 +43,7 @@ public class Model {
     private Connection serverConn;
     private String url = "jdbc:mysql://localhost:3306/";
     private String user = "root";
-    private String password = "root";
+    private String password = "password";
     
     public String DATA_DIRECTORY = System.getProperty("user.dir") + "\\resources\\data\\";
     
