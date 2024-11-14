@@ -15,6 +15,7 @@ koq\encoder\classes\ClassRecord.class
 koq\encoder\classes\ActivityType.class
 koq\encoder\components\SetGradeWeightsWindow.class
 koq\encoder\mvc\RowSelector.class
+koq\encoder\components\InitializeDatabase.class
 koq\encoder\mvc\Controller$SetGradeWeightsWindowListener.class
 koq\encoder\components\WrappedHeaderRenderer.class
 koq\encoder\components\NumericDocumentListener.class

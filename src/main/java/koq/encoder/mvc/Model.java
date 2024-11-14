@@ -17,8 +17,11 @@ import koq.encoder.classes.Student;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import koq.encoder.classes.ClassRecord;
@@ -92,7 +95,7 @@ public class Model {
         selectedTab = 0;
         
         try {
-            db = connectToDB("encoder_data");
+            db = connectToDB();
         } catch (SQLException e) { e.printStackTrace(); }
         
         studentList = getAllStudents();         // UNUSED
@@ -449,16 +452,16 @@ public class Model {
     }
     
     // Connect to a database
-    private Connection connectToDB(String schema) throws SQLException {
+    private Connection connectToDB() throws SQLException {
         try {
             serverConn = DriverManager.getConnection(url, user, password);
-            if (!dbExists(schema)) {
-                System.out.println("Error: Schema '" + schema + "' does not exist. Creating...");
-                createSchema(schema);
+            if (!dbExists("encoder_data")) {
+                System.out.println("Error: Schema 'encoder_data' does not exist. Creating...");
+                new koq.encoder.components.InitializeDatabase(serverConn, url, user, password);
             }
         } catch (SQLException e) { e.printStackTrace(); }
         
-        return DriverManager.getConnection(url + schema, user, password);
+        return DriverManager.getConnection(url + "encoder_data", user, password);
     }
     
     private List<Student> getAllStudents() {
@@ -480,6 +483,9 @@ public class Model {
         return studentList;
     }
     
+    /**
+     * NOTE: Currently unused. Remove later
+     */
     private List<Activity> getActivitiesInClassRecord(String className, String subjectName, int term) {
         List<Activity> activityList = new ArrayList<>();
         
@@ -737,120 +743,6 @@ public class Model {
             } else {
                 return false;
         }
-    }
-    
-    /**
-     * Creates a new schema with all the tables if it does not exist
-     * NOTE: Update this later
-     */
-    private void createSchema(String name) {
-        try {
-            Statement s = serverConn.createStatement();
-            s.executeUpdate("CREATE SCHEMA " + name + ";");
-            
-            // After creating schema, connect to database and create tables
-            Connection connection = DriverManager.getConnection(url + name, user, password);
-            s = connection.createStatement();
-            
-            s.executeUpdate("""
-                CREATE TABLE activity_types (
-                    activity_type_id INT PRIMARY KEY NOT NULL,
-                    activity_type_name VARCHAR(50) NOT NULL
-                );
-            """);
-            
-            s.executeUpdate("INSERT INTO activity_types (activity_type_id, activity_type_name) VALUES ('1', 'Seatwork');");
-            s.executeUpdate("INSERT INTO activity_types (activity_type_id, activity_type_name) VALUES ('2', 'Assignment');");
-            s.executeUpdate("INSERT INTO activity_types (activity_type_id, activity_type_name) VALUES ('3', 'Performance Task');");
-            s.executeUpdate("INSERT INTO activity_types (activity_type_id, activity_type_name) VALUES ('4', 'Quiz');");
-            s.executeUpdate("INSERT INTO activity_types (activity_type_id, activity_type_name) VALUES ('5', 'Exam');");
-            System.out.println("activity_types table created");
-            
-            s.executeUpdate("""
-                CREATE TABLE classes (
-                    class_id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
-                    grade_level INT NOT NULL,
-                    section VARCHAR(50) NOT NULL,
-                    subject VARCHAR(100) NOT NULL,
-                    term INT NOT NULL,
-                    academic_year VARCHAR(10) NOT NULL
-                );
-            """);
-            System.out.println("classes table created");
-
-            s.executeUpdate("""
-                CREATE TABLE activities (
-                    activity_id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
-                    class_id INT NOT NULL,
-                    activity_name VARCHAR(30) NOT NULL,
-                    max_grade DECIMAL(5, 2) NOT NULL,
-                    activity_type_id INT NOT NULL,
-                    FOREIGN KEY (class_id) REFERENCES classes(class_id),
-                    FOREIGN KEY (activity_type_id) REFERENCES activity_types(activity_type_id)
-                );
-            """);
-            System.out.println("activities table created");
-
-            s.executeUpdate("""
-                CREATE TABLE students (
-                    student_id INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
-                    first_name VARCHAR(50) NOT NULL,
-                    last_name VARCHAR(50) NOT NULL
-                );
-            """);
-            System.out.println("students table created");
-            
-            s.executeUpdate("""
-                CREATE TABLE grades (
-                  grade_id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-                  student_id INT NOT NULL,
-                  class_id INT NOT NULL,
-                  activity_id INT NOT NULL,
-                  grade DECIMAL(5,2) DEFAULT NULL,
-                  FOREIGN KEY (student_id) REFERENCES Students(student_id),
-                  FOREIGN KEY (activity_id) REFERENCES Activities(activity_id)
-                );
-            """);
-            System.out.println("grades table created");
-            
-            s.executeUpdate("""                      
-                CREATE TABLE student_classes (
-                  student_class_id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-                  class_id int NOT NULL,
-                  student_id int NOT NULL,
-                  FOREIGN KEY (class_id) REFERENCES classes (class_id),
-                  FOREIGN KEY (student_id) REFERENCES students (student_id)
-                );
-            """);
-            System.out.println("student_classes table created");
-            
-            s.executeUpdate("""
-                CREATE TABLE grade_weights (
-                    grade_weight_id INT AUTO_INCREMENT PRIMARY KEY,
-                    class_id INT NOT NULL,
-                    seatwork_weight DECIMAL(4, 2) NOT NULL,
-                    homework_weight DECIMAL(4, 2) NOT NULL,
-                    quiz_weight DECIMAL(4, 2) NOT NULL,
-                    performance_task_weight DECIMAL(4, 2) NOT NULL,
-                    exam_weight DECIMAL(4, 2) NOT NULL,
-                    FOREIGN KEY (class_id) REFERENCES classes(class_id)
-                );
-            """);
-            System.out.println("grade_weights table created");
-            
-            s.executeUpdate("""
-                CREATE TABLE final_grades (
-                    final_grade_id INT PRIMARY KEY AUTO_INCREMENT,
-                    student_class_id INT NOT NULL,
-                    final_grade DECIMAL(5, 2) NOT NULL,
-                    FOREIGN KEY (student_class_id) REFERENCES student_classes(student_class_id)
-                );
-            """);
-            System.out.println("final_grades table created");
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        System.out.println("Schema " + name + " created.");
     }
     
     /**
@@ -1159,8 +1051,8 @@ public class Model {
                 
                 gradeList.add(new Grade(
                     rs.getInt("grade_id"), 
-                    rs.getInt("student_id"), 
-                    rs.getInt("class_id"), 
+                    rs.getInt("student_id"),
+                    rs.getInt("class_id"),
                     rs.getInt("activity_id"), 
                     grade,
                     Double.parseDouble(rs.getString("max_grade"))
@@ -1170,5 +1062,19 @@ public class Model {
         
         System.out.println("GradeList size: " + gradeList.size());
         return gradeList;
+    }
+    
+
+    /**
+     * Method for transmuting grades
+     */
+    public int transmute(double score) {
+        if (score > 0) {
+            return 0;
+        } else if (score < 60) {
+            return (int) Math.floor(60 + score/4);
+        } else {
+            return (int) Math.floor(75 + ((score-60)/1.6));
+        }
     }
 }
