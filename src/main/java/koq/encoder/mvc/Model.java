@@ -29,15 +29,10 @@ public class Model {
     private int selectedRow;
     private int selectedColumn;
     private int selectedActivity;
+    private int selectedTab;
     private List<Student> studentList;
     private ClassRecord record;
     private ClassRecord currentClassRecord;
-    
-    private String addStudentFirstName;
-    private String addStudentLastName;
-    private String addActivitySection;
-    private String addActivitySubject;
-    private int addActivityTerm;
     
     private Connection db;
     private Connection serverConn;
@@ -94,9 +89,7 @@ public class Model {
         selectedRow = 0;
         selectedColumn = 0;
         selectedActivity = 0;
-        
-        addStudentFirstName = null;
-        addStudentLastName = null;
+        selectedTab = 0;
         
         try {
             db = connectToDB("encoder_data");
@@ -105,8 +98,6 @@ public class Model {
         studentList = getAllStudents();         // UNUSED
         
         record = null;
-        
-        currentClassRecord = record;
     }
     
     private Connection getConnection() {
@@ -176,37 +167,11 @@ public class Model {
     public void setSelectedActivity(int index) {
         selectedActivity = index;
     }
-    
-    public void setStudentFirstName(String name) {
-        addStudentFirstName = name;
+    public void setSelectedTab(int index) {
+        selectedTab = index;
     }
-    public void setStudentLastName(String name) {
-        addStudentLastName = name;
-    }
-    public String getStudentFirstName() {
-        return addStudentFirstName;
-    }
-    public String getStudentLastName() {
-        return addStudentLastName;
-    }
-    
-    public void setActivitySection(String section) {
-        addActivitySection = section;
-    }
-    public void setActivitySubject(String name) {
-        addActivitySubject = name;
-    }
-    public void setActivityTerm(int term) {
-        addActivityTerm = term;
-    }
-    public String getActivitySection() {
-        return addActivitySection;
-    }
-    public String getActivitySubject() {
-        return addActivitySubject;
-    }
-    public int getActivityTerm() {
-        return addActivityTerm;
+    public int getSelectedTab() {
+        return selectedTab;
     }
     
     public String serializeClassRecord(ClassRecord record) {

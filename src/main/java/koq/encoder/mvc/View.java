@@ -202,8 +202,8 @@ public class View {
         frame.setTitle(title);
     }
     
-    public JTable getTable() {
-        return ((EditorWindow) getEditorWindow()).getTable();
+    public JTable getTable(int term) {
+        return ((EditorWindow) getEditorWindow()).getTable(term);
     }
     
     public Double getGradeFieldValue() {
@@ -220,56 +220,63 @@ public class View {
         ( (JLabel) getComponent(Fields.MAX_GRADE.name()) ).setText("/" + value);
     }
     
-    public String getTableValueAt(int row, int col) {
-        return String.valueOf(getTable().getModel().getValueAt(row, col));
+    public String getTableValueAt(JTable table, int row, int col) {
+        return String.valueOf(table.getModel().getValueAt(row, col));
     }
             
     public EditorWindow getEditorWindow() {
         return editorWindow;
     }
+    
+    public JTabbedPane getTabbedPane() {
+        return editorWindow.getTableView();
+    }
         
-    public void resizeTable() {
-        if (getTable().getTableHeader() != null) {
+    public void resizeTable(int selectedTab) {
+        JTable table = getTable(selectedTab);
+        
+        if (table.getTableHeader() != null) {
             WrappedHeaderRenderer headerRenderer = new WrappedHeaderRenderer();
             StudentNameRenderer studentNameRenderer = new StudentNameRenderer();
 
-            for (int i = 0; i < getTable().getColumnModel().getColumnCount(); i++) {
-                getTable().getColumnModel().getColumn(i).setHeaderRenderer(headerRenderer);
+            for (int i = 0; i < table.getColumnModel().getColumnCount(); i++) {
+                table.getColumnModel().getColumn(i).setHeaderRenderer(headerRenderer);
             }
 
-            if (getTable().getColumnModel().getColumnCount() > 0) {
+            if (table.getColumnModel().getColumnCount() > 0) {
 
-                getTable().getColumnModel().getColumn(1).setCellRenderer(studentNameRenderer);
+                table.getColumnModel().getColumn(1).setCellRenderer(studentNameRenderer);
 
-                getTable().getTableHeader().setBackground(Color.LIGHT_GRAY);
+                table.getTableHeader().setBackground(Color.LIGHT_GRAY);
 
-                getTable().getColumnModel().getColumn(0).setPreferredWidth(20);
-                getTable().getColumnModel().getColumn(0).setMaxWidth(20);
-                getTable().getColumnModel().getColumn(1).setPreferredWidth(150);
-                getTable().getColumnModel().getColumn(1).setMaxWidth(150);
+                table.getColumnModel().getColumn(0).setPreferredWidth(20);
+                table.getColumnModel().getColumn(0).setMaxWidth(20);
+                table.getColumnModel().getColumn(1).setPreferredWidth(150);
+                table.getColumnModel().getColumn(1).setMaxWidth(150);
 
-                getTable().setRowHeight(30);
+                table.setRowHeight(30);
             }
 
             // Set each column to be unresizable
-            for (int i = 0; i < getTable().getColumnModel().getColumnCount(); i++) {
-                getTable().getColumnModel().getColumn(i).setResizable(false);
+            for (int i = 0; i < table.getColumnModel().getColumnCount(); i++) {
+                table.getColumnModel().getColumn(i).setResizable(false);
             }
 
-            getTable().revalidate();
-            getTable().repaint();
+            table.revalidate();
+            table.repaint();
         }
     }
     
     /**
      * Set editor panel values
      */
-    public void updateEditPanel(int selectedRowIndex, int selectedActivity, Row selectedRow) {
+    public void updateEditPanel(int selectedTab, int selectedRowIndex, int selectedActivity, Row selectedRow) {
+        JTable table = editorWindow.getTable(selectedTab);
         
         if (selectedRow == null) {
             setStudentNameInEditor("");
         } else {
-            setStudentNameInEditor(getTableValueAt(selectedRowIndex, 1));
+            setStudentNameInEditor(getTableValueAt(table, selectedRowIndex, 1));
         }
         
         // UNUSED, might remove later
@@ -281,8 +288,8 @@ public class View {
         JComboBox selectActivity = getOutputNumberComboBox();
         DefaultComboBoxModel comboModel = new DefaultComboBoxModel();
         // Populate the combo box
-        for (int i = 2; i < getTable().getModel().getColumnCount()-1; i++) {
-            comboModel.addElement(getTable().getModel().getColumnName(i));
+        for (int i = 2; i < table.getModel().getColumnCount()-1; i++) {
+            comboModel.addElement(table.getModel().getColumnName(i));
         }
         selectActivity.setModel(comboModel);
         
@@ -292,7 +299,7 @@ public class View {
         } catch (java.lang.IllegalArgumentException e) {}       // Ignore and do nothing instead
         
         // Update grade text field with the value of current selection
-        String value = getTableValueAt(selectedRowIndex, selectActivity.getSelectedIndex()+2);
+        String value = getTableValueAt(table, selectedRowIndex, selectActivity.getSelectedIndex()+2);
         if (value.equals("null")) {
             setGradeFieldValue("");
         } else {

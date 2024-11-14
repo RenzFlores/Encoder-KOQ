@@ -40,7 +40,7 @@ public class Controller {
         this.model = model;
         this.view = view;
         
-        JTable table = view.getTable();
+        JTable table = view.getTable(model.getSelectedTab());
         
         // New Table event
         ( (JMenuItem) view.getComponent(Actions.NEW_RECORD.name()) ).addActionListener((ActionEvent ev) -> {
@@ -65,10 +65,10 @@ public class Controller {
 
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 model.setClassRecord(model.deserializeClassRecord(fileChooser.getSelectedFile()));
-                model.getClassRecord().initClassList();             // Initialize arrayList
-                model.initClassRecord(model.getClassRecord());      // Populate arrayList
-                model.initTable(view.getTable(), model.getClassRecord());     // Set table model
-                view.resizeTable();                                 // Setup table
+                model.getClassRecord().initClassList();                                             // Initialize arrayList
+                model.initClassRecord(model.getClassRecord());                                      // Populate arrayList
+                model.initTable(view.getTable(model.getSelectedTab()), model.getClassRecord());     // Set table model
+                view.resizeTable(model.getSelectedTab());                                           // Setup table
                 view.setWindowTitle(model.getClassRecord().toString());
                 System.out.println("Class Record set to " + fileChooser.getSelectedFile().getName());
             }
@@ -115,12 +115,17 @@ public class Controller {
             }
         });
         
+        // Tab selection listeners
+        view.getTabbedPane().addChangeListener(e -> {
+            model.setSelectedTab(view.getTabbedPane().getSelectedIndex());
+        });
+        
         // Activity selection listener
         ( (JComboBox) view.getComponent(Fields.SELECT_ACTIVITY.name()) ).addActionListener((ActionEvent ev) -> {
             model.setSelectedActivity(
                 ((JComboBox) view.getComponent(Fields.SELECT_ACTIVITY.name())).getSelectedIndex()
             );
-            view.updateEditPanel(model.getSelectedRow(), model.getSelectedActivity(), model.getClassRecord().getRowAt(model.getSelectedRow()));
+            view.updateEditPanel(model.getSelectedTab(), model.getSelectedRow(), model.getSelectedActivity(), model.getClassRecord().getRowAt(model.getSelectedRow()));
         });
         
         // Grade text field DocumentListener
@@ -171,6 +176,7 @@ public class Controller {
                 if (selectedRow != -1) {  // Ensure a valid row is selected
                     model.setSelectedRow(selectedRow);
                     view.updateEditPanel(
+                        model.getSelectedTab(),
                         selectedRow, 
                         model.getSelectedActivity(), 
                         model.getClassRecord().getRowAt(selectedRow)
@@ -262,7 +268,7 @@ public class Controller {
                     // Remove column from table
                     model.getClassRecord().deleteColumn(table.getSelectedColumn());
                     
-                    view.resizeTable();
+                    view.resizeTable(model.getSelectedTab());
                 } catch (SQLException e) {}
             }
         });
@@ -282,7 +288,7 @@ public class Controller {
                     activityWindow.setVisible(true);
                     activityWindow.getButton().addActionListener(new AddActivityWindowListener(activityWindow));
                 }
-                view.resizeTable();
+                view.resizeTable(model.getSelectedTab());
             }
         };
         
@@ -354,7 +360,7 @@ public class Controller {
 
             if (validForm) {
                 model.addStudentToClassRecord(firstName, lastName);
-                view.resizeTable();
+                view.resizeTable(model.getSelectedTab());
                 window.dispose();
             }
         }
@@ -439,7 +445,7 @@ public class Controller {
                         model.addExamToTable(Double.parseDouble(totalScore));
                         activityTypeId = 5;
                 }
-                view.resizeTable();
+                view.resizeTable(model.getSelectedTab());
                 window.dispose();
             }
         }
@@ -508,8 +514,9 @@ public class Controller {
 
                     model.getClassRecord().initClassList();                     // Initialize arrayList
                     model.initClassRecord(model.getClassRecord());              // Populate arrayList
-                    model.initTable(view.getTable(), model.getClassRecord());   // Set table model
-                    view.resizeTable();                                         // Setup table
+                    model.initTable(
+                        view.getTable(model.getSelectedTab()), model.getClassRecord());   // Set table model
+                    view.resizeTable(model.getSelectedTab());                                         // Setup table
                     view.setWindowTitle(model.getClassRecord().toString());     // Set window title
                     System.out.println("Class Record set");
                     window.dispose();

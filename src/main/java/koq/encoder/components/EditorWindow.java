@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
 
@@ -19,24 +20,16 @@ public class EditorWindow extends JPanel {
         return editPanel;
     }
     
-    /*
-    public JPanel getTableEditor() {
-        return tableEditorPanel;
-    }
-    */
-    
-    /*
-    public JTable getTable() {
-        return ((TableEditorPanel) getTableEditor()).getTable();
-    }
-    */
-    
-    public JTable getTable() {
-        return tableView.getTable();
+    public JTable getTable(int term) {
+        return tableView.getTable(term);
     }
     
     public JToolBar getToolbar() {
         return toolbar;
+    }
+    
+    public JTabbedPane getTableView() {
+        return tableView;
     }
     
     public JPanel getFilter() {

@@ -1,46 +1,50 @@
 package koq.encoder.components;
 
-import java.awt.BorderLayout;
-import java.awt.CardLayout;
-import java.awt.Color;
-import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
-import javax.swing.table.AbstractTableModel;
 
-/**
- *
- * @author KOQ
- */
-public class TableView extends JPanel {
+public class TableView extends JTabbedPane {
     
-    JTable table;
-    JScrollPane viewport;
+    JTable tableQ1;
+    JTable tableQ2;
+    JTable tableQ3;
+    JTable tableQ4;
     
-    public JTable getTable() {
-        return table;
+    public JTable getTable(int term) {
+        switch(term) {
+            case 1:
+                return tableQ1;
+            case 2:
+                return tableQ2;
+            case 3:
+                return tableQ3;
+            default:
+                return tableQ4;
+        }
     }
     
     /**
      * Wrapping of window components in order:
-     * TableView (JPanel) > Viewport (JScrollPane) > Table (JTable)
+     * TableView (JTabbedPane) > Viewport (JScrollPane) > Table (JTable)
      */
     public TableView() {
         setPreferredSize(new java.awt.Dimension(860, 650));
-        setLayout(new BorderLayout());
         
-        table = new JTable();
+        tableQ1 = createTable();
+        tableQ2 = createTable();
+        tableQ3 = createTable();
+        tableQ4 = createTable();
         
-        table.setName("table");
+        addTab("1st Quarter", new JScrollPane(tableQ1));
+        addTab("2nd Quarter", new JScrollPane(tableQ2));
+        addTab("3rd Quarter", new JScrollPane(tableQ3));
+        addTab("4th Quarter", new JScrollPane(tableQ4));
+    }
+    
+    private JTable createTable() {
+        JTable table = new JTable();
         table.getTableHeader().setReorderingAllowed(false);
-        table.setColumnSelectionAllowed(true);
-        
-        viewport = new JScrollPane(table);
-        //viewport.setBackground(new Color(150, 0, 0));         // DEBUG
-        table.setFillsViewportHeight(true);                     // Ensures the table fills the vertical space of the viewport
-
-        // Add scrollpane to panel
-        add(viewport, BorderLayout.CENTER);
+        return table;
     }
 }

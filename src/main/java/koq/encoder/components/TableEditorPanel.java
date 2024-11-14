@@ -18,8 +18,8 @@ public class TableEditorPanel extends JPanel {
         return toolbar;
     }
     
-    public JTable getTable() {
-        return ((TableView) tableView).getTable();
+    public JTable getTable(int term) {
+        return ((TableView) tableView).getTable(term);
     }
     
     public JPanel getContainer() {
