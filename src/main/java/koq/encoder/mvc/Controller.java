@@ -26,6 +26,7 @@ import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumnModel;
 import koq.encoder.classes.Row;
 import koq.encoder.components.AddActivityWindow;
+import koq.encoder.components.LoginWindow;
 import koq.encoder.mvc.Model.Actions;
 import koq.encoder.mvc.Model.Fields;
 import koq.encoder.components.NumericDocumentListener;
@@ -49,6 +50,32 @@ public class Controller {
             window.getButton().addActionListener(new AddClassRecordWindowListener(window));
         });
         
+        // Login button event handler
+        view.getLoginWindow().getButton().addActionListener((ActionEvent ev) -> {
+            LoginWindow window = view.getLoginWindow();
+            String id = window.getId();
+            char[] password = window.getPassword();
+            
+            // Check for matching credentials
+            if (!(model.checkForLogin(id, password))) {
+                JOptionPane.showMessageDialog(
+                    null,
+                    "Incorrect ID and password",
+                    "Invalid form",
+                    JOptionPane.WARNING_MESSAGE
+                );
+            } else {
+                view.initEditWindow();
+                window.dispose();
+            }
+        });
+        
+        // Logout event
+        ( (JMenuItem) view.getComponent(Actions.LOGOUT.name()) ).addActionListener((ActionEvent ev) -> {
+            model.setCurrentUser(null);
+            view.setLoginWindow();
+        });
+        
         // Open File event
         ( (JMenuItem) view.getComponent(Actions.OPEN_RECORD.name()) ).addActionListener((ActionEvent ev) -> {
             JFileChooser fileChooser = new JFileChooser();
@@ -63,15 +90,17 @@ public class Controller {
             // Show the save dialog
             int returnValue = fileChooser.showOpenDialog(null);
 
+            /* OUTDATED
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 model.setClassRecord(model.deserializeClassRecord(fileChooser.getSelectedFile()));
-                model.getClassRecord().initClassList();                                             // Initialize arrayList
-                model.initClassRecord(model.getClassRecord());                                      // Populate arrayList
-                model.initTable(view.getTable(model.getSelectedTab()), model.getClassRecord());     // Set table model
+                model.getGradePeriod().initClassList();                                             // Initialize arrayList
+                model.initClassRecord(model.getGradePeriod());                                      // Populate arrayList
+                model.initTable(view.getTable(model.getSelectedTab()), model.getGradePeriod());     // Set table model
                 view.resizeTable(model.getSelectedTab());                                           // Setup table
-                view.setWindowTitle(model.getClassRecord().toString());
+                view.setWindowTitle(model.getGradePeriod().toString());
                 System.out.println("Class Record set to " + fileChooser.getSelectedFile().getName());
             }
+            */
         });
         
         /** Export File event (UNUSED)
@@ -95,24 +124,28 @@ public class Controller {
         
         // Select previous student event
         ( (JButton) view.getComponent(Actions.PREVIOUS_STUDENT.name()) ).addActionListener((ActionEvent ev) -> {
+            /* OUTDATED
             int row = model.getSelectedRow();
-            if (model.getClassRecord() != null) {
+            if (model.getGradePeriod() != null) {
                 if (row > 0) {
                     model.setSelectedRow(row-1);
                     table.setRowSelectionInterval(row-1, row-1);
                 }
             }
+            */
         });
         
         // Select next student event
         ( (JButton) view.getComponent(Actions.NEXT_STUDENT.name()) ).addActionListener((ActionEvent ev) -> {
+            /* OUTDATED
             int row = model.getSelectedRow();
-            if (model.getClassRecord() != null) {
-                if (row < model.getClassRecord().getClassList().size()-1) {
+            if (model.getGradePeriod() != null) {
+                if (row < model.getGradePeriod().getClassList().size()-1) {
                     model.setSelectedRow(row+1);
                     table.setRowSelectionInterval(row+1, row+1);
                 }
             }
+            */
         });
         
         // Tab selection listeners
@@ -125,7 +158,7 @@ public class Controller {
             model.setSelectedActivity(
                 ((JComboBox) view.getComponent(Fields.SELECT_ACTIVITY.name())).getSelectedIndex()
             );
-            view.updateEditPanel(model.getSelectedTab(), model.getSelectedRow(), model.getSelectedActivity(), model.getClassRecord().getRowAt(model.getSelectedRow()));
+            //view.updateEditPanel(model.getSelectedTab(), model.getSelectedRow(), model.getSelectedActivity(), model.getGradePeriod().getRowAt(model.getSelectedRow()));
         });
         
         // Grade text field DocumentListener
@@ -135,7 +168,8 @@ public class Controller {
             String value = ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).getText();
            
             if (model.getClassRecord() != null) {
-                Grade grade = model.getClassRecord().getRowAt(row).getGrades().get(col);
+                Grade grade = model.getGradePeriod(model.getSelectedTab()).getRowAt(row).getGrades().get(col);
+                
                 // Empty field will set grade value to null
                 if (value.isBlank()) {
                     grade.setGrade(null);
@@ -161,7 +195,7 @@ public class Controller {
                 }
 
                 // Update the table in view
-                model.getClassRecord().fireTableRowsUpdated(row, row);
+                model.getGradePeriod(model.getSelectedTab()).fireTableRowsUpdated(row, row);       
             }
         });
         
@@ -175,22 +209,26 @@ public class Controller {
         
                 if (selectedRow != -1) {  // Ensure a valid row is selected
                     model.setSelectedRow(selectedRow);
+                    /*  OUTDATED
                     view.updateEditPanel(
                         model.getSelectedTab(),
                         selectedRow, 
                         model.getSelectedActivity(), 
-                        model.getClassRecord().getRowAt(selectedRow)
+                        model.getGradePeriod().getRowAt(selectedRow)
                     );
+                    */
                 }
             }
         });
         
         // Add to Table button clicked event
         ( (JButton) view.getComponent(Actions.ADD_TO_TABLE.name()) ).addActionListener((ActionEvent e) -> {
-            if (model.getClassRecord() != null) {
+            /*  OUTDATED
+            if (model.getGradePeriod() != null) {
                 // Show context menu right below the button, centered
                 view.showContextMenu();
             }
+            */
         });
         
         // Remove from Table button clicked event
@@ -198,11 +236,12 @@ public class Controller {
             int response = -1;
             boolean deleteStudent = false;
             
+            /* OUTDATED UPDATE THIS
             // Check if only row selection is allowed
             if (table.getRowSelectionAllowed() && !table.getColumnSelectionAllowed()) {
                 response = JOptionPane.showConfirmDialog(
                     null,
-                    model.getClassRecord().getClassList().get(table.getSelectedRow()).getStudent().getStudentName() + 
+                    model.getGradePeriod().getClassList().get(table.getSelectedRow()).getStudent().getStudentName() + 
                         " will be deleted from this class record and all their recorded grades.\n" + 
                         "This action cannot be undone, confirm?",
                     "Warning",
@@ -217,7 +256,7 @@ public class Controller {
                 if (table.getSelectedColumn() > 1) {
                     response = JOptionPane.showConfirmDialog(
                         null,
-                        model.getClassRecord().getColumnName(table.getSelectedColumn()) + 
+                        model.getGradePeriod().getColumnName(table.getSelectedColumn()) + 
                             " will be deleted from this class record and all recorded grades in this activity.\n" + 
                             "This action cannot be undone, confirm?",
                         "Warning",
@@ -227,50 +266,57 @@ public class Controller {
                     deleteStudent = false;
                 }
             }
+            */
             
             // Delete student
+            
+            /*
             if (response == JOptionPane.YES_OPTION && deleteStudent) {
                 try {
                     System.out.println("Deleting student...");
-                    Row row = model.getClassRecord().getClassList().get(table.getSelectedRow());
-                    model.removeStudentFromClass(row.getStudent().getStudentId(), model.getClassRecord().getClassId());
+                    Row row = model.getGradePeriod().getClassList().get(table.getSelectedRow());
+                    model.removeStudentFromClass(row.getStudent().getStudentId(), model.getGradePeriod().getClassId());
                     for (Grade g: row.getGrades()) {
                         model.deleteGradeInDB(g);
                     }
-                    model.getClassRecord().getClassList().remove(row);
-                    model.getClassRecord().fireTableRowsDeleted(table.getSelectedRow(), table.getSelectedRow());
+                    model.getGradePeriod().getClassList().remove(row);
+                    model.getGradePeriod().fireTableRowsDeleted(table.getSelectedRow(), table.getSelectedRow());
                 } catch (SQLException e) {}
-            } 
+            }
+            */
+            
             // Delete activity
+            
+            /* OUTDATED UPDATE THIS
             else if (response == JOptionPane.YES_OPTION && !deleteStudent) {
                 try {
-                    // BUG: java.lang.IndexOutOfBoundsException when there are no student entries
                     int activityId = model.getActivityIdInDB(
-                        model.getClassRecord().getClassId(), 
-                        model.getClassRecord().getColumnName(table.getSelectedColumn())
+                        model.getGradePeriod().getClassId(), 
+                        model.getGradePeriod().getColumnName(table.getSelectedColumn())
                     );
                     
                     // List to hold the grades to delete
                     ArrayList<Grade> gradesToRemove = new ArrayList<>();
                     
-                    for (Row r: model.getClassRecord().getClassList())  {
+                    for (Row r: model.getGradePeriod().getClassList())  {
                         Grade g = r.getGrades().get(table.getSelectedColumn()-2);
                         model.deleteGradeInDB(g);
                         gradesToRemove.add(g);      // Collect grade for removal after iteration
                     }
                     
                     // Now remove the grades from each row after collecting them
-                    for (Row r : model.getClassRecord().getClassList()) {
+                    for (Row r : model.getGradePeriod().getClassList()) {
                         r.getGrades().removeAll(gradesToRemove); // Safely remove all grades at once
                     }
                     model.deleteActivity(activityId);
                     
                     // Remove column from table
-                    model.getClassRecord().deleteColumn(table.getSelectedColumn());
+                    model.getGradePeriod().deleteColumn(table.getSelectedColumn());
                     
                     view.resizeTable(model.getSelectedTab());
                 } catch (SQLException e) {}
             }
+            */
         });
         
         // Add ActionListener to menu items to detect clicks
@@ -299,12 +345,14 @@ public class Controller {
         
         ( (JButton) view.getComponent(Actions.EDIT_GRADE_WEIGHTS.name()) ).addActionListener(new ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                if (model.getClassRecord() != null) {
+                /*  OUTDATED
+                if (model.getGradePeriod() != null) {
                     SetGradeWeightsWindow gradeWeightsWindow = new SetGradeWeightsWindow();
 
                     gradeWeightsWindow.setVisible(true);
                     gradeWeightsWindow.getButton().addActionListener(new SetGradeWeightsWindowListener(gradeWeightsWindow));
                 }
+                */
             }
         });
         
@@ -313,7 +361,7 @@ public class Controller {
         ( (JButton) view.getComponent( Actions.MOVE_ROW_UP.name() ) ).addActionListener((ActionEvent e) -> {
             int selectedRow = table.getSelectedRow();
             if (selectedRow > 0) {
-                model.getClassRecord().moveRow(selectedRow, selectedRow - 1);
+                model.getGradePeriod().moveRow(selectedRow, selectedRow - 1);
                 table.setRowSelectionInterval(selectedRow - 1, selectedRow - 1);
             }
         });
@@ -323,8 +371,8 @@ public class Controller {
         /*
         ( (JButton) view.getComponent( Actions.MOVE_ROW_DOWN.name() ) ).addActionListener((ActionEvent e) -> {
             int selectedRow = table.getSelectedRow();
-            if (selectedRow < model.getClassRecord().getRowCount() - 1 && selectedRow >= 0) {
-                model.getClassRecord().moveRow(selectedRow, selectedRow + 1);
+            if (selectedRow < model.getGradePeriod().getRowCount() - 1 && selectedRow >= 0) {
+                model.getGradePeriod().moveRow(selectedRow, selectedRow + 1);
                 table.setRowSelectionInterval(selectedRow + 1, selectedRow + 1);
             }
         });
@@ -359,7 +407,7 @@ public class Controller {
             }
 
             if (validForm) {
-                model.addStudentToClassRecord(firstName, lastName);
+                //model.addStudentToClassRecord(firstName, lastName);
                 view.resizeTable(model.getSelectedTab());
                 window.dispose();
             }
@@ -381,16 +429,17 @@ public class Controller {
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            String activityName = window.getActivityName();
             String activityType = window.getActivityType();
             String totalScore = window.getTotalScore();
             int activityTypeId;
             boolean validForm = true;
 
             // Empty field will show an error
-            if (totalScore.isBlank()) {
+            if (activityName.isBlank() || totalScore.isBlank()) {
                 JOptionPane.showMessageDialog(
                     null,
-                    "Please provide the total score.",
+                    "Please provide the activity name and total score.",
                     "Invalid form",
                     JOptionPane.WARNING_MESSAGE
                 );
@@ -425,25 +474,17 @@ public class Controller {
             
             if (validForm) {
                 switch(activityType) {
-                    case "Seatwork":
-                        model.addSeatworkToTable(Double.parseDouble(totalScore));
+                    case "Written Work":
+                        //model.addWWToTable(Double.parseDouble(totalScore));
                         activityTypeId = 1;
                         break;
-                    case "Homework":
-                        model.addHWToTable(Double.parseDouble(totalScore));
+                    case "Performance Task":
+                        //model.addPTToTable(Double.parseDouble(totalScore));
                         activityTypeId = 2;
                         break;
-                    case "Performance Task":
-                        model.addPTToTable(Double.parseDouble(totalScore));
+                    case "Quarterly Assessment":
+                        //model.addQAToTable(Double.parseDouble(totalScore));
                         activityTypeId = 3;
-                        break;
-                    case "Quiz":
-                        model.addQuizToTable(Double.parseDouble(totalScore));
-                        activityTypeId = 4;
-                        break;
-                    default:
-                        model.addExamToTable(Double.parseDouble(totalScore));
-                        activityTypeId = 5;
                 }
                 view.resizeTable(model.getSelectedTab());
                 window.dispose();
@@ -501,6 +542,11 @@ public class Controller {
                 validForm = false;
             }
 
+            /**
+             * OUTDATED. UPDATE THIS
+             */
+            
+            /*
             if (validForm) {
                 if (!model.classRecordExists(gradeLevel, section, subject, term, schoolYear)) {
                     model.addClassRecordInDB(gradeLevel, section, subject, term, schoolYear);
@@ -510,14 +556,14 @@ public class Controller {
                         model.setClassRecord(model.getClassRecordInDB(classId));
                     } catch (SQLException err) { err.printStackTrace(); }
 
-                    model.serializeClassRecord(model.getClassRecord());         // Serialize class record
+                    model.serializeClassRecord(model.getGradePeriod());         // Serialize class record
 
-                    model.getClassRecord().initClassList();                     // Initialize arrayList
-                    model.initClassRecord(model.getClassRecord());              // Populate arrayList
+                    model.getGradePeriod().initClassList();                     // Initialize arrayList
+                    model.initClassRecord(model.getGradePeriod());              // Populate arrayList
                     model.initTable(
-                        view.getTable(model.getSelectedTab()), model.getClassRecord());   // Set table model
+                        view.getTable(model.getSelectedTab()), model.getGradePeriod());   // Set table model
                     view.resizeTable(model.getSelectedTab());                                         // Setup table
-                    view.setWindowTitle(model.getClassRecord().toString());     // Set window title
+                    view.setWindowTitle(model.getGradePeriod().toString());     // Set window title
                     System.out.println("Class Record set");
                     window.dispose();
                 } else {
@@ -529,6 +575,7 @@ public class Controller {
                     );
                 }
             }
+            */
         }
     }
 }

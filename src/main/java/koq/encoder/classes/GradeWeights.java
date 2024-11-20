@@ -1,5 +1,8 @@
 package koq.encoder.classes;
 
+/**
+ * OUTDATED
+ */
 public class GradeWeights {
 
     private int gradeWeightId;             // Primary key

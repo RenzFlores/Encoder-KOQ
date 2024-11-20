@@ -1,10 +1,14 @@
 koq\encoder\classes\GradeWeights.class
 koq\encoder\classes\Row.class
 koq\encoder\mvc\Controller$AddClassRecordWindowListener.class
+koq\encoder\components\LoginWindow.class
 koq\encoder\components\AddClassRecordWindow.class
 koq\encoder\mvc\Controller$AddActivityWindowListener.class
+koq\encoder\classes\GradeSheet.class
 koq\encoder\components\AddStudentWindow.class
+koq\encoder\classes\Faculty.class
 koq\encoder\components\StudentNameRenderer.class
+koq\encoder\classes\GradePeriod.class
 koq\encoder\mvc\Controller$2.class
 koq\encoder\mvc\Controller$AddStudentWindowListener.class
 koq\encoder\components\TableEditorPanel.class
@@ -24,4 +28,5 @@ koq\encoder\components\AddActivityWindow.class
 koq\encoder\mvc\Controller$1.class
 koq\encoder\classes\Grade.class
 koq\encoder\components\FilterPanel.class
+koq\encoder\classes\FinalGradeSheet.class
 koq\encoder\mvc\Controller.class

@@ -26,11 +26,9 @@ public class InitializeDatabase {
                 );
             """);
             
-            s.executeUpdate("INSERT INTO activity_types (activity_type_id, activity_type_name) VALUES ('1', 'Seatwork');");
-            s.executeUpdate("INSERT INTO activity_types (activity_type_id, activity_type_name) VALUES ('2', 'Assignment');");
-            s.executeUpdate("INSERT INTO activity_types (activity_type_id, activity_type_name) VALUES ('3', 'Performance Task');");
-            s.executeUpdate("INSERT INTO activity_types (activity_type_id, activity_type_name) VALUES ('4', 'Quiz');");
-            s.executeUpdate("INSERT INTO activity_types (activity_type_id, activity_type_name) VALUES ('5', 'Exam');");
+            s.executeUpdate("INSERT INTO activity_types (activity_type_id, activity_type_name) VALUES ('1', 'Written Work');");
+            s.executeUpdate("INSERT INTO activity_types (activity_type_id, activity_type_name) VALUES ('2', 'Performance Task');");
+            s.executeUpdate("INSERT INTO activity_types (activity_type_id, activity_type_name) VALUES ('3', 'Quarterly Assessment');");
             System.out.println("activity_types table created");
             
             s.executeUpdate("""

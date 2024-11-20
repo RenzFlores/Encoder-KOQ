@@ -11,6 +11,7 @@ import koq.encoder.mvc.Model.Actions;
 import koq.encoder.components.EditPanel;
 import koq.encoder.components.EditorWindow;
 import koq.encoder.components.FilterPanel;
+import koq.encoder.components.LoginWindow;
 import koq.encoder.components.StudentNameRenderer;
 import koq.encoder.components.WrappedHeaderRenderer;
 import koq.encoder.mvc.Model.Fields;
@@ -21,6 +22,8 @@ public class View {
 
     private final MenuBar menuBar;
     private final EditorWindow editorWindow;
+    
+    private LoginWindow loginWindow;
     
     private final AddContextMenu addContextMenu;
     
@@ -41,9 +44,9 @@ public class View {
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(View.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
-         
+        
         frame = new JFrame("Grade Encoder");                           
-        frame.setSize(1280, 720);                 
+        frame.setSize(1280, 720);
         frame.setLayout(new CardLayout());
         frame.setLocationRelativeTo(null);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -53,15 +56,23 @@ public class View {
         frame.setJMenuBar(menuBar);
         
         editorWindow = new EditorWindow();
-        frame.add(editorWindow);
-        
+       
         addContextMenu = new AddContextMenu();
         addContextMenu.setName("Add Context Menu");
         
         componentList = new ArrayList();
         initializeComponentList();
         
-        frame.pack();
+        loginWindow = new LoginWindow();
+        
+        setLoginWindow();
+        
+        //initEditWindow();
+    }
+    
+    public void setLoginWindow() {
+        frame.remove(editorWindow);
+        loginWindow.setVisible(true);
     }
     
     /**
@@ -133,6 +144,15 @@ public class View {
         else {
             throw new RuntimeException("Component " + componentName + " not found");
         }
+    }
+    
+    public LoginWindow getLoginWindow() {
+        return loginWindow;
+    }
+    
+    public void initEditWindow() {
+        frame.add(editorWindow);
+        frame.pack();
     }
     
     public void showContextMenu() {
@@ -324,21 +344,25 @@ class MenuBar extends JMenuBar {
 
     JMenu menuFile;
     JMenu menuEdit;
+    JMenu menuAccount;
     JMenu menuHelp;
     JMenuItem menuNewTable;
     JMenuItem menuOpenFile;
+    JMenuItem menuAddStudent;
     JMenuItem menuExportFile;
     JMenuItem menuExit;
     JMenuItem menuEditGradeWeights;
     JMenuItem menuCreateReportCard;
+    JMenuItem menuLogout;
     JMenuItem menuKeyboardShortcuts;
     JMenuItem menuAbout;
     
     public MenuBar() {
         // Instantiate the first menu option(File) and its items
-        menuFile = new JMenu("File");
+        menuFile = new JMenu("Record");
         menuNewTable  = new JMenuItem("New Class Record");
         menuOpenFile  = new JMenuItem("Open Class Record");
+        menuAddStudent  = new JMenuItem("Add Student to System");
         menuExportFile  = new JMenuItem("Export File");                         // UNUSED
         menuExit  = new JMenuItem("Exit");
         
@@ -349,6 +373,7 @@ class MenuBar extends JMenuBar {
         
         menuFile.add(menuNewTable);
         menuFile.add(menuOpenFile);       
+        menuFile.add(menuAddStudent);       
         //menuFile.add(menuExportFile);         UNUSED
         menuFile.add(menuExit);
         
@@ -362,6 +387,11 @@ class MenuBar extends JMenuBar {
         
         //menuEdit.add(menuEditGradeWeights);
         
+        menuAccount = new JMenu("Account");
+        menuLogout = new JMenuItem("Logout");
+        
+        menuAccount.add(menuLogout);
+        
         // Instantiate the third menu options(Help) and its items
         menuHelp = new JMenu("Help");
         menuKeyboardShortcuts = new JMenuItem("Keyboard Shortcuts");
@@ -373,7 +403,9 @@ class MenuBar extends JMenuBar {
         // Set actions to each JMenuItem
         menuNewTable.setName(Actions.NEW_RECORD.name());
         menuOpenFile.setName(Actions.OPEN_RECORD.name());
+        menuAddStudent.setName(Actions.ADD_STUDENT_SYSTEM.name());
         menuExportFile.setName(Actions.EXPORTFILE.name());
+        menuLogout.setName(Actions.LOGOUT.name());
         menuExit.setName(Actions.EXIT.name());
         menuKeyboardShortcuts.setName(Actions.VIEWSHORTCUTS.name());
         menuAbout.setName(Actions.VIEWABOUT.name());
@@ -381,6 +413,7 @@ class MenuBar extends JMenuBar {
         // Add all menus to menu bar
         add(menuFile);
         //add(menuEdit);        // UNUSED
+        add(menuAccount);
         add(menuHelp);
     }
 }

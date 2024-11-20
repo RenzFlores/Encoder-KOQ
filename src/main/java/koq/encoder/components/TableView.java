@@ -8,8 +8,9 @@ public class TableView extends JTabbedPane {
     
     JTable tableQ1;
     JTable tableQ2;
-    JTable tableQ3;
-    JTable tableQ4;
+    JTable tableQ1GradeSheet;
+    JTable tableQ2GradeSheet;
+    JTable tableFinalGrade;
     
     public JTable getTable(int term) {
         switch(term) {
@@ -18,9 +19,11 @@ public class TableView extends JTabbedPane {
             case 2:
                 return tableQ2;
             case 3:
-                return tableQ3;
+                return tableQ1GradeSheet;
+            case 4:
+                return tableQ2GradeSheet;
             default:
-                return tableQ4;
+                return tableFinalGrade;
         }
     }
     
@@ -33,13 +36,29 @@ public class TableView extends JTabbedPane {
         
         tableQ1 = createTable();
         tableQ2 = createTable();
-        tableQ3 = createTable();
-        tableQ4 = createTable();
+        tableQ1GradeSheet = createTable();
+        tableQ2GradeSheet = createTable();
+        tableFinalGrade = createTable();
         
-        addTab("1st Quarter", new JScrollPane(tableQ1));
-        addTab("2nd Quarter", new JScrollPane(tableQ2));
-        addTab("3rd Quarter", new JScrollPane(tableQ3));
-        addTab("4th Quarter", new JScrollPane(tableQ4));
+        addTab("Grade Period 1", new JScrollPane(tableQ1));
+        addTab("Grade Period 2", new JScrollPane(tableQ2));
+        addTab("Grade Sheet 1", new JScrollPane(tableQ1GradeSheet));
+        addTab("Grade Sheet 2", new JScrollPane(tableQ2GradeSheet));
+        addTab("Semester Final Grade", new JScrollPane(tableFinalGrade));
+    }
+    
+    private void setTabNames(int semester) {
+        if (semester == 1) {
+            setTitleAt(1, "Q1 Grading Period");
+            setTitleAt(2, "Q2 Grading Period");
+            setTitleAt(3, "Q1 Grading Period");
+            setTitleAt(4, "Q2 Grading Period");
+        } else if (semester == 2) {
+            setTitleAt(1, "Q3 Grading Period");
+            setTitleAt(2, "Q4 Grading Period");
+            setTitleAt(3, "Q3 Grading Period");
+            setTitleAt(4, "Q4 Grading Period");
+        }
     }
     
     private JTable createTable() {
