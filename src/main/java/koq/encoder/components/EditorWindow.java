@@ -2,6 +2,7 @@ package koq.encoder.components;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
@@ -50,6 +51,20 @@ public class EditorWindow extends JPanel {
         add(BorderLayout.CENTER, tableView);
         add(BorderLayout.WEST, editPanel);
         add(BorderLayout.EAST, filterPanel);
+    }
+    
+    public void enableWindow() {
+        editPanel.setEnabled(true);
+        toolbar.setEnabled(true);
+        tableView.setEnabled(true);
+        filterPanel.setEnabled(true);
+    }
+    
+    public void disableWindow() {
+        editPanel.setEnabled(false);
+        toolbar.setEnabled(false);
+        tableView.setEnabled(false);
+        filterPanel.setEnabled(false);
     }
 }
 

@@ -78,18 +78,8 @@ public class Controller {
         
         // Open File event
         ( (JMenuItem) view.getComponent(Actions.OPEN_RECORD.name()) ).addActionListener((ActionEvent ev) -> {
-            JFileChooser fileChooser = new JFileChooser();
-
-            // Set the current directory to the project's data directory
-            File dir = new File(model.DATA_DIRECTORY);
-            fileChooser.setCurrentDirectory(dir);
+            model.setClassRecord(model.getClassRecordInDB(1));
             
-            // Set File filter
-            fileChooser.setFileFilter(new FileNameExtensionFilter("Java Serialized Object (.ser)", "ser"));
-
-            // Show the save dialog
-            int returnValue = fileChooser.showOpenDialog(null);
-
             /* OUTDATED
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 model.setClassRecord(model.deserializeClassRecord(fileChooser.getSelectedFile()));

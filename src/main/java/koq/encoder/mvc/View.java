@@ -152,6 +152,7 @@ public class View {
     
     public void initEditWindow() {
         frame.add(editorWindow);
+        editorWindow.disableWindow();
         frame.pack();
     }
     

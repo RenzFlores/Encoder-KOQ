@@ -556,8 +556,8 @@ getGradePeriod().getClassId(),      // class_id
      * Retrieves a class record from the database
      * OUTDATED
      */
-    public GradePeriod getClassRecordInDB(int classId) throws SQLException {
-        GradePeriod record = null;
+    public ClassRecord getClassRecordInDB(int classId) {
+        ClassRecord record = null;
         
         try {
             PreparedStatement ps = getConnection().prepareStatement("""
@@ -569,16 +569,15 @@ getGradePeriod().getClassId(),      // class_id
             ResultSet rs = ps.executeQuery();
             
             if (rs.next()) {
-                /*  OUTDATED. UPDATE THIS
-                record = new GradePeriod(
+                record = new ClassRecord(
                     rs.getInt("class_id"), 
+                    rs.getInt("faculty_id"), 
+                    rs.getInt("subject_id"), 
                     rs.getInt("grade_level"),
                     rs.getString("section"), 
-                    rs.getString("subject"), 
-                    rs.getInt("term"), 
+                    rs.getInt("semester"), 
                     rs.getString("academic_year")
                 );
-                */ 
                 System.out.println("Retrieved class record details. Class record object created");
             }
         } catch (SQLException e) { e.printStackTrace(); }
@@ -586,7 +585,7 @@ getGradePeriod().getClassId(),      // class_id
         if (record != null) {
             return record;
         } else {
-            throw new SQLException("Class record with class_id = " + classId + " not found");
+            throw new NullPointerException("Class record with class_id = " + classId + " not found. Object is null");
         }
     }
     

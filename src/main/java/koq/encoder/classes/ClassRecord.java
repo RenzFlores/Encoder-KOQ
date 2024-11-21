@@ -4,10 +4,11 @@ public class ClassRecord {
     
     // Class Record Metadata
     private int classId;
+    private int facultyId;
+    private int subjectId;
     private int gradeLevel;
     private String section;
-    private String subject;
-    private Integer term;
+    private Integer semester;
     private String schoolYear;
     
     private GradePeriod gradePeriodQ1;
@@ -16,21 +17,22 @@ public class ClassRecord {
     private GradeSheet gradeSheetQ2;
     private FinalGradeSheet finalGradeSheet; 
     
-    public ClassRecord(int classId, int gradeLevel, String section, String subject, int term, String schoolYear) {
+    public ClassRecord(int classId, int facultyId, int subjectId, int gradeLevel, String section, int semester, String schoolYear) {
         this.classId = classId;
+        this.facultyId = facultyId;
+        this.subjectId = subjectId;
         this.gradeLevel = gradeLevel;
         this.section = section;
-        this.subject = subject;
-        this.term = term;
+        this.semester = semester;
         this.schoolYear = schoolYear;
     }
     
-    // Setters (important)
+    // Setters (important!)
     public void setData(
             GradePeriod gradePeriodQ1, 
             GradePeriod gradePeriodQ2, 
             GradeSheet gradeSheetQ1, 
-            GradeSheet gradeSheetQ2, 
+            GradeSheet gradeSheetQ2,
             FinalGradeSheet finalGradeSheet) {
         this.gradePeriodQ1 = gradePeriodQ1;
         this.gradePeriodQ2 = gradePeriodQ2;
@@ -71,17 +73,14 @@ public class ClassRecord {
     public String getSection() {
         return section;
     }
-    public String getSubject() {
-        return subject;
-    }
     public int getTerm() {
-        return term;
+        return semester;
     }
     public String getSY() {
         return schoolYear;
     }
     public String getFormattedTerm() {
-        switch(term) {
+        switch(semester) {
             case 1:
                 return "1st Quarter";
             case 2:
@@ -96,12 +95,11 @@ public class ClassRecord {
     }
     
     public String toString() {
-        return String.format("%d | %s | %s | %s | %s", 
+        return String.format("%d | %s | %s | %s", 
                 getGradeLevel(),
                 getSection(),
                 getFormattedTerm(),
-                getSY(),
-                getSubject()
+                getSY()
         );
     }
 }

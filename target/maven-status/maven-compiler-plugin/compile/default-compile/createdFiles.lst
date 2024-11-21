@@ -1,5 +1,6 @@
 koq\encoder\classes\GradeWeights.class
 koq\encoder\classes\Row.class
+koq\encoder\components\RegisterFacultyWindow.class
 koq\encoder\mvc\Controller$AddClassRecordWindowListener.class
 koq\encoder\components\LoginWindow.class
 koq\encoder\components\AddClassRecordWindow.class
