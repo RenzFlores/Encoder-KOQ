@@ -1,6 +1,5 @@
 package koq.encoder.classes;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.table.AbstractTableModel;
@@ -8,16 +7,14 @@ import javax.swing.table.AbstractTableModel;
 /**
  * Custom table for representing a class record in the GUI
  */
-public class GradePeriod extends AbstractTableModel implements Serializable {
-    private static final long serialVersionUID = 1L;
-    
+public class GradePeriod extends AbstractTableModel {
     // Table model contents
-    private transient List<Row> classList;
-    private transient List<String> columnNames;
+    private List<Row> rows;
+    private List<String> columnNames;
     
     public GradePeriod() {
-        this.classList = null;          // Empty rows
-        this.columnNames = null;     // Empty columns
+        rows = new ArrayList<>();           // Empty rows
+        columnNames = new ArrayList<>();    // Empty columns
     }
    
     // Insert new column
@@ -32,39 +29,35 @@ public class GradePeriod extends AbstractTableModel implements Serializable {
     }
     
     // Setters
-    public void setClassList(List<Row> list) {
-        classList = list;
+    public void setRows(List<Row> list) {
+        rows = list;
     }
     public void setColumnNames(List<String> activityNames) {
         List<String> cols = new ArrayList<>();
         
         cols.add("#");
         cols.add("Student Name");
+        cols.add("Sex");
         cols.addAll(activityNames);
-        cols.add("Computed Raw Grades");
         
         columnNames = cols;
     }
-    public void initClassList() {
-        classList = new ArrayList<>();
-        columnNames = new ArrayList<>();
-    }
 
     public Row getRowAt(int index) {
-        if (index < classList.size()) {
-            return classList.get(index);
+        if (index < rows.size()) {
+            return rows.get(index);
         } else {
-            throw new IndexOutOfBoundsException("Index " + index + " out of bounds for length " + classList.size());
+            throw new IndexOutOfBoundsException("Index " + index + " out of bounds for length " + rows.size());
         }
     }
     
-    public List<Row> getClassList() {
-        return classList;
+    public List<Row> getRows() {
+        return rows;
     }
     
     @Override
     public int getRowCount() {
-        return classList.size();
+        return rows.size();
     }
 
     @Override
@@ -83,50 +76,48 @@ public class GradePeriod extends AbstractTableModel implements Serializable {
 
     @Override
     public Object getValueAt(int row, int col) {
-        Row r = classList.get(row);
+        Row r = rows.get(row);
         
         int colModulo = col % (columnNames.size());
         
         // Set cell to row number on first column (#)
         if (colModulo == 0) {
-            return classList.indexOf(r)+1;
+            return rows.indexOf(r)+1;
         } 
-        // Set cell to student name (Surname, First name) on second column (Student Name)
+        // Set cell to student name (Surname, First name M.I.) on second column (Student Name)
         else if (colModulo == 1) {
             return r.getStudent().getStudentNameFormatted();
         } 
-        // Set cell to computed raw grade on last column (Computed Raw Grade)
-        else if (colModulo == columnNames.size()-1) {
-            if (r.getComputedGrades()  == null) {
-                return null;
-            }
-            return r.getComputedGrades();
+        // Set cell to student sex on third column (Sex)
+        else if (colModulo == 2) {
+            return r.getStudent().getGenderInitial();
         }
         // Otherwise, set cell to grade value (either null or Double)
         else {
-            if (r.getGrades().get(colModulo-2) == null) {
+            if (r.getGrades().get(colModulo-3) == null) {
                 return null;
             }
-            return r.getGrades().get(colModulo-2).getGrade();
+            return r.getGrades().get(colModulo-3).getGrade();
         }
     }
 
     @Override
     public boolean isCellEditable(int row, int col) {
-        return col > 0; // Make only certain columnNames editable
+        return false;
     }
 
     @Override
     public void setValueAt(Object value, int row, int col) {
-        Row obj = classList.get(row);
+        Row obj = rows.get(row);
         
         int colModulo = col % (columnNames.size());
-                
+        
+        // Only set values if table is not empty
         if (colModulo > 1) {
             if (value == null) {
                 obj.setGradesAt(colModulo-1, null);
             } else {
-                obj.setGradesAt(colModulo-1, Double.parseDouble( (String) value ));
+                obj.setGradesAt(colModulo-1, Integer.parseInt( (String) value ));
             }
         }
         
@@ -134,13 +125,13 @@ public class GradePeriod extends AbstractTableModel implements Serializable {
     }
     
     public void moveRow(int fromIndex, int toIndex) {
-        if (fromIndex < 0 || toIndex < 0 || fromIndex >= classList.size() || toIndex >= classList.size()) {
+        if (fromIndex < 0 || toIndex < 0 || fromIndex >= rows.size() || toIndex >= rows.size()) {
             throw new IndexOutOfBoundsException("Invalid row index");
         }
 
         // Swap the rows
-        Row row = classList.remove(fromIndex);
-        classList.add(toIndex, row);
+        Row row = rows.remove(fromIndex);
+        rows.add(toIndex, row);
 
         // Notify the table about the data change
         fireTableRowsDeleted(fromIndex, fromIndex);

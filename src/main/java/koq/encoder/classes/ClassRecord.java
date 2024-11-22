@@ -1,5 +1,7 @@
 package koq.encoder.classes;
 
+import java.util.List;
+
 public class ClassRecord {
     
     // Class Record Metadata
@@ -8,9 +10,10 @@ public class ClassRecord {
     private int subjectId;
     private int gradeLevel;
     private String section;
-    private Integer semester;
+    private int semester;
     private String schoolYear;
     
+    private List<Student> classList;
     private GradePeriod gradePeriodQ1;
     private GradePeriod gradePeriodQ2;
     private GradeSheet gradeSheetQ1;
@@ -25,6 +28,12 @@ public class ClassRecord {
         this.section = section;
         this.semester = semester;
         this.schoolYear = schoolYear;
+        
+        this.classList = null;          // Empty class list. Must be populated thru database calls
+        this.gradePeriodQ1 = new GradePeriod();
+        this.gradePeriodQ2 = new GradePeriod();
+        this.gradeSheetQ1 = null;
+        this.gradeSheetQ2 = null;
     }
     
     // Setters (important!)
@@ -36,9 +45,22 @@ public class ClassRecord {
             FinalGradeSheet finalGradeSheet) {
         this.gradePeriodQ1 = gradePeriodQ1;
         this.gradePeriodQ2 = gradePeriodQ2;
-        this.gradeSheetQ1 = gradeSheetQ1;
-        this.gradeSheetQ2 = gradeSheetQ2;
-        this.finalGradeSheet = finalGradeSheet;
+        this.gradeSheetQ1 = null;                   // CHANGE THIS LATER
+        this.gradeSheetQ2 = null;
+        this.finalGradeSheet = null;
+    }
+    
+    public void setClassList(List<Student> students) {
+        this.classList = students;
+    }
+    
+    public void setGradePeriod(int quarter, List<Row> rows) {
+        switch (quarter) {
+            case 1:
+                gradePeriodQ1.setRows(rows);
+            default:
+                gradePeriodQ2.setRows(rows);
+        }
     }
     
     // Getters
@@ -70,10 +92,13 @@ public class ClassRecord {
     public int getGradeLevel() {
         return gradeLevel;
     }
+    public List<Student> getClassList() {
+        return classList;
+    }
     public String getSection() {
         return section;
     }
-    public int getTerm() {
+    public int getSemester() {
         return semester;
     }
     public String getSY() {

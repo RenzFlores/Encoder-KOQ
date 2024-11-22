@@ -156,6 +156,10 @@ public class View {
         frame.pack();
     }
     
+    public void enableTabs() {
+        editorWindow.enableWindow();
+    }
+    
     public void showContextMenu() {
         JButton addButton = (JButton) getComponent(Actions.ADD_TO_TABLE.name());
         addContextMenu.show(addButton,
@@ -223,12 +227,12 @@ public class View {
         frame.setTitle(title);
     }
     
-    public JTable getTable(int term) {
-        return ((EditorWindow) getEditorWindow()).getTable(term);
+    public JTable getTable(int table) {
+        return ((EditorWindow) getEditorWindow()).getTable(table);
     }
     
-    public Double getGradeFieldValue() {
-        return Double.parseDouble(
+    public Integer getGradeFieldValue() {
+        return Integer.parseInt(
           ( (JTextField) getComponent(Fields.EDIT_GRADE.name()) ).getText()
         );
     }
@@ -252,64 +256,79 @@ public class View {
     public JTabbedPane getTabbedPane() {
         return editorWindow.getTableView();
     }
+    
+    public void setTabNames(int semester) {
+        JTabbedPane tableView = getTabbedPane();
+        if (semester == 1) {
+            tableView.setTitleAt(0, "Q1 Grading Period");
+            tableView.setTitleAt(1, "Q2 Grading Period");
+            tableView.setTitleAt(2, "Q1 Grading Sheet");
+            tableView.setTitleAt(3, "Q2 Grading Sheet");
+        } else if (semester == 2) {
+            tableView.setTitleAt(0, "Q3 Grading Period");
+            tableView.setTitleAt(1, "Q4 Grading Period");
+            tableView.setTitleAt(2, "Q3 Grading Sheet");
+            tableView.setTitleAt(3, "Q4 Grading Sheet");
+        }
+    }
         
     public void resizeTable(int selectedTab) {
         JTable table = getTable(selectedTab);
         
-        if (table.getTableHeader() != null) {
-            WrappedHeaderRenderer headerRenderer = new WrappedHeaderRenderer();
-            StudentNameRenderer studentNameRenderer = new StudentNameRenderer();
+        WrappedHeaderRenderer headerRenderer = new WrappedHeaderRenderer();
+        StudentNameRenderer studentNameRenderer = new StudentNameRenderer();
 
-            for (int i = 0; i < table.getColumnModel().getColumnCount(); i++) {
-                table.getColumnModel().getColumn(i).setHeaderRenderer(headerRenderer);
-            }
-
-            if (table.getColumnModel().getColumnCount() > 0) {
-
-                table.getColumnModel().getColumn(1).setCellRenderer(studentNameRenderer);
-
-                table.getTableHeader().setBackground(Color.LIGHT_GRAY);
-
-                table.getColumnModel().getColumn(0).setPreferredWidth(20);
-                table.getColumnModel().getColumn(0).setMaxWidth(20);
-                table.getColumnModel().getColumn(1).setPreferredWidth(150);
-                table.getColumnModel().getColumn(1).setMaxWidth(150);
-
-                table.setRowHeight(30);
-            }
-
-            // Set each column to be unresizable
-            for (int i = 0; i < table.getColumnModel().getColumnCount(); i++) {
-                table.getColumnModel().getColumn(i).setResizable(false);
-            }
-
-            table.revalidate();
-            table.repaint();
+        for (int i = 0; i < table.getColumnModel().getColumnCount(); i++) {
+            table.getColumnModel().getColumn(i).setHeaderRenderer(headerRenderer);
         }
+
+        if (table.getColumnModel().getColumnCount() > 0) {
+
+            table.getColumnModel().getColumn(1).setCellRenderer(studentNameRenderer);
+
+            table.getTableHeader().setBackground(Color.LIGHT_GRAY);
+
+            // Set column 1 width (Student number)
+            table.getColumnModel().getColumn(0).setPreferredWidth(20);
+            table.getColumnModel().getColumn(0).setMaxWidth(20);
+            // Set column 2 width (Student name)
+            table.getColumnModel().getColumn(1).setPreferredWidth(150);
+            table.getColumnModel().getColumn(1).setMaxWidth(150);
+            // Set column 3 width (Student gender)
+            table.getColumnModel().getColumn(2).setPreferredWidth(30);
+            table.getColumnModel().getColumn(2).setMaxWidth(30);
+
+            table.setRowHeight(30);
+        }
+
+        // Set each column to be unresizable
+        for (int i = 0; i < table.getColumnModel().getColumnCount(); i++) {
+            table.getColumnModel().getColumn(i).setResizable(false);
+        }
+
+        table.revalidate();
+        table.repaint();
     }
     
     /**
      * Set editor panel values
      */
-    public void updateEditPanel(int selectedTab, int selectedRowIndex, int selectedActivity, Row selectedRow) {
+    public void updateEditPanel(int selectedTab, int selectedActivity, Row selectedRow) {
         JTable table = editorWindow.getTable(selectedTab);
         
         if (selectedRow == null) {
             setStudentNameInEditor("");
         } else {
-            setStudentNameInEditor(getTableValueAt(table, selectedRowIndex, 1));
+            setStudentNameInEditor(selectedRow.getStudent().getStudentNameFormatted());
         }
-        
-        // UNUSED, might remove later
-        // setStudentClassInEditor((String) ((EditorWindow) getEditorWindow()).getTabNameAt(0));
         
         /**
          * Set combo box to contain the list of activities in the current table
          */
         JComboBox selectActivity = getOutputNumberComboBox();
         DefaultComboBoxModel comboModel = new DefaultComboBoxModel();
-        // Populate the combo box
-        for (int i = 2; i < table.getModel().getColumnCount()-1; i++) {
+        // Populate the combo box starting from 4th column to last column
+        for (int i = 3; i < table.getModel().getColumnCount(); i++) {
             comboModel.addElement(table.getModel().getColumnName(i));
         }
         selectActivity.setModel(comboModel);
@@ -320,11 +339,11 @@ public class View {
         } catch (java.lang.IllegalArgumentException e) {}       // Ignore and do nothing instead
         
         // Update grade text field with the value of current selection
-        String value = getTableValueAt(table, selectedRowIndex, selectActivity.getSelectedIndex()+2);
-        if (value.equals("null")) {
+        Integer value = selectedRow.getGrades().get(selectActivity.getSelectedIndex()).getGrade();
+        if (value == null) {
             setGradeFieldValue("");
         } else {
-            setGradeFieldValue(value);
+            setGradeFieldValue(String.valueOf(value));
         }
         
         // Update the value of max grade with the value of current selected activity
@@ -333,7 +352,7 @@ public class View {
             if (selectedRow.getGrades().get(selectActivity.getSelectedIndex()) == null) {
                 s = "";
             } else {
-                s = String.valueOf(selectedRow.getGrades().get(selectActivity.getSelectedIndex()).getMaxGrade());
+                s = String.valueOf(selectedRow.getGrades().get(selectActivity.getSelectedIndex()).getTotalScore());
             }
             setMaxGradeLabel(s);
         } catch (java.lang.IndexOutOfBoundsException e) {}

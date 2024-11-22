@@ -33,7 +33,7 @@ public class WrappedHeaderRenderer extends DefaultTableCellRenderer {
         
         setBorder(BorderFactory.createLineBorder(Color.GRAY));
                 
-        setText("<html><center>" + value.toString().replace(" ", "<br>") + "</center></html>");
+        setText("<html><center>" + value.toString().replace("|", "<br>") + "</center></html>");
         
         return this;
     }

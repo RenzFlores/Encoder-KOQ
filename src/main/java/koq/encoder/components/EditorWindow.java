@@ -21,8 +21,8 @@ public class EditorWindow extends JPanel {
         return editPanel;
     }
     
-    public JTable getTable(int term) {
-        return tableView.getTable(term);
+    public JTable getTable(int table) {
+        return tableView.getTable(table);
     }
     
     public JToolBar getToolbar() {

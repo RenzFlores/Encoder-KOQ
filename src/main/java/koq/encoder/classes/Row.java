@@ -10,12 +10,10 @@ import java.util.List;
 public class Row {
     private Student student;
     private List<Grade> gradesList;
-    private Double computedGrades;
 
-    public Row(Student student, ArrayList<Grade> gradesList, Double computedGrades) {
+    public Row(Student student, ArrayList<Grade> gradesList) {
         this.student = student;
         this.gradesList = gradesList;
-        this.computedGrades = computedGrades;
     }
     
     public Student getStudent() {
@@ -24,20 +22,13 @@ public class Row {
     public List<Grade> getGrades() {
         return gradesList;
     }
-    public Double getComputedGrades() {
-        return computedGrades;
-    }
     
     public void setGrades(List<Grade> gradesList) {
         this.gradesList = gradesList;
     }
-    public void setGradesAt(int index, Double value) {
+    public void setGradesAt(int index, Integer value) {
         if (!(gradesList.get(index) == null)) {
             gradesList.get(index).setGrade(value);
         }
-    }
-    
-    public void setComputedGrades(Double value) {
-        this.computedGrades = value;
     }
 }

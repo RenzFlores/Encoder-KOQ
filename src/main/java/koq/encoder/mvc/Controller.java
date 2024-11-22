@@ -21,6 +21,8 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.LineBorder;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumnModel;
@@ -41,7 +43,8 @@ public class Controller {
         this.model = model;
         this.view = view;
         
-        JTable table = view.getTable(model.getSelectedTab());
+        JTable tableQ1 = view.getTable(0);
+        JTable tableQ2 = view.getTable(1);
         
         // New Table event
         ( (JMenuItem) view.getComponent(Actions.NEW_RECORD.name()) ).addActionListener((ActionEvent ev) -> {
@@ -65,6 +68,7 @@ public class Controller {
                     JOptionPane.WARNING_MESSAGE
                 );
             } else {
+                // Login successful. Start the main window and remove the login window
                 view.initEditWindow();
                 window.dispose();
             }
@@ -78,7 +82,25 @@ public class Controller {
         
         // Open File event
         ( (JMenuItem) view.getComponent(Actions.OPEN_RECORD.name()) ).addActionListener((ActionEvent ev) -> {
+            
+            /**
+             * This part is for testing only
+             */
             model.setClassRecord(model.getClassRecordInDB(1));
+            model.initClassRecord(model.getClassRecord());
+            view.getTable(0).setModel(model.getClassRecord().getGradePeriod(1));
+            view.getTable(1).setModel(model.getClassRecord().getGradePeriod(2));
+            model.initGradeSheetTable(view.getTable(2), model.getClassRecord().getGradePeriod(1).getRows());
+            model.initGradeSheetTable(view.getTable(3), model.getClassRecord().getGradePeriod(2).getRows());
+            model.initFinalGradeTable(view.getTable(4));
+            view.enableTabs();
+            view.getTable(0).setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
+            view.resizeTable(0);
+            view.resizeTable(1);
+            view.resizeTable(2);
+            view.resizeTable(3);
+            view.resizeTable(4);
+            view.setTabNames(model.getClassRecord().getSemester());
             
             /* OUTDATED
             if (returnValue == JFileChooser.APPROVE_OPTION) {
@@ -140,7 +162,23 @@ public class Controller {
         
         // Tab selection listeners
         view.getTabbedPane().addChangeListener(e -> {
-            model.setSelectedTab(view.getTabbedPane().getSelectedIndex());
+            int index = view.getTabbedPane().getSelectedIndex();
+            model.setSelectedTab(index);
+            if (index == 0) {
+                view.getTable(0).setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
+                view.updateEditPanel(
+                    model.getSelectedTab(), 
+                    0, 
+                    model.getGradePeriod(1).getRowAt(view.getTable(0).getSelectedRow())
+                );
+            } else if (index == 1) {
+                view.getTable(1).setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
+                view.updateEditPanel(
+                    model.getSelectedTab(), 
+                    0, 
+                    model.getGradePeriod(2).getRowAt(view.getTable(0).getSelectedRow())
+                );
+            }
         });
         
         // Activity selection listener
@@ -148,7 +186,11 @@ public class Controller {
             model.setSelectedActivity(
                 ((JComboBox) view.getComponent(Fields.SELECT_ACTIVITY.name())).getSelectedIndex()
             );
-            //view.updateEditPanel(model.getSelectedTab(), model.getSelectedRow(), model.getSelectedActivity(), model.getGradePeriod().getRowAt(model.getSelectedRow()));
+            view.updateEditPanel(
+                model.getSelectedTab(), 
+                model.getSelectedActivity(), 
+                model.getGradePeriod(model.getSelectedTab()+1).getRowAt(model.getSelectedRow())
+            );
         });
         
         // Grade text field DocumentListener
@@ -158,7 +200,7 @@ public class Controller {
             String value = ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).getText();
            
             if (model.getClassRecord() != null) {
-                Grade grade = model.getGradePeriod(model.getSelectedTab()).getRowAt(row).getGrades().get(col);
+                Grade grade = model.getGradePeriod(model.getSelectedTab()+1).getRowAt(row).getGrades().get(col);
                 
                 // Empty field will set grade value to null
                 if (value.isBlank()) {
@@ -171,42 +213,57 @@ public class Controller {
                     System.out.println("Error: Invalid input");
                 }
                 // Input exceeds range and will feedback an error
-                else if (Double.parseDouble(value) > grade.getMaxGrade() || Double.parseDouble(value) < 0) {
+                else if (Double.parseDouble(value) > grade.getTotalScore() || Double.parseDouble(value) < 0) {
                     // Set border color to Red
                     ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).setBorder(new LineBorder(java.awt.Color.RED, 1));
-                    System.out.println("Error: Input must be between 0 and " + grade.getMaxGrade());
+                    System.out.println("Error: Input must be between 0 and " + grade.getTotalScore());
                 } 
                 // Input accepted
                 else {
                     // Clear border color
                     ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).setBorder(null);
-                    grade.setGrade(Double.parseDouble(value));
-                    model.updateGrade(grade.getGradeId(), Double.parseDouble(value));
+                    grade.setGrade(Integer.parseInt(value));
+                    model.updateGrade(grade.getGradeId(), Integer.parseInt(value));
                 }
 
                 // Update the table in view
-                model.getGradePeriod(model.getSelectedTab()).fireTableRowsUpdated(row, row);       
+                model.getGradePeriod(model.getSelectedTab()+1).fireTableRowsUpdated(row, row);       
             }
         });
         
         // Add document listener so this field can only receive numeric and floating-point values
         ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).getDocument().addDocumentListener(new NumericDocumentListener());
         
-        table.getSelectionModel().addListSelectionListener(event -> {
+        // List selection listener for Grade Period Q1 table
+        tableQ1.getSelectionModel().addListSelectionListener(event -> {
             // Check if the event is adjusting (to avoid double calls during selection changes)
             if (!event.getValueIsAdjusting()) {
-                int selectedRow = table.getSelectedRow();
-        
-                if (selectedRow != -1) {  // Ensure a valid row is selected
+                int selectedRow = tableQ1.getSelectedRow();
+
+                if (selectedRow != -1) { // Ensure a valid row is selected
                     model.setSelectedRow(selectedRow);
-                    /*  OUTDATED
                     view.updateEditPanel(
                         model.getSelectedTab(),
-                        selectedRow, 
-                        model.getSelectedActivity(), 
-                        model.getGradePeriod().getRowAt(selectedRow)
+                        model.getSelectedActivity(),
+                        model.getGradePeriod(1).getRowAt(selectedRow)
                     );
-                    */
+                }
+            }
+        });
+        
+        // List selection listener for Grade Period Q2 table
+        tableQ2.getSelectionModel().addListSelectionListener(event -> {
+            // Check if the event is adjusting (to avoid double calls during selection changes)
+            if (!event.getValueIsAdjusting()) {
+                int selectedRow = tableQ2.getSelectedRow();
+
+                if (selectedRow != -1) { // Ensure a valid row is selected
+                    model.setSelectedRow(selectedRow);
+                    view.updateEditPanel(
+                        model.getSelectedTab(),
+                        model.getSelectedActivity(),
+                        model.getGradePeriod(2).getRowAt(selectedRow)
+                    );
                 }
             }
         });

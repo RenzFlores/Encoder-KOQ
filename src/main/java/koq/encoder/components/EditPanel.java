@@ -92,7 +92,7 @@ public class EditPanel extends JPanel {
         // NOTE: OMITTED COMPONENT FOR NOW
         // containerPanel.add(outputTypeLabel);
 
-        outputTypeCombo = new JComboBox(new javax.swing.DefaultComboBoxModel<>(new String[] { "Activity", "Assignment", "Quiz", "Exam" }));
+        outputTypeCombo = new JComboBox(new javax.swing.DefaultComboBoxModel<>(new String[] { "Written Work", "Performance Task", "Quarterly Assessment" }));
         outputTypeCombo.setMinimumSize(new java.awt.Dimension(100, 22));
         outputTypeCombo.setPreferredSize(new java.awt.Dimension(100, 24));
         // NOTE: OMITTED COMPONENT FOR NOW
@@ -105,8 +105,8 @@ public class EditPanel extends JPanel {
         containerPanel.add(outputNumberLabel);
         
         outputNumberCombo = new JComboBox(new javax.swing.DefaultComboBoxModel<>(new String[] {}));
-        outputNumberCombo.setMinimumSize(new java.awt.Dimension(100, 22));
-        outputNumberCombo.setPreferredSize(new java.awt.Dimension(100, 24));
+        outputNumberCombo.setMinimumSize(new java.awt.Dimension(150, 22));
+        outputNumberCombo.setPreferredSize(new java.awt.Dimension(150, 24));
         containerPanel.add(outputNumberCombo);
 
         gradeLabel = new JLabel("Grade:");

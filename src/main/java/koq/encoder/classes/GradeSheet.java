@@ -1,14 +1,10 @@
 package koq.encoder.classes;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.table.AbstractTableModel;
 
-/**
- * Custom table for representing a class record in the GUI
- */
-public class GradeSheet extends AbstractTableModel implements Serializable {
+public class GradeSheet extends AbstractTableModel {
     private static final long serialVersionUID = 1L;
     
     // Table model contents

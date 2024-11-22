@@ -5,35 +5,25 @@ public class Grade {
     private int studentId;
     private int classId;       
     private int activityId;   
-    private Double grade;
-    private double maxGrade;
+    private Integer grade;
+    private int totalScore;
 
-    /**
-     * 
-     * @param gradeId
-     * @param studentId
-     * @param classId
-     * @param activityId
-     * @param grade 
-     */
-    public Grade(int gradeId, int studentId, int classId, int activityId, Double grade, double maxGrade) {
+    public Grade(int gradeId, int studentId, int classId, int activityId, Integer grade, int totalScore) {
         this.gradeId = gradeId;
         this.studentId = studentId;
         this.classId = classId;
         this.activityId = activityId;
         this.grade = grade;
-        this.maxGrade = maxGrade;
+        this.totalScore = totalScore;
     }
     
     // Constructor for a new Grade instance (no assigned gradeId yet)
-    public Grade(int studentId, int classId, int activityId, Double grade, double maxGrade) {
+    public Grade(int studentId, int classId, int activityId, Integer grade, int totalScore) {
         this.studentId = studentId;
         this.classId = classId;
         this.activityId = activityId;
         this.grade = grade;
-        this.maxGrade = maxGrade;
-        
-        this.gradeId = 999;     // TODO: Change this later
+        this.totalScore = totalScore;
     }
 
     // Getter and setter methods
@@ -69,16 +59,16 @@ public class Grade {
         this.activityId = activityId;
     }
 
-    public Double getGrade() {
+    public Integer getGrade() {
         return grade;
     }
 
-    public void setGrade(Double grade) {
+    public void setGrade(Integer grade) {
         this.grade = grade;
     }
     
-    public double getMaxGrade() {
-        return maxGrade;
+    public int getTotalScore() {
+        return totalScore;
     }
 
     // Method to display grade information as a string
