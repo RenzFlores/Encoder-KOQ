@@ -92,7 +92,7 @@ public class Controller {
             view.getTable(1).setModel(model.getClassRecord().getGradePeriod(2));
             model.initGradeSheetTable(view.getTable(2), model.getClassRecord().getGradePeriod(1).getRows());
             model.initGradeSheetTable(view.getTable(3), model.getClassRecord().getGradePeriod(2).getRows());
-            model.initFinalGradeTable(view.getTable(4));
+            model.initFinalGradeTable(view.getTable(4), model.getClassRecord().getGradePeriod(2).getRows());
             view.enableTabs();
             view.getTable(0).setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
             view.resizeTable(0);
@@ -222,8 +222,36 @@ public class Controller {
                 else {
                     // Clear border color
                     ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).setBorder(null);
+                    // Update grade in object
                     grade.setGrade(Integer.parseInt(value));
+                    // Update grade in db
                     model.updateGrade(grade.getGradeId(), Integer.parseInt(value));
+                    // Recalculate percentage grade in db
+                    model.updatePercentageGrade(
+                        model.calculatePercentageGrade(
+                                grade.getStudentId(), 
+                                grade.getActivityTypeId(), 
+                                grade.getClassId(), 
+                                grade.getQuarter()), 
+                        grade.getStudentId(), 
+                        grade.getActivityTypeId(),
+                        grade.getClassId(), 
+                        grade.getQuarter()
+                    );
+                    model.updateInitialGrade( 
+                        grade.getStudentId(), 
+                        grade.getClassId(), 
+                        grade.getQuarter()
+                    );
+                    // Dirty update by setting the whole table model
+                    if (grade.getQuarter() == 1) {
+                        model.initGradeSheetTable(view.getTable(2), model.getClassRecord().getGradePeriod(1).getRows());
+                        view.resizeTable(2);
+                    } else {
+                        model.initGradeSheetTable(view.getTable(3), model.getClassRecord().getGradePeriod(2).getRows());
+                        view.resizeTable(3);
+                    }
+                    model.initFinalGradeTable(view.getTable(4), model.getClassRecord().getGradePeriod(2).getRows());
                 }
 
                 // Update the table in view

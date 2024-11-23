@@ -86,7 +86,7 @@ public class GradePeriod extends AbstractTableModel {
         } 
         // Set cell to student name (Surname, First name M.I.) on second column (Student Name)
         else if (colModulo == 1) {
-            return r.getStudent().getStudentNameFormatted();
+            return r.getStudent().getStudentFullName();
         } 
         // Set cell to student sex on third column (Sex)
         else if (colModulo == 2) {

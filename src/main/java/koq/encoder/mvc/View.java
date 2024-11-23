@@ -282,24 +282,35 @@ public class View {
             table.getColumnModel().getColumn(i).setHeaderRenderer(headerRenderer);
         }
 
-        if (table.getColumnModel().getColumnCount() > 0) {
+        if (selectedTab < 2) {
+            if (table.getColumnModel().getColumnCount() > 0) {
+                table.getColumnModel().getColumn(1).setCellRenderer(studentNameRenderer);
 
-            table.getColumnModel().getColumn(1).setCellRenderer(studentNameRenderer);
+                table.getTableHeader().setBackground(Color.LIGHT_GRAY);
+
+                // Set column 1 width (Student number)
+                table.getColumnModel().getColumn(0).setPreferredWidth(20);
+                table.getColumnModel().getColumn(0).setMaxWidth(20);
+                // Set column 2 width (Student name)
+                table.getColumnModel().getColumn(1).setPreferredWidth(150);
+                table.getColumnModel().getColumn(1).setMaxWidth(150);
+                // Set column 3 width (Student gender)
+                table.getColumnModel().getColumn(2).setPreferredWidth(30);
+                table.getColumnModel().getColumn(2).setMaxWidth(30);
+            } 
+        } else if (selectedTab >= 2) {
+            table.getColumnModel().getColumn(0).setCellRenderer(studentNameRenderer);
 
             table.getTableHeader().setBackground(Color.LIGHT_GRAY);
 
-            // Set column 1 width (Student number)
-            table.getColumnModel().getColumn(0).setPreferredWidth(20);
-            table.getColumnModel().getColumn(0).setMaxWidth(20);
-            // Set column 2 width (Student name)
-            table.getColumnModel().getColumn(1).setPreferredWidth(150);
-            table.getColumnModel().getColumn(1).setMaxWidth(150);
-            // Set column 3 width (Student gender)
-            table.getColumnModel().getColumn(2).setPreferredWidth(30);
-            table.getColumnModel().getColumn(2).setMaxWidth(30);
-
-            table.setRowHeight(30);
+            // Set column 1 width (Student name)
+            table.getColumnModel().getColumn(0).setPreferredWidth(150);
+            table.getColumnModel().getColumn(0).setMaxWidth(150);
+            // Set column 2 width (Student gender)
+            table.getColumnModel().getColumn(1).setPreferredWidth(30);
+            table.getColumnModel().getColumn(1).setMaxWidth(30);
         }
+        table.setRowHeight(30);
 
         // Set each column to be unresizable
         for (int i = 0; i < table.getColumnModel().getColumnCount(); i++) {

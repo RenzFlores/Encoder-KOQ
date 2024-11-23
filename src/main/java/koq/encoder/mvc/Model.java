@@ -329,16 +329,157 @@ getGradePeriod().getClassId(),      // class_id
         } catch (SQLException e) { e.printStackTrace(); }
     }
     
-    public void updatePercentageGrade() {
+    public double calculatePercentageGrade(int studentId, int activityTypeId, int classId, int quarter) {
+        String selectQuery = """
+            SELECT *
+            FROM grades g
+            JOIN activities a ON a.activity_id = g.activity_id
+            JOIN students s ON s.student_id = g.student_id
+            JOIN classes c ON c.class_id = g.class_id
+            WHERE c.class_id = ? AND s.student_id = ? AND a.activity_type_id = ? AND a.quarter = ?;
+        """;
         
+        int rawScore = 0;
+        int totalScore = 0;
+        
+        try (PreparedStatement pstmt = getConnection().prepareStatement(selectQuery)) {
+            pstmt.setInt(1, classId);
+            pstmt.setInt(2, studentId);
+            pstmt.setInt(3, activityTypeId);
+            pstmt.setInt(4, quarter);
+            ResultSet rs = pstmt.executeQuery();
+            
+            int value;
+            
+            while (rs.next()) {
+                value = rs.getInt("grade");
+                if (! rs.wasNull()) {
+                    rawScore += value;
+                }
+                
+                totalScore += rs.getInt("total_score");
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        
+        if (totalScore <= 0) {
+            return 0.0;
+        } else {
+            double percentage = (double) rawScore / totalScore * 100.0;
+            percentage = Math.round(percentage * 100.0) / 100.0; // Round to 2 decimal places
+            System.out.println(percentage);
+            return percentage;
+        }
     }
     
-    public void updateWeightedGrade() {
+    public double[] getGradeWeights(int studentId, int classId) {
+        String selectQuery = """
+            SELECT *
+            FROM calculated_grades cg
+            JOIN grade_weights gw ON gw.class_id = cg.class_id
+            WHERE cg.class_id = ? AND cg.student_id = ?;
+        """;
         
+        try (PreparedStatement pstmt = getConnection().prepareStatement(selectQuery)) {
+            pstmt.setInt(1, classId);
+            pstmt.setInt(2, studentId);
+            ResultSet rs = pstmt.executeQuery();
+            
+            if (rs.next()) {
+                return new double[]{rs.getDouble("ww_weight"), rs.getDouble("pt_weight"), rs.getDouble("qa_weight")};
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        
+        return null;
     }
     
-    public void updateFinalGrade() {
+    public double[] calculateWeightedGrade(int studentId, int classId, int quarter) {
+        String selectQuery = """
+            SELECT *
+            FROM calculated_grades cg
+            WHERE cg.class_id = ? AND cg.student_id = ?;
+        """;
         
+        double[] weights = getGradeWeights(studentId, classId);
+        
+        try (PreparedStatement pstmt = getConnection().prepareStatement(selectQuery)) {
+            pstmt.setInt(1, classId);
+            pstmt.setInt(2, studentId);
+            ResultSet rs = pstmt.executeQuery();
+            
+            if (rs.next()) {
+                if (quarter == 1) {
+                    return new double[]{
+                        Math.round(rs.getDouble("q1_ww_ps") * weights[0] * 100) / 100.0, 
+                        Math.round(rs.getDouble("q1_pt_ps") * weights[1] * 100) / 100.0, 
+                        Math.round(rs.getDouble("q1_qa_ps") * weights[2] * 100) / 100.0
+                    };
+                } else {
+                    return new double[]{
+                        Math.round(rs.getDouble("q2_ww_ps") * weights[0] * 100) / 100.0,
+                        Math.round(rs.getDouble("q2_pt_ps") * weights[1] * 100) / 100.0,
+                        Math.round(rs.getDouble("q2_qa_ps") * weights[2] * 100) / 100.0
+                    };
+                }
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        
+        return null;
+    }
+    
+    public void updatePercentageGrade(double value, int studentId, int activityTypeId, int classId, int quarter) {
+        String updateQuery = "UPDATE calculated_grades SET ";
+        
+        switch (quarter) {
+            case 1:
+                updateQuery = updateQuery.concat("q1_");
+                break;
+            case 2:
+                updateQuery = updateQuery.concat("q2_");
+        }
+        
+        switch (activityTypeId) {
+            case 1:
+                updateQuery = updateQuery.concat("ww_ps = ? ");
+                break;
+            case 2:
+                updateQuery = updateQuery.concat("pt_ps = ? ");
+                break;
+            case 3:
+                updateQuery = updateQuery.concat("qa_ps = ? ");
+        }
+        
+        updateQuery = updateQuery.concat("WHERE student_id = ? AND class_id = ?;");
+        
+        try (PreparedStatement pstmt = getConnection().prepareStatement(updateQuery)) {
+            pstmt.setDouble(1, value);
+            pstmt.setInt(2, studentId);
+            pstmt.setInt(3, classId);
+            int rowsAffected = pstmt.executeUpdate();
+            System.out.println(value);
+            System.out.println("Percentage grade updated. Rows affected: " + rowsAffected);
+        } catch (SQLException e) { e.printStackTrace(); }
+    }
+    
+    public void updateInitialGrade(int studentId, int classId, int quarter) {
+        String updateQuery = "UPDATE calculated_grades SET ";
+        
+        if (quarter == 1) {
+            updateQuery = updateQuery.concat("q1_raw_grade = ?");
+        } else {
+            updateQuery = updateQuery.concat("q2_raw_grade = ?");
+        }
+        
+        updateQuery = updateQuery.concat(" WHERE student_id = ? AND class_id = ?;");
+        
+        double[] grades = calculateWeightedGrade(studentId, classId, quarter);
+        
+        try (PreparedStatement pstmt = getConnection().prepareStatement(updateQuery)) {
+            pstmt.setDouble(1, grades[0] + grades[1] + grades[2]);
+            pstmt.setInt(2, studentId);
+            pstmt.setInt(3, classId);
+            pstmt.executeUpdate();
+            System.out.println("Initial raw grade updated");
+        } catch (SQLException e) { e.printStackTrace(); }
     }
     
     /* UPDATE THIS
@@ -517,7 +658,7 @@ getGradePeriod().getClassId(),      // class_id
     public void initGradeSheetTable(JTable table, List<Row> rows) {
         Object[][] data = {};
         String[] columnNames = {
-            "#", "Student Name", "Sex", "WW|Percentage", 
+            "Student Name", "Sex", "WW|Percentage", 
             "PT|Percentage", "QA|Percentage", "WW|Weighted", 
             "PT|Weighted", "QA|Weighted", "Initial|Grade", "Transmuted|Grade"
         };
@@ -525,30 +666,108 @@ getGradePeriod().getClassId(),      // class_id
         table.setModel(model);
         
         for (int i = 0; i < rows.size(); i++) {
-            model.addRow(new Object[]{
-                "0",
-                "Name",
-                "Sex",
-                "WW%",
-                "PT%",
-                "QA%",
-                "WWW",
-                "PTW",
-                "QAW",
-                "IG",
-                "TG"
-            });
+            model.addRow(getGradeSheetRowInDB(
+                rows.get(i).getStudent().getStudentId(), 
+                rows.get(i).getGrades().getFirst().getClassId(),
+                rows.get(i).getGrades().getFirst().getQuarter()
+                )
+            );
         }
     }
     
-    public void initFinalGradeTable(JTable table) {
+    public Object[] getGradeSheetRowInDB(int studentId, int classId, int quarter) {
+        String selectQuery = """
+            SELECT *
+            FROM calculated_grades cg
+            JOIN students s ON s.student_id = cg.student_id
+            WHERE class_id = ? AND s.student_id = ?;
+        """;
+        
+        try (PreparedStatement pstmt = getConnection().prepareStatement(selectQuery)) {
+            pstmt.setInt(1, classId);
+            pstmt.setInt(2, studentId);
+            ResultSet rs = pstmt.executeQuery();
+            
+            double[] weightedGrade = calculateWeightedGrade(studentId, classId, quarter);
+            
+            if (rs.next()) {
+                if (quarter == 1) {
+                    return new Object[]{
+                        rs.getString("last_name") + ", " + rs.getString("first_name") + " " + rs.getString("middle_name"),
+                        rs.getString("gender").charAt(0),
+                        rs.getDouble("q1_ww_ps") + "%",
+                        rs.getDouble("q1_pt_ps") + "%",
+                        rs.getDouble("q1_qa_ps") + "%",
+                        weightedGrade[0],
+                        weightedGrade[1],
+                        weightedGrade[2],
+                        rs.getDouble("q1_raw_grade"),
+                        transmute(rs.getDouble("q1_raw_grade"))
+                    };
+                } else {
+                    return new Object[]{
+                        rs.getString("last_name") + ", " + rs.getString("first_name") + " " + rs.getString("middle_name"),
+                        rs.getString("gender").charAt(0),
+                        rs.getDouble("q2_ww_ps") + "%",
+                        rs.getDouble("q2_pt_ps") + "%",
+                        rs.getDouble("q2_qa_ps") + "%",
+                        weightedGrade[0],
+                        weightedGrade[1],
+                        weightedGrade[2],
+                        rs.getDouble("q2_raw_grade"),
+                        transmute(rs.getDouble("q2_raw_grade"))
+                    };
+                }
+            } else { throw new NullPointerException("Error: grade sheet row with student_id=" + studentId + ", class_id=" + classId + " does not exist"); }
+        } catch (SQLException e) { e.printStackTrace(); }
+        
+        return null;
+    }
+    
+    public Object[] getFinalGradeRowInDB(int studentId, int classId) {
+        String selectQuery = """
+            SELECT *
+            FROM calculated_grades cg
+            JOIN students s ON s.student_id = cg.student_id
+            WHERE class_id = ? AND s.student_id = ?;
+        """;
+        
+        try (PreparedStatement pstmt = getConnection().prepareStatement(selectQuery)) {
+            pstmt.setInt(1, classId);
+            pstmt.setInt(2, studentId);
+            ResultSet rs = pstmt.executeQuery();
+            
+            if (rs.next()) {
+                return new Object[]{
+                    rs.getString("last_name") + ", " + rs.getString("first_name") + " " + rs.getString("middle_name"),
+                    rs.getString("gender").charAt(0),
+                    transmute(rs.getDouble("q1_raw_grade")),
+                    transmute(rs.getDouble("q2_raw_grade")),
+                    rs.getDouble("sem_raw_avg"),
+                    transmute(rs.getDouble("sem_raw_avg")),
+                    "Placeholder"
+                };
+            } else { throw new NullPointerException("Error: grade sheet row with student_id=" + studentId + ", class_id=" + classId + " does not exist"); }
+        } catch (SQLException e) { e.printStackTrace(); }
+        
+        return null;
+    }
+    
+    public void initFinalGradeTable(JTable table, List<Row> rows) {
         Object[][] data = {};
         String[] columnNames = {
-            "#", "Student Name", "Sex", "First Quarter", 
+            "Student Name", "Sex", "First Quarter", 
             "Second Quarter", "Average", "Final Grade", "Remarks"
         };
         DefaultTableModel model = new DefaultTableModel(data, columnNames);
         table.setModel(model);
+        
+        for (int i = 0; i < rows.size(); i++) {
+            model.addRow(getFinalGradeRowInDB(
+                rows.get(i).getStudent().getStudentId(), 
+                rows.get(i).getGrades().getFirst().getClassId()
+            ));
+        }
     }
     
     public double getPercentageScore(Row row) {
@@ -680,7 +899,7 @@ getGradePeriod().getClassId(),      // class_id
         try {
             for (Student s: students) {
                 PreparedStatement ps = getConnection().prepareStatement("""
-                    SELECT g.grade_id, g.student_id, g.class_id, g.activity_id, g.grade, a.total_score
+                    SELECT *
                     FROM grades g
                     JOIN student_classes sc ON g.student_id = sc.student_id AND g.class_id = sc.class_id
                     JOIN students s ON g.student_id = s.student_id
@@ -713,7 +932,9 @@ getGradePeriod().getClassId(),      // class_id
                             rs.getInt("class_id"), 
                             rs.getInt("activity_id"), 
                             grade,
-                            Integer.parseInt(rs.getString("total_score"))
+                            Integer.parseInt(rs.getString("total_score")),
+                            rs.getInt("activity_type_id"),
+                            rs.getInt("quarter")
                     );
 
                     row.getGrades().add(g);
@@ -861,8 +1082,8 @@ getGradePeriod().getClassId(),      // class_id
      * Student and class will not be affected
      */
     public void removeStudentFromClass(int studentId, int classId) throws SQLException {
-        String insertQuery = "DELETE FROM student_classes WHERE student_id = ? AND class_id = ?";
-        try (PreparedStatement pstmt = getConnection().prepareStatement(insertQuery)) {
+        String deleteQuery = "DELETE FROM student_classes WHERE student_id = ? AND class_id = ?";
+        try (PreparedStatement pstmt = getConnection().prepareStatement(deleteQuery)) {
             pstmt.setInt(1, studentId);
             pstmt.setInt(2, classId);
             pstmt.executeUpdate();
@@ -887,14 +1108,14 @@ getGradePeriod().getClassId(),      // class_id
      * Retrieves activity_id from database based on class_id and activity_name
      */
     public int getActivityIdInDB(int classId, String activityName) throws SQLException {
-        String insertQuery = """
+        String selectQuery = """
             SELECT activity_id
             FROM activities a
             JOIN classes c ON c.class_id = a.class_id
             WHERE c.class_id = ? AND a.activity_name = ?;
         """;
         
-        try (PreparedStatement pstmt = getConnection().prepareStatement(insertQuery)) {
+        try (PreparedStatement pstmt = getConnection().prepareStatement(selectQuery)) {
             pstmt.setInt(1, classId);
             pstmt.setString(2, activityName);
             ResultSet rs = pstmt.executeQuery();
@@ -1014,7 +1235,7 @@ getGradePeriod().getClassId(),      // class_id
     // Retrieve all grades for a specific student in a class from the database
     public List<Grade> getGrades(int studentId, int classId) {
         String query = 
-                "SELECT g.grade_id, g.student_id, g.class_id, g.activity_id, grade, a.total_score " +
+                "SELECT * " +
                 "FROM grades g " + 
                 "JOIN activities a ON g.activity_id = a.activity_id " +
                 "WHERE g.student_id = ? AND g.class_id = ?;";
@@ -1042,7 +1263,9 @@ getGradePeriod().getClassId(),      // class_id
                     rs.getInt("class_id"),
                     rs.getInt("activity_id"), 
                     grade,
-                    Integer.parseInt(rs.getString("total_score"))
+                    Integer.parseInt(rs.getString("total_score")),
+                    rs.getInt("activity_type_id"),
+                    rs.getInt("quarter")
                 ));
             }
         } catch (SQLException e) { e.printStackTrace(); }
@@ -1056,7 +1279,7 @@ getGradePeriod().getClassId(),      // class_id
      * Method for transmuting grades
      */
     public int transmute(double score) {
-        if (score > 0) {
+        if (score <= 0) {
             return 0;
         } else if (score < 60) {
             return (int) Math.floor(60 + score/4);

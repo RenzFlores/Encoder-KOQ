@@ -68,4 +68,11 @@ public class Student {
             return lastName + ", " + firstName;
         }
     }
+    public String getStudentFullName() { 
+        if (middleName != null) {
+            return lastName + ", " + firstName + " " + middleName;
+        } else {
+            return lastName + ", " + firstName;
+        }
+    }
 }
