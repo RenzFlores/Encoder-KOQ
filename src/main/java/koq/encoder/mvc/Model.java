@@ -12,9 +12,11 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.DefaultTableModel;
+import koq.encoder.classes.Activity;
 import koq.encoder.classes.ClassRecord;
 import koq.encoder.classes.Faculty;
 import koq.encoder.classes.GradePeriod;
@@ -102,6 +104,13 @@ public class Model {
         return db;
     }
     
+    public void closeConnection() {
+        try {
+            db.close();
+            serverConn.close();
+        } catch (SQLException e) { e.printStackTrace(); }
+    }
+    
     public boolean checkForLogin(String name, char[] password) {
         String query = "SELECT teacher_id, password FROM faculty;";
         List<String> idList = new ArrayList<>();
@@ -180,14 +189,12 @@ public class Model {
             System.out.println("Student records retrieved. Size: " + record.getClassList().size());
         } catch(SQLException e) { e.printStackTrace(); }
         
-        record.getGradePeriod(1).setColumnNames(getActivityNamesInDB(record.getClassId(), 1));
+        record.getGradePeriod(1).setColumnNames(getActivitiesInDB(record.getClassId(), 1));
         record.setGradePeriod(1, getGradePeriodInDB(record.getClassList(), record.getClassId(), 1));
-        record.getGradePeriod(2).setColumnNames(getActivityNamesInDB(record.getClassId(), 2));
+        record.getGradePeriod(2).setColumnNames(getActivitiesInDB(record.getClassId(), 2));
         record.setGradePeriod(2, getGradePeriodInDB(record.getClassList(), record.getClassId(), 2));
-        System.out.println("Grade records retrieved");
-        
-        //record.setColumnNames(getActivityNamesInClassRecord(record.getClassId()));
-        //System.out.println("Column names set. No. of columns: " + record.getColumnCount());
+        System.out.println("Grade records retrieved. Q1 columns=" + record.getGradePeriod(1).getColumns().size() + 
+                ", Q2 columns=" + record.getGradePeriod(2).getColumns().size());
     }
     
     public List<Student> getStudentList() {
@@ -262,42 +269,47 @@ public class Model {
     }
     */
     
-    /* UPDATE THIS
-    public void addNewActivity(int index, String name, Double totalScore, int activityTypeId) {
+    /**
+     * TODO: ADD DOCUMENTATION
+     */
+    public void addNewActivity(int index, String name, int totalScore, int activityTypeId, int quarter) {
         int activityId;
         int gradeId;
         
         try {
-            addActivityToDB(getGradePeriod().getClassId(), name, totalScore, activityTypeId);
-            activityId = getActivityIdInDB(getGradePeriod().getClassId(), name);
+            addActivityToDB(getClassRecord().getClassId(), name, totalScore, activityTypeId, quarter);
+            activityId = getActivityIdInDB(getClassRecord().getClassId(), name, quarter);
             
-            getGradePeriod().insertColumn(index+1, name);
-            
-            for (Row r: getGradePeriod().getClassList()) {
-                addEmptyGradeToDB(r.getStudent().getStudentId(),
-                    getGradePeriod().getClassId(),
+            for (Row r: getGradePeriod(quarter).getRows()) {
+                addEmptyGradeToDB(
+                    r.getStudent().getStudentId(),
+                    getClassRecord().getClassId(),
                     activityId
                 );
                 
                 gradeId = getGradeIdInDB(r.getStudent().getStudentId(),
-                    getGradePeriod().getClassId(),
+                    getClassRecord().getClassId(),
                     activityId
                 );
                 
                 Grade grade = new Grade(
-                    gradeId,                            // grade_id
-                    r.getStudent().getStudentId(),      // student_id
-getGradePeriod().getClassId(),      // class_id
-                    activityId,                         // activity_id
-                    null,                               // grade
-                    totalScore                          // total_score
+                    gradeId,                         // grade_id
+                    r.getStudent().getStudentId(),    // student_id
+                    getClassRecord().getClassId(),  // class_id
+                    null,                              // grade
+                    totalScore,                             // total_score
+                    activityId,                  // activity_id
+                    quarter                                 // quarter
                 );
                 // Fill all cells inside column to be empty
-                r.getGrades().add(index, grade);
+                r.getGrades().add(index-2, grade);
             }
+            
+            // Insert column to table
+            getGradePeriod(quarter).insertColumn(index, name);
+            
         } catch (SQLException e) { e.printStackTrace(); }            
     }
-    */
     
     public int getGradeIdInDB(int studentId, int classId, int activityId) throws SQLException {
         String insertQuery = 
@@ -482,84 +494,58 @@ getGradePeriod().getClassId(),      // class_id
         } catch (SQLException e) { e.printStackTrace(); }
     }
     
-    /* UPDATE THIS
-    public void addWWToTable(double totalScore) {
+    /**
+     * TODO: ADD DOCUMENTATION
+     */
+    public void addWWToTable(String name, int totalScore, int quarter) {
         List<String> columns;
-        columns = getGradePeriod().getColumns().stream()
-                .filter(e -> e.contains("Seatwork")).collect(Collectors.toList());
-        String newActivityName;
         int index;
-
-        if (!columns.isEmpty()) {
-            String[] s = columns.getLast().split(" ");
-            newActivityName = s[0] + " " + (Integer.parseInt(s[s.length-1])+1);
+        
+        if (quarter == 1) {
+            columns = getClassRecord().getGradePeriod(1).getColumns().stream()
+                .filter(e -> e.contains("WW")).collect(Collectors.toList());
         } else {
-            newActivityName = "Seatwork 1";
-            columns = getGradePeriod().getColumns().stream()
-                .filter(e -> e.contains("Student Name")).collect(Collectors.toList());
+            columns = getClassRecord().getGradePeriod(2).getColumns().stream()
+                .filter(e -> e.contains("WW")).collect(Collectors.toList());
         }
-
+        
+        if (columns.isEmpty()) {
+            columns = getGradePeriod(getSelectedTab()+1).getColumns().stream()
+                .filter(e -> e.contains("Sex")).collect(Collectors.toList());
+        }
+        
         // Get index
-        index = getGradePeriod().findColumn(columns.getLast());
+        index = getGradePeriod(quarter).findColumn(columns.getLast());
         
-        addNewActivity(index-1, newActivityName, totalScore, 1);
+        addNewActivity(index, name, totalScore, 1, quarter);
     }
     
-    public void addPTToTable(double totalScore) {
-        List<String> columns = getGradePeriod().getColumns().stream()
-                .filter(e -> e.contains("Performance Task")).collect(Collectors.toList());
-        String newActivityName;
+    /**
+     * TODO: ADD DOCUMENTATION
+     */
+    public void addPTToTable(String name, int totalScore, int quarter) {
+        List<String> columns;
         int index;
-
-        if (!columns.isEmpty()) {
-            String[] s = columns.getLast().split(" ");
-            newActivityName = s[0] + " " + s[1] + " " + (Integer.parseInt(s[s.length-1])+1);
-        } else {
-            newActivityName = "Performance Task 1";
-            
-            // Get index to insert
-            List<String> keywords = Arrays.asList("Homework", "Seatwork", "Student Name");
-            for (String keyword : keywords) {
-                columns = getGradePeriod().getColumns().stream()
-                    .filter(e -> e.contains(keyword))
-                    .collect(Collectors.toList());
-                if (!columns.isEmpty()) break;
-            }
-        }
-
-        index = getGradePeriod().findColumn(columns.getLast());
         
-        addNewActivity(index-1, newActivityName, totalScore, 2);
+        if (quarter == 1) {
+            columns = getClassRecord().getGradePeriod(1).getColumns().stream()
+                .filter(e -> e.contains("PT")).collect(Collectors.toList());
+        } else {
+            columns = getClassRecord().getGradePeriod(2).getColumns().stream()
+                .filter(e -> e.contains("PT")).collect(Collectors.toList());
+        }
+        
+        if (columns.isEmpty()) {
+            columns = getGradePeriod(getSelectedTab()+1).getColumns().stream()
+                .filter(e -> e.contains("WW")).collect(Collectors.toList());
+        }
+        
+        // Get index
+        index = getGradePeriod(quarter).findColumn(columns.getLast());
+        
+        addNewActivity(index, name, totalScore, 2, quarter);
     }
     
-    public void addQAToTable(double totalScore) {
-        List<String> columns = getGradePeriod().getColumns().stream()
-                .filter(e -> e.contains("Quiz")).collect(Collectors.toList());
-        String newActivityName;
-        int index;
-
-        if (!columns.isEmpty()) {
-            String[] s = columns.getLast().split(" ");
-            newActivityName = s[0] + " " + (Integer.parseInt(s[s.length-1])+1);
-        } else {
-            newActivityName = "Quiz 1";
-            
-            // Get index to insert
-            List<String> keywords = Arrays.asList("Performance Task", "Homework", "Seatwork", "Student Name");
-            for (String keyword : keywords) {
-                columns = getGradePeriod().getColumns().stream()
-                    .filter(e -> e.contains(keyword))
-                    .collect(Collectors.toList());
-                if (!columns.isEmpty()) break;
-            }
-        }
-
-        index = getGradePeriod().findColumn(columns.getLast());
-        
-        addNewActivity(index-1, newActivityName, totalScore, 3);
-    }
-    */
-
     // Connect to a database
     private Connection connectToDB() throws SQLException {
         try {
@@ -600,46 +586,37 @@ getGradePeriod().getClassId(),      // class_id
      * Retrieves all activity names in a given class record from the database.
      * This function is called to put labels in a JTable header
      */
-    private List<String> getActivityNamesInDB(int classId, int quarter) {
-        List<String> activityNames = new ArrayList<>();
+    public List<Activity> getActivitiesInDB(int classId, int quarter) {
+        List<Activity> activities = new ArrayList<>();
         
         try {
             PreparedStatement ps = getConnection().prepareStatement("""
-                SELECT DISTINCT a.name, a.activity_type_id
+                SELECT DISTINCT a.name, a.activity_type_id, a.activity_id, a.class_id, a.total_score, a.activity_type_id, a.quarter
                 FROM activities a
                 LEFT JOIN grades g ON g.activity_id = a.activity_id
                 JOIN classes c ON a.class_id = c.class_id
                 WHERE c.class_id = ? AND a.quarter = ?
-                ORDER BY a.activity_type_id, a.name;                                        
+                ORDER BY a.activity_type_id, a.activity_id;
             """);
             ps.setInt(1, classId);
             ps.setInt(2, quarter);
             
             ResultSet rs = ps.executeQuery();
             
-            int wwCounter = 1;
-            int ptCounter = 1;
-            int qaCounter = 1;
-            
             while (rs.next()) {
-                switch (rs.getInt("activity_type_id")) {
-                    case 1:
-                        activityNames.add("WW " + wwCounter + "|" + rs.getString("name"));
-                        wwCounter++;
-                        break;
-                    case 2:
-                        activityNames.add("PT " + ptCounter + "|" + rs.getString("name"));
-                        ptCounter++;
-                        break;
-                    case 3:
-                        activityNames.add("QA " + qaCounter + "|" + rs.getString("name"));
-                        qaCounter++;
-                }
+                activities.add(new Activity(
+                    rs.getInt("activity_id"),
+                    rs.getInt("class_id"),
+                    rs.getString("name"),
+                    rs.getInt("total_score"),
+                    rs.getInt("activity_type_id"),
+                    rs.getInt("quarter"))
+                );
             }
             
         } catch (SQLException e) { e.printStackTrace(); }
         
-        return activityNames;
+        return activities;
     }
     
     /**
@@ -906,7 +883,7 @@ getGradePeriod().getClassId(),      // class_id
                     JOIN activities a ON g.activity_id = a.activity_id
                     JOIN classes c ON g.class_id = c.class_id
                     WHERE c.class_id = ? AND s.student_id = ? AND a.quarter = ?
-                    ORDER BY a.activity_type_id, a.name;
+                    ORDER BY a.activity_type_id, a.activity_id;
                 """);
                 ps.setInt(1, classId);
                 ps.setInt(2, s.getStudentId());
@@ -1105,19 +1082,20 @@ getGradePeriod().getClassId(),      // class_id
     }
     
     /**
-     * Retrieves activity_id from database based on class_id and activity_name
+     * Retrieves activity_id from database based on class_id, name, and quarter
      */
-    public int getActivityIdInDB(int classId, String activityName) throws SQLException {
+    public int getActivityIdInDB(int classId, String name, int quarter) throws SQLException {
         String selectQuery = """
             SELECT activity_id
             FROM activities a
             JOIN classes c ON c.class_id = a.class_id
-            WHERE c.class_id = ? AND a.activity_name = ?;
+            WHERE c.class_id = ? AND a.name = ? AND a.quarter = ?;
         """;
         
         try (PreparedStatement pstmt = getConnection().prepareStatement(selectQuery)) {
             pstmt.setInt(1, classId);
-            pstmt.setString(2, activityName);
+            pstmt.setString(2, name);
+            pstmt.setInt(3, quarter);
             ResultSet rs = pstmt.executeQuery();
             
             if (rs.next()) {
@@ -1126,7 +1104,7 @@ getGradePeriod().getClassId(),      // class_id
             } else {
                 throw new SQLException(
                         "activity_id with class_id = " + classId + 
-                        ", activity_name = " + activityName + " not found"
+                        ", name = " + name + " not found"
                 );
             }
         }
@@ -1149,15 +1127,16 @@ getGradePeriod().getClassId(),      // class_id
      * Add a new activity record to the database. This method is called when a new activity is added
      * to the class record by the user
      */
-    public void addActivityToDB(int classId, String activity_name, int totalScore, int activityTypeId) {
-        String insertQuery = "INSERT INTO activities (class_id, activity_name, total_score, activity_type_id) " +
-                             "VALUES (?, ?, ?, ?);";
+    public void addActivityToDB(int classId, String name, int totalScore, int activityTypeId, int quarter) {
+        String insertQuery = "INSERT INTO activities (class_id, name, total_score, activity_type_id, quarter) " +
+                             "VALUES (?, ?, ?, ?, ?);";
 
         try (PreparedStatement pstmt = getConnection().prepareStatement(insertQuery)) {
                 pstmt.setInt(1, classId);
-                pstmt.setString(2, activity_name);
+                pstmt.setString(2, name);
                 pstmt.setInt(3, totalScore);
                 pstmt.setInt(4, activityTypeId);
+                pstmt.setInt(5, quarter);
                 pstmt.executeUpdate();
                 System.out.println("New activity added to DB");
         } catch (SQLException e) { e.printStackTrace(); }

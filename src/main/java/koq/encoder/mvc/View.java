@@ -13,6 +13,7 @@ import koq.encoder.components.EditorWindow;
 import koq.encoder.components.FilterPanel;
 import koq.encoder.components.LoginWindow;
 import koq.encoder.components.StudentNameRenderer;
+import koq.encoder.components.TableView;
 import koq.encoder.components.WrappedHeaderRenderer;
 import koq.encoder.mvc.Model.Fields;
 
@@ -45,11 +46,11 @@ public class View {
             java.util.logging.Logger.getLogger(View.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         
-        frame = new JFrame("Grade Encoder");                           
+        frame = new JFrame("Encoder");                           
         frame.setSize(1280, 720);
         frame.setLayout(new CardLayout());
         frame.setLocationRelativeTo(null);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         frame.setVisible(true);
         
         menuBar = new MenuBar();
@@ -151,6 +152,7 @@ public class View {
     }
     
     public void initEditWindow() {
+        frame.setJMenuBar(menuBar);
         frame.add(editorWindow);
         editorWindow.disableWindow();
         frame.pack();
@@ -158,6 +160,14 @@ public class View {
     
     public void enableTabs() {
         editorWindow.enableWindow();
+    }
+    
+    public void resetTables() {
+        ( (TableView) editorWindow.getTableView()).resetTables();
+    }
+    
+    public JFrame getFrame() {
+        return frame;
     }
     
     public void showContextMenu() {

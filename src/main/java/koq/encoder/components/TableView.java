@@ -3,6 +3,7 @@ package koq.encoder.components;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
 
 public class TableView extends JTabbedPane {
     
@@ -45,6 +46,14 @@ public class TableView extends JTabbedPane {
         addTab("Grade Sheet 1", new JScrollPane(tableQ1GradeSheet));
         addTab("Grade Sheet 2", new JScrollPane(tableQ2GradeSheet));
         addTab("Semester Final Grade", new JScrollPane(tableFinalGrade));
+    }
+    
+    public void resetTables() {
+        tableQ1.setModel(new DefaultTableModel());
+        tableQ2.setModel(new DefaultTableModel());
+        tableQ1GradeSheet.setModel(new DefaultTableModel());
+        tableQ2GradeSheet.setModel(new DefaultTableModel());
+        tableFinalGrade.setModel(new DefaultTableModel());
     }
     
     private JTable createTable() {

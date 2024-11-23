@@ -47,7 +47,7 @@ public class Toolbar extends JToolBar {
         generateReportButton.setBorder(BorderFactory.createBevelBorder(BevelBorder.RAISED));
         
         add(addButton);
-        add(removeButton);
+        //add(removeButton);                UNUSED COMPONENT
         add(setGradeWeightsButton);
         add(generateReportButton);
         

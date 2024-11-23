@@ -6,10 +6,11 @@ import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
+import javax.swing.text.AbstractDocument;
 
 public class AddActivityWindow extends JFrame {
     
-    private JLabel contextLabel;
+    private JLabel quarterLabel;
     private JLabel activityNameLabel;
     private JLabel activityTypeLabel;
     private JLabel totalScoreLabel;
@@ -17,39 +18,47 @@ public class AddActivityWindow extends JFrame {
     private JTextField activityNameField;
     private JTextField totalScoreField;
     
+    private JComboBox quarterCombo;
     private JComboBox activityTypeCombo;
     
     private JButton confirmButton;
     
     public AddActivityWindow() {
         setLayout(new FlowLayout(FlowLayout.CENTER));
-         
-        contextLabel = new JLabel("Create a new activity record:");
-        contextLabel.setPreferredSize(new java.awt.Dimension(225, 16));
         
-        activityTypeLabel = new JLabel("Activity type:");
-        activityTypeLabel.setPreferredSize(new java.awt.Dimension(100, 16));
+        quarterLabel = new JLabel("Quarter:");
+        quarterLabel.setPreferredSize(new java.awt.Dimension(120, 16));
         
-        activityNameLabel = new JLabel("Activity type:");
-        activityNameLabel.setPreferredSize(new java.awt.Dimension(100, 16));
+        quarterCombo = new JComboBox();
+        quarterCombo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "1", "2" }));
+        quarterCombo.setPreferredSize(new java.awt.Dimension(120, 22));
+        
+        activityNameLabel = new JLabel("Activity name:");
+        activityNameLabel.setPreferredSize(new java.awt.Dimension(120, 16));
         
         activityNameField = new JTextField();
-        activityNameField.setPreferredSize(new java.awt.Dimension(100, 22));
+        activityNameField.setPreferredSize(new java.awt.Dimension(120, 22));
+        
+        activityTypeLabel = new JLabel("Activity type:");
+        activityTypeLabel.setPreferredSize(new java.awt.Dimension(120, 16));
         
         activityTypeCombo = new JComboBox();
         activityTypeCombo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Written Work", "Performance Task" }));
+        activityTypeCombo.setPreferredSize(new java.awt.Dimension(120, 22));
         
         totalScoreLabel = new JLabel("Total score:");
-        totalScoreLabel.setPreferredSize(new java.awt.Dimension(100, 16));
+        totalScoreLabel.setPreferredSize(new java.awt.Dimension(120, 16));
         
         totalScoreField = new JTextField();
-        totalScoreField.setPreferredSize(new java.awt.Dimension(100, 22));
+        totalScoreField.setPreferredSize(new java.awt.Dimension(120, 22));
 
-        totalScoreField.getDocument().addDocumentListener(new NumericDocumentListener());
+        ( (AbstractDocument) totalScoreField.getDocument()).setDocumentFilter(new NumericDocumentFilter());
         
         confirmButton = new JButton("OK");
         
         //add(contextLabel);
+        add(quarterLabel);
+        add(quarterCombo);
         add(activityNameLabel);
         add(activityNameField);
         add(activityTypeLabel);
@@ -59,12 +68,16 @@ public class AddActivityWindow extends JFrame {
         add(confirmButton);
         
         setTitle("Create a new activity record:");
-        setSize(250, 130);
+        setSize(270, 180);
         setLocationRelativeTo(null);
     }
     
     public JButton getButton() {
         return confirmButton;
+    }
+    
+    public int getQuarter() {
+        return Integer.parseInt((String)quarterCombo.getSelectedItem());
     }
     
     public String getActivityName() {

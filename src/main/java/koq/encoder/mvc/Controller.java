@@ -9,9 +9,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
@@ -26,6 +29,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumnModel;
+import koq.encoder.classes.Activity;
 import koq.encoder.classes.Row;
 import koq.encoder.components.AddActivityWindow;
 import koq.encoder.components.LoginWindow;
@@ -46,7 +50,21 @@ public class Controller {
         JTable tableQ1 = view.getTable(0);
         JTable tableQ2 = view.getTable(1);
         
-        // New Table event
+        /**
+         * Window listener for exit event
+         */
+        view.getFrame().addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                model.closeConnection();
+                view.getFrame().dispose();
+                System.exit(0);
+            }
+        });
+         
+        /**
+         * New Table event
+         */
         ( (JMenuItem) view.getComponent(Actions.NEW_RECORD.name()) ).addActionListener((ActionEvent ev) -> {
             AddClassRecordWindow window = new AddClassRecordWindow();
             window.setVisible(true);
@@ -77,6 +95,8 @@ public class Controller {
         // Logout event
         ( (JMenuItem) view.getComponent(Actions.LOGOUT.name()) ).addActionListener((ActionEvent ev) -> {
             model.setCurrentUser(null);
+            model.setClassRecord(null);
+            view.resetTables();
             view.setLoginWindow();
         });
         
@@ -101,26 +121,16 @@ public class Controller {
             view.resizeTable(3);
             view.resizeTable(4);
             view.setTabNames(model.getClassRecord().getSemester());
-            
-            /* OUTDATED
-            if (returnValue == JFileChooser.APPROVE_OPTION) {
-                model.setClassRecord(model.deserializeClassRecord(fileChooser.getSelectedFile()));
-                model.getGradePeriod().initClassList();                                             // Initialize arrayList
-                model.initClassRecord(model.getGradePeriod());                                      // Populate arrayList
-                model.initTable(view.getTable(model.getSelectedTab()), model.getGradePeriod());     // Set table model
-                view.resizeTable(model.getSelectedTab());                                           // Setup table
-                view.setWindowTitle(model.getGradePeriod().toString());
-                System.out.println("Class Record set to " + fileChooser.getSelectedFile().getName());
-            }
-            */
         });
         
         /** Export File event (UNUSED)
         ( (JMenuItem) view.getComponent(Actions.EXPORTFILE.name()) ).addActionListener((ActionEvent ev) -> {});
         */
         
-        // Exit event
+        // Exit event from the menu bar
         ( (JMenuItem) view.getComponent(Actions.EXIT.name()) ).addActionListener((ActionEvent ev) -> {
+            model.closeConnection();
+            view.getFrame().dispose();
             System.exit(0);
         });
         
@@ -176,7 +186,7 @@ public class Controller {
                 view.updateEditPanel(
                     model.getSelectedTab(), 
                     0, 
-                    model.getGradePeriod(2).getRowAt(view.getTable(0).getSelectedRow())
+                    model.getGradePeriod(2).getRowAt(view.getTable(1).getSelectedRow())
                 );
             }
         });
@@ -298,15 +308,14 @@ public class Controller {
         
         // Add to Table button clicked event
         ( (JButton) view.getComponent(Actions.ADD_TO_TABLE.name()) ).addActionListener((ActionEvent e) -> {
-            /*  OUTDATED
-            if (model.getGradePeriod() != null) {
+            if (model.getClassRecord() != null) {
                 // Show context menu right below the button, centered
                 view.showContextMenu();
             }
-            */
         });
         
-        // Remove from Table button clicked event
+        // Remove from Table button clicked event. UNUSED COMPONENT
+        /**
         ( (JButton) view.getComponent(Actions.REMOVE_FROM_TABLE.name()) ).addActionListener((ActionEvent ev) -> {
             int response = -1;
             boolean deleteStudent = false;
@@ -392,7 +401,8 @@ public class Controller {
                 } catch (SQLException e) {}
             }
             */
-        });
+        //});
+        
         
         // Add ActionListener to menu items to detect clicks
         ActionListener menuListener = new ActionListener() {
@@ -493,7 +503,7 @@ public class Controller {
         }
     }
     
-    // Listener for the confirmation button in AddActivitytWindow
+    // Listener for the confirmation button in AddActivityWindow
     class AddActivityWindowListener implements ActionListener {
 
         AddActivityWindow window;
@@ -504,6 +514,7 @@ public class Controller {
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            int quarter = window.getQuarter();
             String activityName = window.getActivityName();
             String activityType = window.getActivityType();
             String totalScore = window.getTotalScore();
@@ -519,9 +530,10 @@ public class Controller {
                     JOptionPane.WARNING_MESSAGE
                 );
                 validForm = false;
-            } 
-            // Input is negative and will feedback an error
-            else if (Double.parseDouble(totalScore) <= 0) {
+            }
+            
+            // Total score must be more than 0
+            if (Integer.parseInt(totalScore) <= 0) {
                 JOptionPane.showMessageDialog(
                     null,
                     "Total score must be more than 0.",
@@ -529,39 +541,19 @@ public class Controller {
                     JOptionPane.WARNING_MESSAGE
                 );
                 validForm = false;
-            } 
-            else {
-                // Input accepted
-                try {
-                    validForm = true;
-                } 
-                // An input of only '.' will result in an exception, relay an error if this happens
-                catch (java.lang.NumberFormatException exception) {
-                    JOptionPane.showMessageDialog(
-                        null,
-                        "Invalid input.",
-                        "Invalid form",
-                        JOptionPane.WARNING_MESSAGE
-                    );
-                    validForm = false;
-                }
             }
             
             if (validForm) {
                 switch(activityType) {
                     case "Written Work":
-                        //model.addWWToTable(Double.parseDouble(totalScore));
-                        activityTypeId = 1;
+                        model.addWWToTable(activityName, Integer.parseInt(totalScore), quarter);
                         break;
                     case "Performance Task":
-                        //model.addPTToTable(Double.parseDouble(totalScore));
-                        activityTypeId = 2;
-                        break;
-                    case "Quarterly Assessment":
-                        //model.addQAToTable(Double.parseDouble(totalScore));
-                        activityTypeId = 3;
+                        model.addPTToTable(activityName, Integer.parseInt(totalScore), quarter);
                 }
-                view.resizeTable(model.getSelectedTab());
+                List<Activity> activities = model.getActivitiesInDB(model.getClassRecord().getClassId(), quarter);
+                model.getClassRecord().getGradePeriod(quarter).setColumnNames(activities);
+                view.resizeTable(quarter-1);
                 window.dispose();
             }
         }

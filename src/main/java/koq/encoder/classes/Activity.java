@@ -2,26 +2,28 @@ package koq.encoder.classes;
 
 public class Activity {
     private int activityId;
-    private String activityName;
-    private double maxGrade;
+    private int classId;
+    private String name;
+    private double totalScore;
     private int activityTypeId;
-    private int term;
+    private int quarter;
 
-    public Activity(int activityId, String activityName, int activityTypeId, double maxGrade, int term) {
+    public Activity(int activityId, int classId, String name, double totalScore, int activityTypeId, int quarter) {
         this.activityId = activityId;
-        this.activityName = activityName;
-        this.maxGrade = maxGrade;
+        this.classId = classId;
+        this.name = name;
+        this.totalScore = totalScore;
         this.activityTypeId = activityTypeId;
-        this.term = term;
+        this.quarter = quarter;
     }
     
     // Constructor for new activities (No Activity ID yet)
-    public Activity(String activityName, int activityTypeId, double maxGrade, int term) {
-        this.activityId = activityId;
-        this.activityName = activityName;
-        this.maxGrade = maxGrade;
+    public Activity(int classId, String name, double totalScore, int activityTypeId, int quarter) {
+        this.classId = classId;
+        this.name = name;
+        this.totalScore = totalScore;
         this.activityTypeId = activityTypeId;
-        this.term = term;
+        this.quarter = quarter;
     }
 
     public int getActivityId() {
@@ -32,42 +34,42 @@ public class Activity {
         this.activityId = activityId;
     }
 
-    public String getActivityName() {
-        return activityName;
+    public String getName() {
+        return name;
     }
 
-    public void setActivityName(String activityName) {
-        this.activityName = activityName;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public double getMaxGrade() {
-        return maxGrade;
+    public double getTotalScore() {
+        return totalScore;
     }
 
-    public void setMaxGrade(double maxGrade) {
-        this.maxGrade = maxGrade;
+    public void setTotalScore(double totalScore) {
+        this.totalScore = totalScore;
     }
 
     public int getActivityTypeId() {
         return activityTypeId;
     }
     
-    public int getTerm() {
-        return term;
+    public int getQuarter() {
+        return quarter;
     }
 
-    public void setTerm(int term) {
-        this.term = term;
+    public void setQuarter(int quarter) {
+        this.quarter = quarter;
     }
     
     @Override
     public String toString() {
         return "Activity{" +
                 "activityId=" + activityId +
-                ", activityName='" + activityName + '\'' +
-                ", maxGrade=" + maxGrade +
+                ", activityName='" + name + '\'' +
+                ", maxGrade=" + totalScore +
                 ", activityTypeId=" + activityTypeId +
-                ", term=" + term +
+                ", term=" + quarter +
                 '}';
     }
 }

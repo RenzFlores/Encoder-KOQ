@@ -32,15 +32,34 @@ public class GradePeriod extends AbstractTableModel {
     public void setRows(List<Row> list) {
         rows = list;
     }
-    public void setColumnNames(List<String> activityNames) {
+    public void setColumnNames(List<Activity> activities) {
         List<String> cols = new ArrayList<>();
         
+        int wwCounter = 1;
+        int ptCounter = 1;
+        int qaCounter = 1;
+            
         cols.add("#");
         cols.add("Student Name");
         cols.add("Sex");
-        cols.addAll(activityNames);
+        for (Activity a: activities) {
+            switch (a.getActivityTypeId()) {
+                case 1:
+                    cols.add("WW " + wwCounter + "|" + a.getName());
+                    wwCounter++;
+                    break;
+                case 2:
+                    cols.add("PT " + ptCounter + "|" +  a.getName());
+                    ptCounter++;
+                    break;
+                case 3:
+                    cols.add("QA " + qaCounter + "|" +  a.getName());
+                    qaCounter++;
+            }
+        }
         
         columnNames = cols;
+        fireTableStructureChanged();
     }
 
     public Row getRowAt(int index) {
