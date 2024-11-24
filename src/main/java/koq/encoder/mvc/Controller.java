@@ -1,8 +1,7 @@
 package koq.encoder.mvc;
 
-import koq.encoder.classes.Grade;
-import koq.encoder.components.AddClassRecordWindow;
-import koq.encoder.components.AddStudentWindow;
+import koq.encoder.components.*;
+import koq.encoder.classes.*;
 import java.awt.Component;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
@@ -17,7 +16,10 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
@@ -29,14 +31,8 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumnModel;
-import koq.encoder.classes.Activity;
-import koq.encoder.classes.Row;
-import koq.encoder.components.AddActivityWindow;
-import koq.encoder.components.LoginWindow;
 import koq.encoder.mvc.Model.Actions;
 import koq.encoder.mvc.Model.Fields;
-import koq.encoder.components.NumericDocumentListener;
-import koq.encoder.components.SetGradeWeightsWindow;
 
 public class Controller {
     
@@ -102,24 +98,23 @@ public class Controller {
         
         // Open File event
         ( (JMenuItem) view.getComponent(Actions.OPEN_RECORD.name()) ).addActionListener((ActionEvent ev) -> {
-            
             /**
-             * This part is for testing only
+             * This part is for testing only. Replace setClassRecord() to selectedItem on final version
              */
             model.setClassRecord(model.getClassRecordInDB(1));
             model.initClassRecord(model.getClassRecord());
             view.getTable(0).setModel(model.getClassRecord().getGradePeriod(1));
             view.getTable(1).setModel(model.getClassRecord().getGradePeriod(2));
-            model.initGradeSheetTable(view.getTable(2), model.getClassRecord().getGradePeriod(1).getRows());
-            model.initGradeSheetTable(view.getTable(3), model.getClassRecord().getGradePeriod(2).getRows());
-            model.initFinalGradeTable(view.getTable(4), model.getClassRecord().getGradePeriod(2).getRows());
+            model.setTableListeners(view.getTable(0));
+            model.setTableListeners(view.getTable(1));
+            model.initGradeSheetTable(view.getTable(2), model.getClassRecord().getGradePeriod(1).getRows(), model.getClassRecord().getClassId(), 1);
+            model.initGradeSheetTable(view.getTable(3), model.getClassRecord().getGradePeriod(2).getRows(), model.getClassRecord().getClassId(), 2);
+            model.initFinalGradeTable(view.getTable(4), model.getClassRecord().getGradePeriod(2).getRows(), model.getClassRecord().getClassId());
             view.enableTabs();
-            view.getTable(0).setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
-            view.resizeTable(0);
-            view.resizeTable(1);
-            view.resizeTable(2);
-            view.resizeTable(3);
-            view.resizeTable(4);
+            if (!model.getClassRecord().getClassList().isEmpty()) {
+                view.getTable(0).setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
+            }
+            view.resizeAllTables();
             view.setTabNames(model.getClassRecord().getSemester());
         });
         
@@ -174,6 +169,11 @@ public class Controller {
         view.getTabbedPane().addChangeListener(e -> {
             int index = view.getTabbedPane().getSelectedIndex();
             model.setSelectedTab(index);
+            
+            if (model.getClassRecord().getClassList().isEmpty()) {
+                return;
+            }
+            
             if (index == 0) {
                 view.getTable(0).setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
                 view.updateEditPanel(
@@ -255,13 +255,12 @@ public class Controller {
                     );
                     // Dirty update by setting the whole table model
                     if (grade.getQuarter() == 1) {
-                        model.initGradeSheetTable(view.getTable(2), model.getClassRecord().getGradePeriod(1).getRows());
-                        view.resizeTable(2);
+                        model.initGradeSheetTable(view.getTable(2), model.getClassRecord().getGradePeriod(1).getRows(), model.getClassRecord().getClassId(), 1);
                     } else {
-                        model.initGradeSheetTable(view.getTable(3), model.getClassRecord().getGradePeriod(2).getRows());
-                        view.resizeTable(3);
+                        model.initGradeSheetTable(view.getTable(3), model.getClassRecord().getGradePeriod(2).getRows(), model.getClassRecord().getClassId(), 2);
                     }
-                    model.initFinalGradeTable(view.getTable(4), model.getClassRecord().getGradePeriod(2).getRows());
+                    model.initFinalGradeTable(view.getTable(4), model.getClassRecord().getGradePeriod(1).getRows(), model.getClassRecord().getClassId());
+                    view.resizeAllTables();
                 }
 
                 // Update the table in view
@@ -314,18 +313,26 @@ public class Controller {
             }
         });
         
-        // Remove from Table button clicked event. UNUSED COMPONENT
-        /**
+        // Remove from Table button clicked event
         ( (JButton) view.getComponent(Actions.REMOVE_FROM_TABLE.name()) ).addActionListener((ActionEvent ev) -> {
             int response = -1;
             boolean deleteStudent = false;
+            JTable table = null;
             
-            /* OUTDATED UPDATE THIS
+            JDialog dialog = view.createDeleteDialog();
+            
+            int selectedTab = model.getSelectedTab();
+            if (selectedTab <= 1) {
+                table = view.getTable(selectedTab);
+            } else {
+                return;
+            }
+            
             // Check if only row selection is allowed
             if (table.getRowSelectionAllowed() && !table.getColumnSelectionAllowed()) {
                 response = JOptionPane.showConfirmDialog(
                     null,
-                    model.getGradePeriod().getClassList().get(table.getSelectedRow()).getStudent().getStudentName() + 
+                    model.getClassRecord().getClassList().get(table.getSelectedRow()).getStudentFullName() + 
                         " will be deleted from this class record and all their recorded grades.\n" + 
                         "This action cannot be undone, confirm?",
                     "Warning",
@@ -337,10 +344,10 @@ public class Controller {
 
             // Check if only column selection is allowed
             if (!table.getRowSelectionAllowed() && table.getColumnSelectionAllowed()) {
-                if (table.getSelectedColumn() > 1) {
+                if (table.getSelectedColumn() > 2 && table.getSelectedColumn() < model.getClassRecord().getGradePeriod(selectedTab+1).getColumnCount()-1) {
                     response = JOptionPane.showConfirmDialog(
                         null,
-                        model.getGradePeriod().getColumnName(table.getSelectedColumn()) + 
+                        model.getClassRecord().getGradePeriod(selectedTab+1).getColumnName(table.getSelectedColumn()) + 
                             " will be deleted from this class record and all recorded grades in this activity.\n" + 
                             "This action cannot be undone, confirm?",
                         "Warning",
@@ -349,60 +356,118 @@ public class Controller {
                     );
                     deleteStudent = false;
                 }
+                else if (table.getSelectedColumn() == model.getClassRecord().getGradePeriod(selectedTab+1).getColumnCount()-1) {
+                    response = JOptionPane.showConfirmDialog(
+                        null,
+                        "Quarterly Assessment is fixed and cannot be removed",
+                        "Note",
+                        JOptionPane.DEFAULT_OPTION,
+                        JOptionPane.INFORMATION_MESSAGE
+                    );
+                    return;
+                }
             }
-            */
             
             // Delete student
-            
-            /*
             if (response == JOptionPane.YES_OPTION && deleteStudent) {
                 try {
-                    System.out.println("Deleting student...");
-                    Row row = model.getGradePeriod().getClassList().get(table.getSelectedRow());
-                    model.removeStudentFromClass(row.getStudent().getStudentId(), model.getGradePeriod().getClassId());
-                    for (Grade g: row.getGrades()) {
+                    dialog.setVisible(true);
+
+                    /**
+                     * Delete all relevant records in database
+                     */
+                    Row rowQ1 = model.getGradePeriod(1).getRows().get(table.getSelectedRow());
+                    Row rowQ2 = model.getGradePeriod(2).getRows().get(table.getSelectedRow());
+                    for (Grade g: rowQ1.getGrades()) {
                         model.deleteGradeInDB(g);
                     }
-                    model.getGradePeriod().getClassList().remove(row);
-                    model.getGradePeriod().fireTableRowsDeleted(table.getSelectedRow(), table.getSelectedRow());
+                    for (Grade g: rowQ2.getGrades()) {
+                        model.deleteGradeInDB(g);
+                    }
+                    model.removeStudentFromClass(rowQ1.getStudent().getStudentId(), model.getClassRecord().getClassId());
+                    
+                    /**
+                     * Update all tables inside the program
+                     */
+                    model.getGradePeriod(1).removeRow(model.getSelectedRow());
+                    model.getGradePeriod(2).removeRow(model.getSelectedRow());
+                    model.getGradePeriod(1).fireTableRowsDeleted(table.getSelectedRow(), table.getSelectedRow());
+                    model.getGradePeriod(2).fireTableRowsDeleted(table.getSelectedRow(), table.getSelectedRow());
+                    // Dirty update by setting the whole table model on grade sheet Q1, Q2, and final grades
+                    model.initGradeSheetTable(view.getTable(2), model.getClassRecord().getGradePeriod(1).getRows(),  model.getClassRecord().getClassId(), 1);
+                    model.initGradeSheetTable(view.getTable(3), model.getClassRecord().getGradePeriod(2).getRows(),  model.getClassRecord().getClassId(), 2);
+                    model.initFinalGradeTable(view.getTable(4), model.getClassRecord().getGradePeriod(1).getRows(), model.getClassRecord().getClassId());
+                    view.resizeAllTables();
+                    
+                    dialog.dispose();
                 } catch (SQLException e) {}
             }
-            */
             
             // Delete activity
-            
-            /* OUTDATED UPDATE THIS
             else if (response == JOptionPane.YES_OPTION && !deleteStudent) {
                 try {
+                    dialog.setVisible(true);
+                    
+                    GradePeriod period = model.getGradePeriod(selectedTab+1);
+                    
                     int activityId = model.getActivityIdInDB(
-                        model.getGradePeriod().getClassId(), 
-                        model.getGradePeriod().getColumnName(table.getSelectedColumn())
+                        model.getClassRecord().getClassId(), 
+                        period.getColumnName(table.getSelectedColumn()).split("\\|")[1],
+                        selectedTab+1
                     );
                     
                     // List to hold the grades to delete
                     ArrayList<Grade> gradesToRemove = new ArrayList<>();
                     
-                    for (Row r: model.getGradePeriod().getClassList())  {
-                        Grade g = r.getGrades().get(table.getSelectedColumn()-2);
+                    for (Row r: period.getRows())  {
+                        Grade g = r.getGrades().get(table.getSelectedColumn()-3);
+                        // Delete grade record in db
                         model.deleteGradeInDB(g);
+                        // Recalculate percentage grade in db
+                        model.updatePercentageGrade(
+                            model.calculatePercentageGrade(
+                                    g.getStudentId(), 
+                                    g.getActivityTypeId(), 
+                                    g.getClassId(), 
+                                    g.getQuarter()), 
+                            g.getStudentId(), 
+                            g.getActivityTypeId(),
+                            g.getClassId(), 
+                            g.getQuarter()
+                        );
+                        // Recalculate final grade
+                        model.updateInitialGrade( 
+                            g.getStudentId(), 
+                            g.getClassId(), 
+                            g.getQuarter()
+                        );
                         gradesToRemove.add(g);      // Collect grade for removal after iteration
                     }
                     
                     // Now remove the grades from each row after collecting them
-                    for (Row r : model.getGradePeriod().getClassList()) {
+                    for (Row r : period.getRows()) {
                         r.getGrades().removeAll(gradesToRemove); // Safely remove all grades at once
                     }
                     model.deleteActivity(activityId);
-                    
+
                     // Remove column from table
-                    model.getGradePeriod().deleteColumn(table.getSelectedColumn());
+                    period.deleteColumn(table.getSelectedColumn());
+                    period.setColumnNames(model.getActivitiesInDB(model.getClassRecord().getClassId(), selectedTab+1));
                     
+                    /**
+                     * Update all tables inside the program
+                     */
                     view.resizeTable(model.getSelectedTab());
+                    // Dirty update by setting the whole table model on grade sheet Q1, Q2, and final grades
+                    model.initGradeSheetTable(view.getTable(2), model.getClassRecord().getGradePeriod(1).getRows(), model.getClassRecord().getClassId(), 1);
+                    model.initGradeSheetTable(view.getTable(3), model.getClassRecord().getGradePeriod(2).getRows(), model.getClassRecord().getClassId(), 2);
+                    model.initFinalGradeTable(view.getTable(4), model.getClassRecord().getGradePeriod(1).getRows(), model.getClassRecord().getClassId());
+                    view.resizeAllTables();
+                    
+                    dialog.dispose();
                 } catch (SQLException e) {}
             }
-            */
-        //});
-        
+        });
         
         // Add ActionListener to menu items to detect clicks
         ActionListener menuListener = new ActionListener() {
@@ -422,6 +487,16 @@ public class Controller {
                 view.resizeTable(model.getSelectedTab());
             }
         };
+
+        // Add Student to System event
+        ( (JMenuItem) view.getComponent(Actions.REGISTER_STUDENT_SYSTEM.name()) ).addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                RegisterStudentToSystemWindow window = new RegisterStudentToSystemWindow();
+                window.setVisible(true);
+                window.getButton().addActionListener(new RegisterStudentToSystemWindowListener(window));
+            }
+        });
         
         // Add Student event
         ( (JMenuItem) view.getComponent(Actions.ADDSTUDENT.name()) ).addActionListener(menuListener);
@@ -554,6 +629,61 @@ public class Controller {
                 List<Activity> activities = model.getActivitiesInDB(model.getClassRecord().getClassId(), quarter);
                 model.getClassRecord().getGradePeriod(quarter).setColumnNames(activities);
                 view.resizeTable(quarter-1);
+                window.dispose();
+            }
+        }
+    }
+    
+    // Listener for the confirmation button in RegisterStudentToSystemWindow
+    class RegisterStudentToSystemWindowListener implements ActionListener {
+
+        RegisterStudentToSystemWindow window;
+
+        public RegisterStudentToSystemWindowListener(RegisterStudentToSystemWindow window) {
+            this.window = window;
+        }
+
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            String firstName = window.getFirstName();
+            String middleName = window.getMiddleName();
+            String lastName = window.getLastName();
+            String lrn = window.getLrn();
+            String dob = window.getDob();
+            String gender = window.getGender();
+            String strand = window.getStrand();
+            int gradeLevel = window.getGradeLevel();
+            
+            boolean validForm = true;
+
+            // Empty fields will show an error
+            if (firstName.isBlank() || lastName.isBlank() || lrn.isBlank() || dob.isBlank()) {
+                JOptionPane.showMessageDialog(
+                    null,
+                    "Please provide all the necessary details.",
+                    "Invalid form",
+                    JOptionPane.WARNING_MESSAGE
+                );
+                validForm = false;
+            }
+            
+            if (validForm) {
+                List<Activity> activities = model.getActivitiesInDB(model.getClassRecord().getClassId(), quarter);
+                model.getClassRecord().getGradePeriod(quarter).setColumnNames(activities);
+                
+                /**
+                 * Update all tables inside the program
+                 */
+                model.setClassRecord(model.getClassRecordInDB(1));      // FOR TESTING ONLY. CHANGE THIS LATER
+                model.initClassRecord(model.getClassRecord());
+                view.getTable(0).setModel(model.getClassRecord().getGradePeriod(1));
+                view.getTable(1).setModel(model.getClassRecord().getGradePeriod(2));
+                // Dirty update by setting the whole table model on grade sheet Q1, Q2, and final grades
+                model.initGradeSheetTable(view.getTable(2), model.getClassRecord().getGradePeriod(1).getRows(),  model.getClassRecord().getClassId(), 1);
+                model.initGradeSheetTable(view.getTable(3), model.getClassRecord().getGradePeriod(2).getRows(),  model.getClassRecord().getClassId(), 2);
+                model.initFinalGradeTable(view.getTable(4), model.getClassRecord().getGradePeriod(1).getRows(), model.getClassRecord().getClassId());
+                view.resizeAllTables();
+                    
                 window.dispose();
             }
         }

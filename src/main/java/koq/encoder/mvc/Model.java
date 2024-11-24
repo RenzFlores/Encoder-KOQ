@@ -16,11 +16,7 @@ import java.util.stream.Collectors;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.DefaultTableModel;
-import koq.encoder.classes.Activity;
-import koq.encoder.classes.ClassRecord;
-import koq.encoder.classes.Faculty;
-import koq.encoder.classes.GradePeriod;
-import koq.encoder.classes.Row;
+import koq.encoder.classes.*;
 
 public class Model {
 
@@ -51,7 +47,7 @@ public class Model {
         NEW_RECORD,
         OPEN_RECORD,
         EXPORTFILE,         // UNUSED
-        ADD_STUDENT_SYSTEM,
+        REGISTER_STUDENT_SYSTEM,
         LOGOUT,
         EXIT,
         ADD_TO_TABLE,
@@ -233,19 +229,41 @@ public class Model {
     }
     
     /**
-     * Add student to database, retrieve their data, create a Student object and add it to the current GradePeriod
-     * OUTDATED. UPDATE THIS
+     * Get a student object from LRN
      */
+    public Student getStudentInDB(int lrn) {
+        String selectQuery = 
+            "SELECT * " +
+            "FROM students s " +
+            "WHERE s.lrn = ?;";
+        
+        try (PreparedStatement pstmt = getConnection().prepareStatement(selectQuery)) {
+            pstmt.setInt(1, lrn);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return new Student(
+                    rs.getInt("student_id"),
+                    rs.getString("first_name"),
+                    rs.getString("middle_name"),
+                    rs.getString("last_name"),
+                    rs.getInt("lrn"),
+                    rs.getString("gender"),
+                    rs.getString("date_of_birth"),
+                    rs.getString("strand")
+                );
+            } else {
+                throw new NullPointerException("Error: Student does not exist.");
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        
+        return null;
+    }
     
-    /*
-    public void addStudentToClassRecord(String firstName, String lastName) {
+    /**
+     * Add student to database, retrieve their data, create a Student object and add it to the current GradePeriod
+     */
+    public void addStudentToClassRecord(Student student) {
         try {
-            addStudent(firstName, lastName);
-            
-            int id = getStudentIdInDB(firstName, lastName);
-            
-            Student s = new Student(id, firstName, lastName);
-            
             addStudentToClass(s.getStudentId(), getGradePeriod().getClassId());
             
             Row row = new Row(s, new ArrayList<Grade>(), null);
@@ -267,7 +285,6 @@ public class Model {
             getGradePeriod().fireTableDataChanged();
         } catch (SQLException err) {}
     }
-    */
     
     /**
      * TODO: ADD DOCUMENTATION
@@ -312,12 +329,12 @@ public class Model {
     }
     
     public int getGradeIdInDB(int studentId, int classId, int activityId) throws SQLException {
-        String insertQuery = 
+        String selectQuery = 
             "SELECT grade_id " +
             "FROM grades g " +
             "WHERE g.student_id = ? AND g.class_id = ? AND g.activity_id = ?;";
         
-        try (PreparedStatement pstmt = getConnection().prepareStatement(insertQuery)) {
+        try (PreparedStatement pstmt = getConnection().prepareStatement(selectQuery)) {
             pstmt.setInt(1, studentId);
             pstmt.setInt(2, classId);
             pstmt.setInt(3, activityId);
@@ -467,7 +484,6 @@ public class Model {
             pstmt.setInt(2, studentId);
             pstmt.setInt(3, classId);
             int rowsAffected = pstmt.executeUpdate();
-            System.out.println(value);
             System.out.println("Percentage grade updated. Rows affected: " + rowsAffected);
         } catch (SQLException e) { e.printStackTrace(); }
     }
@@ -620,22 +636,19 @@ public class Model {
     }
     
     /**
-     * Initializes a JTable with a table model (GradePeriod class) and the 
+     * Initializes a JTable that uses the GradePeriod class model with the 
      * appropriate listeners
-     * UNUSED
      */
-    public void initTable(JTable table, GradePeriod clsRec) {
-        table.setModel(clsRec);
-        
+    public void setTableListeners(JTable table) {
         table.getTableHeader().addMouseListener(new HeaderSelector(table));
         table.addMouseListener(new RowSelector(table));
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
     }
     
-    public void initGradeSheetTable(JTable table, List<Row> rows) {
+    public void initGradeSheetTable(JTable table, List<Row> rows, int classId, int quarter) {
         Object[][] data = {};
         String[] columnNames = {
-            "Student Name", "Sex", "WW|Percentage", 
+            "#", "Student Name", "Sex", "WW|Percentage", 
             "PT|Percentage", "QA|Percentage", "WW|Weighted", 
             "PT|Weighted", "QA|Weighted", "Initial|Grade", "Transmuted|Grade"
         };
@@ -644,15 +657,16 @@ public class Model {
         
         for (int i = 0; i < rows.size(); i++) {
             model.addRow(getGradeSheetRowInDB(
+                i+1,
                 rows.get(i).getStudent().getStudentId(), 
-                rows.get(i).getGrades().getFirst().getClassId(),
-                rows.get(i).getGrades().getFirst().getQuarter()
+                classId,
+                quarter
                 )
             );
         }
     }
     
-    public Object[] getGradeSheetRowInDB(int studentId, int classId, int quarter) {
+    public Object[] getGradeSheetRowInDB(int rowCount, int studentId, int classId, int quarter) {
         String selectQuery = """
             SELECT *
             FROM calculated_grades cg
@@ -670,6 +684,7 @@ public class Model {
             if (rs.next()) {
                 if (quarter == 1) {
                     return new Object[]{
+                        rowCount,
                         rs.getString("last_name") + ", " + rs.getString("first_name") + " " + rs.getString("middle_name"),
                         rs.getString("gender").charAt(0),
                         rs.getDouble("q1_ww_ps") + "%",
@@ -683,6 +698,7 @@ public class Model {
                     };
                 } else {
                     return new Object[]{
+                        rowCount,
                         rs.getString("last_name") + ", " + rs.getString("first_name") + " " + rs.getString("middle_name"),
                         rs.getString("gender").charAt(0),
                         rs.getDouble("q2_ww_ps") + "%",
@@ -701,7 +717,7 @@ public class Model {
         return null;
     }
     
-    public Object[] getFinalGradeRowInDB(int studentId, int classId) {
+    public Object[] getFinalGradeRowInDB(int rowCount, int studentId, int classId) {
         String selectQuery = """
             SELECT *
             FROM calculated_grades cg
@@ -716,6 +732,7 @@ public class Model {
             
             if (rs.next()) {
                 return new Object[]{
+                    rowCount,
                     rs.getString("last_name") + ", " + rs.getString("first_name") + " " + rs.getString("middle_name"),
                     rs.getString("gender").charAt(0),
                     transmute(rs.getDouble("q1_raw_grade")),
@@ -730,10 +747,10 @@ public class Model {
         return null;
     }
     
-    public void initFinalGradeTable(JTable table, List<Row> rows) {
+    public void initFinalGradeTable(JTable table, List<Row> rows, int classId) {
         Object[][] data = {};
         String[] columnNames = {
-            "Student Name", "Sex", "First Quarter", 
+            "#", "Student Name", "Sex", "First Quarter", 
             "Second Quarter", "Average", "Final Grade", "Remarks"
         };
         DefaultTableModel model = new DefaultTableModel(data, columnNames);
@@ -741,8 +758,9 @@ public class Model {
         
         for (int i = 0; i < rows.size(); i++) {
             model.addRow(getFinalGradeRowInDB(
+                i+1,
                 rows.get(i).getStudent().getStudentId(), 
-                rows.get(i).getGrades().getFirst().getClassId()
+                classId
             ));
         }
     }
@@ -783,7 +801,7 @@ public class Model {
                 JOIN student_classes sc ON s.student_id = sc.student_id
                 JOIN classes c ON sc.class_id = c.class_id
                 WHERE c.class_id = ?
-                ORDER BY s.student_id;
+                ORDER BY s.gender DESC, s.last_name, s.first_name;
             """);
             ps.setInt(1, classId);
             
@@ -988,10 +1006,11 @@ public class Model {
     }
     
     /**
+     * OUTDATED DOCUMENTATION
      * Adds a new student to the database if they do not exist yet. getStudentInDB() must be called
      * after this query to get the assigned student_id
      */
-    public void addStudent(String firstName, String lastName) throws SQLException {
+    public void addStudentToDb(String firstName, String lastName) throws SQLException {
         if (!studentExists(firstName, lastName)) {
             String insertQuery = "INSERT INTO students (first_name, last_name) VALUES (?, ?)";
             try (PreparedStatement pstmt = getConnection().prepareStatement(insertQuery)) {
@@ -1103,8 +1122,8 @@ public class Model {
                 return rs.getInt("activity_id");
             } else {
                 throw new SQLException(
-                        "activity_id with class_id = " + classId + 
-                        ", name = " + name + " not found"
+                    "activity_id with class_id = " + classId + 
+                    ", name = " + name + ", quarter=" + quarter + " not found"
                 );
             }
         }

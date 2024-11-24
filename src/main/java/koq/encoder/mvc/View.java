@@ -7,14 +7,8 @@ import javax.swing.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import koq.encoder.classes.Row;
+import koq.encoder.components.*;
 import koq.encoder.mvc.Model.Actions;
-import koq.encoder.components.EditPanel;
-import koq.encoder.components.EditorWindow;
-import koq.encoder.components.FilterPanel;
-import koq.encoder.components.LoginWindow;
-import koq.encoder.components.StudentNameRenderer;
-import koq.encoder.components.TableView;
-import koq.encoder.components.WrappedHeaderRenderer;
 import koq.encoder.mvc.Model.Fields;
 
 public class View {
@@ -86,17 +80,14 @@ public class View {
         componentList.addAll(Arrays.asList(
                 ( (EditPanel) editorWindow.getGradeEditor() ).getContainer().getComponents()));
         
+        // Toolbar
         componentList.addAll(Arrays.asList(
                 editorWindow.getToolbar().getComponents()));
         
         // Table editor
         //componentList.addAll(Arrays.asList(
         //        tableEditor.getContainer().getComponents()));
-        
-        // Toolbar
-        //componentList.addAll(Arrays.asList(
-        //        ( (Toolbar) tableEditor.getToolbar()).getComponents()));
-        
+
         // Table view
         // componentList.add(( (TableView) tableEditor).getTab());
         
@@ -168,6 +159,21 @@ public class View {
     
     public JFrame getFrame() {
         return frame;
+    }
+    
+    public JDialog createDeleteDialog() {
+        JDialog dialog = new JDialog(frame, "Processing", false);
+        JLabel label = new JLabel("Removing. Please wait...");
+        label.setHorizontalAlignment(SwingConstants.CENTER); 
+        label.setPreferredSize(new java.awt.Dimension(200, 100));
+        
+        dialog.setLayout(new java.awt.BorderLayout());
+        dialog.add(label, java.awt.BorderLayout.CENTER);
+        dialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+        dialog.pack();
+        dialog.setLocationRelativeTo(null);
+        
+        return dialog;
     }
     
     public void showContextMenu() {
@@ -292,35 +298,22 @@ public class View {
             table.getColumnModel().getColumn(i).setHeaderRenderer(headerRenderer);
         }
 
-        if (selectedTab < 2) {
-            if (table.getColumnModel().getColumnCount() > 0) {
-                table.getColumnModel().getColumn(1).setCellRenderer(studentNameRenderer);
-
-                table.getTableHeader().setBackground(Color.LIGHT_GRAY);
-
-                // Set column 1 width (Student number)
-                table.getColumnModel().getColumn(0).setPreferredWidth(20);
-                table.getColumnModel().getColumn(0).setMaxWidth(20);
-                // Set column 2 width (Student name)
-                table.getColumnModel().getColumn(1).setPreferredWidth(150);
-                table.getColumnModel().getColumn(1).setMaxWidth(150);
-                // Set column 3 width (Student gender)
-                table.getColumnModel().getColumn(2).setPreferredWidth(30);
-                table.getColumnModel().getColumn(2).setMaxWidth(30);
-            } 
-        } else if (selectedTab >= 2) {
-            table.getColumnModel().getColumn(0).setCellRenderer(studentNameRenderer);
+        if (table.getColumnModel().getColumnCount() > 0) {
+            table.getColumnModel().getColumn(1).setCellRenderer(studentNameRenderer);
 
             table.getTableHeader().setBackground(Color.LIGHT_GRAY);
 
-            // Set column 1 width (Student name)
-            table.getColumnModel().getColumn(0).setPreferredWidth(150);
-            table.getColumnModel().getColumn(0).setMaxWidth(150);
-            // Set column 2 width (Student gender)
-            table.getColumnModel().getColumn(1).setPreferredWidth(30);
-            table.getColumnModel().getColumn(1).setMaxWidth(30);
-        }
-        table.setRowHeight(30);
+            // Set column 1 width (Student number)
+            table.getColumnModel().getColumn(0).setPreferredWidth(20);
+            table.getColumnModel().getColumn(0).setMaxWidth(20);
+            // Set column 2 width (Student name)
+            table.getColumnModel().getColumn(1).setPreferredWidth(150);
+            table.getColumnModel().getColumn(1).setMaxWidth(150);
+            // Set column 3 width (Student gender)
+            table.getColumnModel().getColumn(2).setPreferredWidth(30);
+            table.getColumnModel().getColumn(2).setMaxWidth(30);
+            table.setRowHeight(30);
+        } 
 
         // Set each column to be unresizable
         for (int i = 0; i < table.getColumnModel().getColumnCount(); i++) {
@@ -331,11 +324,23 @@ public class View {
         table.repaint();
     }
     
+    public void resizeAllTables() {
+        resizeTable(0);
+        resizeTable(1);
+        resizeTable(2);
+        resizeTable(3);
+        resizeTable(4);
+    }
+    
     /**
      * Set editor panel values
      */
     public void updateEditPanel(int selectedTab, int selectedActivity, Row selectedRow) {
         JTable table = editorWindow.getTable(selectedTab);
+        
+        if (selectedTab > 1) {
+            return;
+        }
         
         if (selectedRow == null) {
             setStudentNameInEditor("");
@@ -389,7 +394,7 @@ class MenuBar extends JMenuBar {
     JMenu menuHelp;
     JMenuItem menuNewTable;
     JMenuItem menuOpenFile;
-    JMenuItem menuAddStudent;
+    JMenuItem menuRegisterStudent;
     JMenuItem menuExportFile;
     JMenuItem menuExit;
     JMenuItem menuEditGradeWeights;
@@ -403,7 +408,7 @@ class MenuBar extends JMenuBar {
         menuFile = new JMenu("Record");
         menuNewTable  = new JMenuItem("New Class Record");
         menuOpenFile  = new JMenuItem("Open Class Record");
-        menuAddStudent  = new JMenuItem("Add Student to System");
+        menuRegisterStudent  = new JMenuItem("Register Student to System");
         menuExportFile  = new JMenuItem("Export File");                         // UNUSED
         menuExit  = new JMenuItem("Exit");
         
@@ -414,7 +419,7 @@ class MenuBar extends JMenuBar {
         
         menuFile.add(menuNewTable);
         menuFile.add(menuOpenFile);       
-        menuFile.add(menuAddStudent);       
+        menuFile.add(menuRegisterStudent);       
         //menuFile.add(menuExportFile);         UNUSED
         menuFile.add(menuExit);
         
@@ -444,7 +449,7 @@ class MenuBar extends JMenuBar {
         // Set actions to each JMenuItem
         menuNewTable.setName(Actions.NEW_RECORD.name());
         menuOpenFile.setName(Actions.OPEN_RECORD.name());
-        menuAddStudent.setName(Actions.ADD_STUDENT_SYSTEM.name());
+        menuRegisterStudent.setName(Actions.REGISTER_STUDENT_SYSTEM.name());
         menuExportFile.setName(Actions.EXPORTFILE.name());
         menuLogout.setName(Actions.LOGOUT.name());
         menuExit.setName(Actions.EXIT.name());

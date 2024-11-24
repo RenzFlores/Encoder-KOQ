@@ -23,8 +23,13 @@ public class GradePeriod extends AbstractTableModel {
         fireTableStructureChanged();
     }
     
-     public void deleteColumn(int index) {
+    public void deleteColumn(int index) {
         getColumns().remove(index);
+        fireTableStructureChanged();
+    }
+    
+    public void removeRow(int index) {
+        getRows().remove(index);
         fireTableStructureChanged();
     }
     
