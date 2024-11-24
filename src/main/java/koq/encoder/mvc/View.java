@@ -164,9 +164,9 @@ public class View {
         return frame;
     }
     
-    public JDialog createDeleteDialog() {
-        JDialog dialog = new JDialog(frame, "Processing", false);
-        JLabel label = new JLabel("Removing. Please wait...");
+    public JDialog createPopupDialog(String message) {
+        JDialog dialog = new JDialog(frame, "Processing", true);
+        JLabel label = new JLabel(message);
         label.setHorizontalAlignment(SwingConstants.CENTER); 
         label.setPreferredSize(new java.awt.Dimension(200, 100));
         

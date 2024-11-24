@@ -26,6 +26,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
 import javax.swing.border.LineBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -314,7 +315,7 @@ public class Controller {
                         grade.getClassId(), 
                         grade.getQuarter()
                     );
-                    // Dirty update by setting the whole table model
+                    // Dirty update by setting the whole selectedTable model
                     if (grade.getQuarter() == 1) {
                         model.initGradeSheetTable(view.getTable(2), model.getClassRecord().getGradePeriod(1).getRows(), model.getClassRecord().getClassId(), 1);
                     } else {
@@ -324,7 +325,7 @@ public class Controller {
                     view.resizeAllTables();
                 }
 
-                // Update the table in view
+                // Update the selectedTable in view
                 model.getGradePeriod(model.getSelectedTab()+1).fireTableRowsUpdated(row, row);       
             }
         });
@@ -370,6 +371,61 @@ public class Controller {
             ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).requestFocusInWindow();
         });
         
+        // List selection listener for Grade Sheet Q1 table
+        view.getTable(2).getSelectionModel().addListSelectionListener(event -> {
+            // Check if the event is adjusting (to avoid double calls during selection changes)
+            if (!event.getValueIsAdjusting()) {
+                int selectedRow = view.getTable(2).getSelectedRow();
+
+                if (selectedRow != -1) { // Ensure a valid row is selected
+                    model.setSelectedRow(selectedRow);
+                    view.updateEditPanel(
+                        model.getSelectedTab(),
+                        model.getSelectedActivity(),
+                        model.getGradePeriod(2).getRowAt(selectedRow)
+                    );
+                }
+            }
+            // Set focus to grade text field
+            ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).requestFocusInWindow();
+        });
+        // List selection listener for Grade Sheet Q2 table
+        view.getTable(2).getSelectionModel().addListSelectionListener(event -> {
+            // Check if the event is adjusting (to avoid double calls during selection changes)
+            if (!event.getValueIsAdjusting()) {
+                int selectedRow = view.getTable(2).getSelectedRow();
+
+                if (selectedRow != -1) { // Ensure a valid row is selected
+                    model.setSelectedRow(selectedRow);
+                    view.updateEditPanel(
+                        model.getSelectedTab(),
+                        model.getSelectedActivity(),
+                        model.getGradePeriod(2).getRowAt(selectedRow)
+                    );
+                }
+            }
+            // Set focus to grade text field
+            ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).requestFocusInWindow();
+        });
+        // List selection listener for Final Grade table
+        view.getTable(5).getSelectionModel().addListSelectionListener(event -> {
+            // Check if the event is adjusting (to avoid double calls during selection changes)
+            if (!event.getValueIsAdjusting()) {
+                int selectedRow = view.getTable(2).getSelectedRow();
+
+                if (selectedRow != -1) { // Ensure a valid row is selected
+                    model.setSelectedRow(selectedRow);
+                    view.updateEditPanel(
+                        model.getSelectedTab(),
+                        model.getSelectedActivity(),
+                        model.getGradePeriod(2).getRowAt(selectedRow)
+                    );
+                }
+            }
+            // Set focus to grade text field
+            ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).requestFocusInWindow();
+        });
+        
         // Add to Table button clicked event
         ( (JButton) view.getComponent(Actions.ADD_TO_TABLE.name()) ).addActionListener((ActionEvent e) -> {
             if (model.getClassRecord() != null) {
@@ -383,12 +439,14 @@ public class Controller {
             int response = -1;
             boolean deleteStudent = false;
             JTable table = null;
+            final JTable selectedTable;
             
-            JDialog dialog = view.createDeleteDialog();
+            JDialog dialog = view.createPopupDialog("Deleting. Please wait...");
             
             int selectedTab = model.getSelectedTab();
             if (selectedTab <= 1) {
                 table = view.getTable(selectedTab);
+                selectedTable = table;
             } else {
                 return;
             }
@@ -435,103 +493,120 @@ public class Controller {
             
             // Delete student
             if (response == JOptionPane.YES_OPTION && deleteStudent) {
-                try {
+                SwingUtilities.invokeLater(() -> {
                     dialog.setVisible(true);
+                });
 
-                    /**
-                     * Delete all relevant records in database
-                     */
-                    Row rowQ1 = model.getGradePeriod(1).getRows().get(table.getSelectedRow());
-                    Row rowQ2 = model.getGradePeriod(2).getRows().get(table.getSelectedRow());
-                    for (Grade g: rowQ1.getGrades()) {
-                        model.deleteGradeInDB(g);
-                    }
-                    for (Grade g: rowQ2.getGrades()) {
-                        model.deleteGradeInDB(g);
-                    }
-                    model.removeStudentFromClass(rowQ1.getStudent().getStudentId(), model.getClassRecord().getClassId());
-                    
-                    /**
-                     * Update all tables inside the program
-                     */
-                    model.getGradePeriod(1).removeRow(model.getSelectedRow());
-                    model.getGradePeriod(2).removeRow(model.getSelectedRow());
-                    model.getGradePeriod(1).fireTableRowsDeleted(table.getSelectedRow(), table.getSelectedRow());
-                    model.getGradePeriod(2).fireTableRowsDeleted(table.getSelectedRow(), table.getSelectedRow());
-                    // Dirty update by setting the whole table model on grade sheet Q1, Q2, and final grades
-                    model.initGradeSheetTable(view.getTable(2), model.getClassRecord().getGradePeriod(1).getRows(),  model.getClassRecord().getClassId(), 1);
-                    model.initGradeSheetTable(view.getTable(3), model.getClassRecord().getGradePeriod(2).getRows(),  model.getClassRecord().getClassId(), 2);
-                    model.initFinalGradeTable(view.getTable(4), model.getClassRecord().getGradePeriod(1).getRows(), model.getClassRecord().getClassId());
-                    view.resizeAllTables();
-                    
-                    dialog.dispose();
-                } catch (SQLException e) {}
+                // Create a new thread
+                new Thread(() -> {
+                    try {
+                        /**
+                         * Delete all relevant records in database
+                         */
+                        Row rowQ1 = model.getGradePeriod(1).getRows().get(selectedTable.getSelectedRow());
+                        Row rowQ2 = model.getGradePeriod(2).getRows().get(selectedTable.getSelectedRow());
+                        for (Grade g: rowQ1.getGrades()) {
+                            model.deleteGradeInDB(g);
+                        }
+                        for (Grade g: rowQ2.getGrades()) {
+                            model.deleteGradeInDB(g);
+                        }
+                        model.removeStudentFromClass(rowQ1.getStudent().getStudentId(), model.getClassRecord().getClassId());
+                    } catch (SQLException e) { e.printStackTrace(); }
+
+                    SwingUtilities.invokeLater(() -> {
+                        /**
+                         * Update all tables inside the program
+                         */
+                        model.getGradePeriod(1).removeRow(model.getSelectedRow());
+                        model.getGradePeriod(2).removeRow(model.getSelectedRow());
+                        model.getGradePeriod(1).fireTableRowsDeleted(selectedTable.getSelectedRow(), selectedTable.getSelectedRow());
+                        model.getGradePeriod(2).fireTableRowsDeleted(selectedTable.getSelectedRow(), selectedTable.getSelectedRow());
+                        // Dirty update by setting the whole selectedTable model on grade sheet Q1, Q2, and final grades
+                        model.initGradeSheetTable(view.getTable(2), model.getClassRecord().getGradePeriod(1).getRows(),  model.getClassRecord().getClassId(), 1);
+                        model.initGradeSheetTable(view.getTable(3), model.getClassRecord().getGradePeriod(2).getRows(),  model.getClassRecord().getClassId(), 2);
+                        model.initFinalGradeTable(view.getTable(4), model.getClassRecord().getGradePeriod(1).getRows(), model.getClassRecord().getClassId());
+                        view.resizeAllTables();
+                        
+                        if (model.getSelectedRow() == model.getClassRecord().getClassList().size()-1) {
+                            model.setSelectedRow(model.getClassRecord().getClassList().size()-1);
+                        }
+                        dialog.dispose();
+                    });
+                }).start();
             }
             
             // Delete activity
             else if (response == JOptionPane.YES_OPTION && !deleteStudent) {
-                try {
+                SwingUtilities.invokeLater(() -> {
                     dialog.setVisible(true);
-                    
-                    GradePeriod period = model.getGradePeriod(selectedTab+1);
-                    
-                    int activityId = model.getActivityIdInDB(
-                        model.getClassRecord().getClassId(), 
-                        period.getColumnName(table.getSelectedColumn()).split("\\|")[1],
-                        selectedTab+1
-                    );
-                    
-                    // List to hold the grades to delete
-                    ArrayList<Grade> gradesToRemove = new ArrayList<>();
-                    
-                    for (Row r: period.getRows())  {
-                        Grade g = r.getGrades().get(table.getSelectedColumn()-3);
-                        System.out.println("activity_id=" + g.getActivityId() + ", type_id" + g.getActivityTypeId());
-                        // Delete grade record in db
-                        model.deleteGradeInDB(g);
-                        // Recalculate percentage grade in db
-                        model.updatePercentageGrade(
-                            model.calculatePercentageGrade(
-                                    g.getStudentId(),
-                                    g.getActivityTypeId(), 
-                                    g.getClassId(), 
-                                    g.getQuarter()), 
-                            g.getStudentId(), 
-                            g.getActivityTypeId(),
-                            g.getClassId(), 
-                            g.getQuarter()
-                        );
-                        // Recalculate final grade
-                        model.updateInitialGrade( 
-                            g.getStudentId(), 
-                            g.getClassId(), 
-                            g.getQuarter()
-                        );
-                        gradesToRemove.add(g);      // Collect grade for removal after iteration
-                    }
-                    
-                    // Now remove the grades from each row after collecting them
-                    for (Row r : period.getRows()) {
-                        r.getGrades().removeAll(gradesToRemove); // Safely remove all grades at once
-                    }
-                    model.deleteActivity(activityId);
+                });
 
-                    // Remove column from table
-                    period.deleteColumn(table.getSelectedColumn());
-                    period.setColumnNames(model.getActivitiesInDB(model.getClassRecord().getClassId(), selectedTab+1));
-                    
-                    /**
-                     * Update all tables inside the program
-                     */
-                    view.resizeTable(model.getSelectedTab());
-                    // Dirty update by setting the whole table model on grade sheet Q1, Q2, and final grades
-                    model.initGradeSheetTable(view.getTable(2), model.getClassRecord().getGradePeriod(1).getRows(), model.getClassRecord().getClassId(), 1);
-                    model.initGradeSheetTable(view.getTable(3), model.getClassRecord().getGradePeriod(2).getRows(), model.getClassRecord().getClassId(), 2);
-                    model.initFinalGradeTable(view.getTable(4), model.getClassRecord().getGradePeriod(1).getRows(), model.getClassRecord().getClassId());
-                    view.resizeAllTables();
-                    
-                    dialog.dispose();
-                } catch (SQLException e) {}
+                // Create a new thread
+                new Thread(() -> {
+                    try {
+                        GradePeriod period = model.getGradePeriod(selectedTab+1);
+
+                        int activityId = model.getActivityIdInDB(
+                            model.getClassRecord().getClassId(), 
+                            period.getColumnName(selectedTable.getSelectedColumn()).split("\\|")[1],
+                            selectedTab+1
+                        );
+
+                        // List to hold the grades to delete
+                        ArrayList<Grade> gradesToRemove = new ArrayList<>();
+
+                        for (Row r: period.getRows())  {
+                            Grade g = r.getGrades().get(selectedTable.getSelectedColumn()-3);
+                            
+                            // Delete grade record in db
+                            model.deleteGradeInDB(g);
+                            // Recalculate percentage grade in db
+                            model.updatePercentageGrade(
+                                model.calculatePercentageGrade(
+                                        g.getStudentId(),
+                                        g.getActivityTypeId(), 
+                                        g.getClassId(), 
+                                        g.getQuarter()), 
+                                g.getStudentId(), 
+                                g.getActivityTypeId(),
+                                g.getClassId(), 
+                                g.getQuarter()
+                            );
+                            // Recalculate final grade
+                            model.updateInitialGrade( 
+                                g.getStudentId(), 
+                                g.getClassId(), 
+                                g.getQuarter()
+                            );
+                            gradesToRemove.add(g);      // Collect grade for removal after iteration
+                        }
+
+                        // Now remove the grades from each row after collecting them
+                        for (Row r : period.getRows()) {
+                            r.getGrades().removeAll(gradesToRemove); // Safely remove all grades at once
+                        }
+                        model.deleteActivity(activityId);
+                    } catch (SQLException e) { e.printStackTrace(); }
+
+                    SwingUtilities.invokeLater(() -> {
+                        // Remove column from selectedTable
+                        GradePeriod period = model.getGradePeriod(selectedTab+1);
+                        period.deleteColumn(selectedTable.getSelectedColumn());
+                        period.setColumnNames(model.getActivitiesInDB(model.getClassRecord().getClassId(), selectedTab+1));  
+                        
+                        /**
+                         * Update all tables inside the program
+                         */
+                        view.resizeTable(model.getSelectedTab());
+                        // Dirty update by setting the whole selectedTable model on grade sheet Q1, Q2, and final grades
+                        model.initGradeSheetTable(view.getTable(2), model.getClassRecord().getGradePeriod(1).getRows(), model.getClassRecord().getClassId(), 1);
+                        model.initGradeSheetTable(view.getTable(3), model.getClassRecord().getGradePeriod(2).getRows(), model.getClassRecord().getClassId(), 2);
+                        model.initFinalGradeTable(view.getTable(4), model.getClassRecord().getGradePeriod(1).getRows(), model.getClassRecord().getClassId());
+                        view.resizeAllTables();
+                        dialog.dispose();
+                    });
+                }).start();
             }
         });
         
@@ -585,10 +660,10 @@ public class Controller {
         // Action to move selected row up (UNUSED COMPONENT)
         /*
         ( (JButton) view.getComponent( Actions.MOVE_ROW_UP.name() ) ).addActionListener((ActionEvent e) -> {
-            int selectedRow = table.getSelectedRow();
+            int selectedRow = selectedTable.getSelectedRow();
             if (selectedRow > 0) {
                 model.getGradePeriod().moveRow(selectedRow, selectedRow - 1);
-                table.setRowSelectionInterval(selectedRow - 1, selectedRow - 1);
+                selectedTable.setRowSelectionInterval(selectedRow - 1, selectedRow - 1);
             }
         });
         */
@@ -596,10 +671,10 @@ public class Controller {
         // Action to move selected row down (UNUSED COMPONENT)
         /*
         ( (JButton) view.getComponent( Actions.MOVE_ROW_DOWN.name() ) ).addActionListener((ActionEvent e) -> {
-            int selectedRow = table.getSelectedRow();
+            int selectedRow = selectedTable.getSelectedRow();
             if (selectedRow < model.getGradePeriod().getRowCount() - 1 && selectedRow >= 0) {
                 model.getGradePeriod().moveRow(selectedRow, selectedRow + 1);
-                table.setRowSelectionInterval(selectedRow + 1, selectedRow + 1);
+                selectedTable.setRowSelectionInterval(selectedRow + 1, selectedRow + 1);
             }
         });
         */
@@ -661,6 +736,7 @@ public class Controller {
             String totalScore = window.getTotalScore();
             int activityTypeId;
             boolean validForm = true;
+            JDialog dialog = view.createPopupDialog("Creating records. Please wait...");
 
             // Empty field will show an error
             if (activityName.isBlank() || totalScore.isBlank()) {
@@ -685,18 +761,54 @@ public class Controller {
             }
             
             if (validForm) {
-                switch(activityType) {
+                window.dispose();
+                
+                SwingUtilities.invokeLater(() -> {
+                    dialog.setVisible(true);
+                });
+
+                // Create a new thread
+                new Thread(() -> {
+                    switch(activityType) {
                     case "Written Work":
                         model.addWWToTable(activityName, Integer.parseInt(totalScore), quarter);
                         break;
                     case "Performance Task":
                         model.addPTToTable(activityName, Integer.parseInt(totalScore), quarter);
-                }
-                List<Activity> activities = model.getActivitiesInDB(model.getClassRecord().getClassId(), quarter);
-                model.getClassRecord().getGradePeriod(quarter).setColumnNames(activities);
-                view.resizeTable(quarter-1);
-                view.getTable(quarter-1).setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
-                window.dispose();
+                    }
+
+                    // Update all final grades in database since a new activity is added
+                    for (Row r: model.getGradePeriod(quarter).getRows()) {
+                        // Recalculate percentage grade in db
+                        model.updatePercentageGrade(
+                            model.calculatePercentageGrade(
+                                    r.getStudent().getStudentId(), 
+                                    "Written Work".equals(activityType) ? 1 : 2,
+                                    model.getClassRecord().getClassId(), 
+                                    quarter
+                            ), 
+                            r.getStudent().getStudentId(),  
+                            "Written Work".equals(activityType) ? 1 : 2,
+                            model.getClassRecord().getClassId(), 
+                            quarter
+                        );
+                        model.updateInitialGrade( 
+                            r.getStudent().getStudentId(),  
+                            model.getClassRecord().getClassId(), 
+                            quarter
+                        );
+                    }
+
+                    SwingUtilities.invokeLater(() -> {
+                        model.getGradePeriod(quarter).setColumnNames(model.getActivitiesInDB(model.getClassRecord().getClassId(), quarter));
+                        // Dirty update by setting the whole table model
+                        model.initGradeSheetTable(view.getTable(quarter+1), model.getClassRecord().getGradePeriod(quarter).getRows(), model.getClassRecord().getClassId(), quarter);
+                        model.initFinalGradeTable(view.getTable(4), model.getClassRecord().getGradePeriod(1).getRows(), model.getClassRecord().getClassId());
+                        view.resizeTable(quarter-1);
+                        view.getTable(quarter-1).setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
+                        dialog.dispose();
+                    });
+                }).start();
             }
         }
     }
@@ -745,7 +857,7 @@ public class Controller {
                 model.initClassRecord(model.getClassRecord());
                 view.getTable(0).setModel(model.getClassRecord().getGradePeriod(1));
                 view.getTable(1).setModel(model.getClassRecord().getGradePeriod(2));
-                // Dirty update by setting the whole table model on grade sheet Q1, Q2, and final grades
+                // Dirty update by setting the whole selectedTable model on grade sheet Q1, Q2, and final grades
                 model.initGradeSheetTable(view.getTable(2), model.getClassRecord().getGradePeriod(1).getRows(),  model.getClassRecord().getClassId(), 1);
                 model.initGradeSheetTable(view.getTable(3), model.getClassRecord().getGradePeriod(2).getRows(),  model.getClassRecord().getClassId(), 2);
                 model.initFinalGradeTable(view.getTable(4), model.getClassRecord().getGradePeriod(1).getRows(), model.getClassRecord().getClassId());
@@ -825,8 +937,8 @@ public class Controller {
                     model.getGradePeriod().initClassList();                     // Initialize arrayList
                     model.initClassRecord(model.getGradePeriod());              // Populate arrayList
                     model.initTable(
-                        view.getTable(model.getSelectedTab()), model.getGradePeriod());   // Set table model
-                    view.resizeTable(model.getSelectedTab());                                         // Setup table
+                        view.getTable(model.getSelectedTab()), model.getGradePeriod());   // Set selectedTable model
+                    view.resizeTable(model.getSelectedTab());                                         // Setup selectedTable
                     view.setWindowTitle(model.getGradePeriod().toString());     // Set window title
                     System.out.println("Class Record set");
                     window.dispose();

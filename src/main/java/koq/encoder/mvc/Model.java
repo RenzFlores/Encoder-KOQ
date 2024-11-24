@@ -482,13 +482,11 @@ public class Model {
         
         updateQuery = updateQuery.concat("WHERE student_id = ? AND class_id = ?;");
         
-        System.out.println("type_id=" + activityTypeId + ", " + updateQuery);
         try (PreparedStatement pstmt = getConnection().prepareStatement(updateQuery)) {
             pstmt.setDouble(1, value);
             pstmt.setInt(2, studentId);
             pstmt.setInt(3, classId);
-            int rowsAffected = pstmt.executeUpdate();
-            System.out.println("Percentage grade updated. Rows affected: " + rowsAffected);
+            pstmt.executeUpdate();
         } catch (SQLException e) { e.printStackTrace(); }
     }
     
@@ -510,7 +508,6 @@ public class Model {
             pstmt.setInt(2, studentId);
             pstmt.setInt(3, classId);
             pstmt.executeUpdate();
-            System.out.println("Initial raw grade updated");
         } catch (SQLException e) { e.printStackTrace(); }
     }
     
@@ -1105,7 +1102,6 @@ public class Model {
         try (PreparedStatement pstmt = getConnection().prepareStatement(deleteQuery)) {
             pstmt.setInt(1, activityId);
             pstmt.executeUpdate();
-            System.out.println("Activity deleted successfully.");
         }
     }
     
@@ -1147,7 +1143,6 @@ public class Model {
         try (PreparedStatement pstmt = getConnection().prepareStatement(insertQuery)) {
             pstmt.setInt(1, grade.getGradeId());
             pstmt.executeUpdate();
-            System.out.println("Grade deleted successfully.");
         }
     }
     
