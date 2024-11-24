@@ -263,6 +263,7 @@ public class Model {
      * Add student to database, retrieve their data, create a Student object and add it to the current GradePeriod
      */
     public void addStudentToClassRecord(Student student) {
+        /*
         try {
             addStudentToClass(s.getStudentId(), getGradePeriod().getClassId());
             
@@ -284,6 +285,7 @@ public class Model {
             getGradePeriod().getClassList().add(row);
             getGradePeriod().fireTableDataChanged();
         } catch (SQLException err) {}
+        */
     }
     
     /**
@@ -311,12 +313,13 @@ public class Model {
                 
                 Grade grade = new Grade(
                     gradeId,                         // grade_id
-                    r.getStudent().getStudentId(),    // student_id
-                    getClassRecord().getClassId(),  // class_id
-                    null,                              // grade
-                    totalScore,                             // total_score
-                    activityId,                  // activity_id
-                    quarter                                 // quarter
+                    r.getStudent().getStudentId(),   // student_id
+                    getClassRecord().getClassId(),   // class_id
+                    activityId,                      // activity_id
+                    null,                            // grade
+                    totalScore,                      // total_score
+                    activityTypeId,                  // activity_type_id
+                    quarter                          // quarter
                 );
                 // Fill all cells inside column to be empty
                 r.getGrades().add(index-2, grade);
@@ -479,6 +482,7 @@ public class Model {
         
         updateQuery = updateQuery.concat("WHERE student_id = ? AND class_id = ?;");
         
+        System.out.println("type_id=" + activityTypeId + ", " + updateQuery);
         try (PreparedStatement pstmt = getConnection().prepareStatement(updateQuery)) {
             pstmt.setDouble(1, value);
             pstmt.setInt(2, studentId);
@@ -731,15 +735,20 @@ public class Model {
             ResultSet rs = pstmt.executeQuery();
             
             if (rs.next()) {
+                int gradeQ1 = transmute(rs.getDouble("q1_raw_grade"));
+                int gradeQ2 = transmute(rs.getDouble("q2_raw_grade"));
+                int finalGrade = transmute((gradeQ1 + gradeQ2)/2);
+                String remarks = (finalGrade > 74) ? "Passed" : "Failed";
+                       
                 return new Object[]{
                     rowCount,
                     rs.getString("last_name") + ", " + rs.getString("first_name") + " " + rs.getString("middle_name"),
                     rs.getString("gender").charAt(0),
-                    transmute(rs.getDouble("q1_raw_grade")),
-                    transmute(rs.getDouble("q2_raw_grade")),
+                    gradeQ1,
+                    gradeQ2,
                     rs.getDouble("sem_raw_avg"),
-                    transmute(rs.getDouble("sem_raw_avg")),
-                    "Placeholder"
+                    finalGrade,
+                    remarks
                 };
             } else { throw new NullPointerException("Error: grade sheet row with student_id=" + studentId + ", class_id=" + classId + " does not exist"); }
         } catch (SQLException e) { e.printStackTrace(); }
@@ -1226,7 +1235,6 @@ public class Model {
             pstmt.setInt(2, classId);
             pstmt.setInt(3, activity_id);
             pstmt.executeUpdate();
-            System.out.println("Empty grade added successfully.");
         } catch (SQLException e) { e.printStackTrace(); }
     }
     

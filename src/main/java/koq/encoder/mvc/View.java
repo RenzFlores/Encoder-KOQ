@@ -51,18 +51,21 @@ public class View {
         frame.setJMenuBar(menuBar);
         
         editorWindow = new EditorWindow();
-       
+        loginWindow = new LoginWindow();
+        
         addContextMenu = new AddContextMenu();
         addContextMenu.setName("Add Context Menu");
         
         componentList = new ArrayList();
         initializeComponentList();
         
-        loginWindow = new LoginWindow();
-        
+        // Set keystrokes for table editing
+        ( (JTextField) getComponent(Fields.EDIT_GRADE.name())).getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke("UP"), "previousStudent");
+        ( (JTextField) getComponent(Fields.EDIT_GRADE.name())).getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke("DOWN"), "nextStudent");
+        ( (JTextField) getComponent(Fields.EDIT_GRADE.name())).getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke("LEFT"), "previousActivity");
+        ( (JTextField) getComponent(Fields.EDIT_GRADE.name())).getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke("RIGHT"), "nextActivity");
+       
         setLoginWindow();
-        
-        //initEditWindow();
     }
     
     public void setLoginWindow() {

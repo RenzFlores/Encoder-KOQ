@@ -14,6 +14,7 @@ import java.io.File;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.AbstractAction;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
@@ -142,26 +143,14 @@ public class Controller {
         // Select previous student event
         ( (JButton) view.getComponent(Actions.PREVIOUS_STUDENT.name()) ).addActionListener((ActionEvent ev) -> {
             /* OUTDATED
-            int row = model.getSelectedRow();
-            if (model.getGradePeriod() != null) {
-                if (row > 0) {
-                    model.setSelectedRow(row-1);
-                    table.setRowSelectionInterval(row-1, row-1);
-                }
-            }
+        
             */
         });
         
         // Select next student event
         ( (JButton) view.getComponent(Actions.NEXT_STUDENT.name()) ).addActionListener((ActionEvent ev) -> {
             /* OUTDATED
-            int row = model.getSelectedRow();
-            if (model.getGradePeriod() != null) {
-                if (row < model.getGradePeriod().getClassList().size()-1) {
-                    model.setSelectedRow(row+1);
-                    table.setRowSelectionInterval(row+1, row+1);
-                }
-            }
+            
             */
         });
         
@@ -188,7 +177,11 @@ public class Controller {
                     0, 
                     model.getGradePeriod(2).getRowAt(view.getTable(1).getSelectedRow())
                 );
+            } else {
+                view.getTable(index).setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
             }
+            // Set focus to grade text field
+            ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).requestFocusInWindow();
         });
         
         // Activity selection listener
@@ -201,6 +194,74 @@ public class Controller {
                 model.getSelectedActivity(), 
                 model.getGradePeriod(model.getSelectedTab()+1).getRowAt(model.getSelectedRow())
             );
+        });
+        
+        // Select previous student keystroke event
+        ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).getActionMap().put("previousStudent", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int row = model.getSelectedRow();
+                
+                if (model.getClassRecord() == null) {
+                    return;
+                }
+                
+                if (row > 0) {
+                    model.setSelectedRow(row-1);
+                    view.getTable(model.getSelectedTab()).setRowSelectionInterval(row-1, row-1);
+                }
+            }
+        });
+        
+        // Select next student keystroke event
+        ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).getActionMap().put("nextStudent", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int row = model.getSelectedRow();
+                
+                if (model.getClassRecord() == null) {
+                    return;
+                }
+                
+                if (row < model.getClassRecord().getClassList().size()-1) {
+                    model.setSelectedRow(row+1);
+                    view.getTable(model.getSelectedTab()).setRowSelectionInterval(row+1, row+1);
+                }
+            }
+        });
+        
+        // Select previous activity keystroke event
+        ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).getActionMap().put("previousActivity", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int selected = model.getSelectedActivity();
+                
+                if (model.getClassRecord() == null) {
+                    return;
+                }
+                
+                if (selected > 0) {
+                    model.setSelectedActivity(selected-1);
+                    view.getOutputNumberComboBox().setSelectedIndex(selected-1);
+                }
+            }
+        });
+        
+        // Select previous activity keystroke event
+        ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).getActionMap().put("nextActivity", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int selected = model.getSelectedActivity();
+                
+                if (model.getClassRecord() == null) {
+                    return;
+                }
+                
+                if (selected < view.getOutputNumberComboBox().getItemCount()-1) {
+                    model.setSelectedActivity(selected+1);
+                    view.getOutputNumberComboBox().setSelectedIndex(selected+1);
+                }
+            }
         });
         
         // Grade text field DocumentListener
@@ -286,6 +347,8 @@ public class Controller {
                     );
                 }
             }
+            // Set focus to grade text field
+            ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).requestFocusInWindow();
         });
         
         // List selection listener for Grade Period Q2 table
@@ -303,6 +366,8 @@ public class Controller {
                     );
                 }
             }
+            // Set focus to grade text field
+            ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).requestFocusInWindow();
         });
         
         // Add to Table button clicked event
@@ -421,12 +486,13 @@ public class Controller {
                     
                     for (Row r: period.getRows())  {
                         Grade g = r.getGrades().get(table.getSelectedColumn()-3);
+                        System.out.println("activity_id=" + g.getActivityId() + ", type_id" + g.getActivityTypeId());
                         // Delete grade record in db
                         model.deleteGradeInDB(g);
                         // Recalculate percentage grade in db
                         model.updatePercentageGrade(
                             model.calculatePercentageGrade(
-                                    g.getStudentId(), 
+                                    g.getStudentId(),
                                     g.getActivityTypeId(), 
                                     g.getClassId(), 
                                     g.getQuarter()), 
@@ -629,6 +695,7 @@ public class Controller {
                 List<Activity> activities = model.getActivitiesInDB(model.getClassRecord().getClassId(), quarter);
                 model.getClassRecord().getGradePeriod(quarter).setColumnNames(activities);
                 view.resizeTable(quarter-1);
+                view.getTable(quarter-1).setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
                 window.dispose();
             }
         }
@@ -668,8 +735,8 @@ public class Controller {
             }
             
             if (validForm) {
-                List<Activity> activities = model.getActivitiesInDB(model.getClassRecord().getClassId(), quarter);
-                model.getClassRecord().getGradePeriod(quarter).setColumnNames(activities);
+                //List<Activity> activities = model.getActivitiesInDB(model.getClassRecord().getClassId(), quarter);
+                //model.getClassRecord().getGradePeriod(quarter).setColumnNames(activities);
                 
                 /**
                  * Update all tables inside the program

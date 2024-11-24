@@ -7,7 +7,6 @@ C:\OneDrive-Renz\OneDrive\Documents\Github\Encoder-KOQ\src\main\java\koq\encoder
 C:\OneDrive-Renz\OneDrive\Documents\Github\Encoder-KOQ\src\main\java\koq\encoder\components\RegisterFacultyWindow.java
 C:\OneDrive-Renz\OneDrive\Documents\Github\Encoder-KOQ\src\main\java\koq\encoder\components\TableEditorPanel.java
 C:\OneDrive-Renz\OneDrive\Documents\Github\Encoder-KOQ\src\main\java\koq\encoder\components\InitializeDatabase.java
-C:\OneDrive-Renz\OneDrive\Documents\Github\Encoder-KOQ\src\main\java\koq\encoder\components\AdvancedSearchExample.java
 C:\OneDrive-Renz\OneDrive\Documents\Github\Encoder-KOQ\src\main\java\koq\encoder\components\AddStudentWindow.java
 C:\OneDrive-Renz\OneDrive\Documents\Github\Encoder-KOQ\src\main\java\koq\encoder\classes\ClassRecord.java
 C:\OneDrive-Renz\OneDrive\Documents\Github\Encoder-KOQ\src\main\java\koq\encoder\components\StudentNameRenderer.java
@@ -22,6 +21,7 @@ C:\OneDrive-Renz\OneDrive\Documents\Github\Encoder-KOQ\src\main\java\koq\encoder
 C:\OneDrive-Renz\OneDrive\Documents\Github\Encoder-KOQ\src\main\java\koq\encoder\components\LoginWindow.java
 C:\OneDrive-Renz\OneDrive\Documents\Github\Encoder-KOQ\src\main\java\koq\encoder\components\RegisterStudentToSystemWindow.java
 C:\OneDrive-Renz\OneDrive\Documents\Github\Encoder-KOQ\src\main\java\koq\encoder\components\AddActivityWindow.java
+C:\OneDrive-Renz\OneDrive\Documents\Github\Encoder-KOQ\src\main\java\koq\encoder\components\MultipleCriteriaSearchExample.java
 C:\OneDrive-Renz\OneDrive\Documents\Github\Encoder-KOQ\src\main\java\koq\encoder\mvc\Main.java
 C:\OneDrive-Renz\OneDrive\Documents\Github\Encoder-KOQ\src\main\java\koq\encoder\classes\Grade.java
 C:\OneDrive-Renz\OneDrive\Documents\Github\Encoder-KOQ\src\main\java\koq\encoder\components\SetGradeWeightsWindow.java
