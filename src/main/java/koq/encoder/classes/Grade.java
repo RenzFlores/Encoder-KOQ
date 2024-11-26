@@ -94,6 +94,9 @@ public class Grade {
                 ", classId=" + classId +
                 ", activityId=" + activityId +
                 ", grade=" + grade +
+                ", totalScore=" + totalScore +
+                ", activityTypeId=" + activityTypeId +
+                ", quarter=" + quarter +
                 '}';
     }
 }

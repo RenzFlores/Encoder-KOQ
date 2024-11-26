@@ -293,35 +293,37 @@ public class Model {
      */
     public void addNewActivity(int index, String name, int totalScore, int activityTypeId, int quarter) {
         int activityId;
-        int gradeId;
         
         try {
             addActivityToDB(getClassRecord().getClassId(), name, totalScore, activityTypeId, quarter);
             activityId = getActivityIdInDB(getClassRecord().getClassId(), name, quarter);
+            List<Integer> studentIdList = new ArrayList<>();
             
             for (Row r: getGradePeriod(quarter).getRows()) {
-                addEmptyGradeToDB(
-                    r.getStudent().getStudentId(),
-                    getClassRecord().getClassId(),
-                    activityId
-                );
+                studentIdList.add(r.getStudent().getStudentId());
+            }
+            
+            Integer gradeIdList[] = addEmptyGradesToDB(studentIdList.toArray(Integer[]::new),     // Convert List<Integer> to Integer[]
+                getClassRecord().getClassId(),
+                activityId
+            );
                 
-                gradeId = getGradeIdInDB(r.getStudent().getStudentId(),
-                    getClassRecord().getClassId(),
-                    activityId
-                );
-                
+            for (int i = 0; i < getGradePeriod(quarter).getRows().size(); i++) {
+                Row r = getGradePeriod(quarter).getRows().get(i);
                 Grade grade = new Grade(
-                    gradeId,                         // grade_id
-                    r.getStudent().getStudentId(),   // student_id
-                    getClassRecord().getClassId(),   // class_id
-                    activityId,                      // activity_id
-                    null,                            // grade
-                    totalScore,                      // total_score
-                    activityTypeId,                  // activity_type_id
-                    quarter                          // quarter
+                    gradeIdList[i],                             // grade_id
+                    r.getStudent().getStudentId(),              // student_id
+                    getClassRecord().getClassId(),              // class_id
+                    activityId,                                 // activity_id
+                    null,                                       // grade
+                    totalScore,                                 // total_score
+                    activityTypeId,                             // activity_type_id
+                    quarter                                     // quarter
                 );
+                System.out.println(grade.toString());
                 // Fill all cells inside column to be empty
+                // Grade columns start at 4th column and 'index' is the selected column index in the table
+                // So we subtract 2 to achieve zero-based indexing
                 r.getGrades().add(index-2, grade);
             }
             
@@ -398,7 +400,7 @@ public class Model {
         } else {
             double percentage = (double) rawScore / totalScore * 100.0;
             percentage = Math.round(percentage * 100.0) / 100.0; // Round to 2 decimal places
-            System.out.println(percentage);
+            System.out.println("rawScore=" + rawScore + ", totalScore=" + totalScore + ", percentage=" + percentage);
             return percentage;
         }
     }
@@ -734,7 +736,7 @@ public class Model {
             if (rs.next()) {
                 int gradeQ1 = transmute(rs.getDouble("q1_raw_grade"));
                 int gradeQ2 = transmute(rs.getDouble("q2_raw_grade"));
-                int finalGrade = transmute((gradeQ1 + gradeQ2)/2);
+                int finalGrade = (int) Math.round( (gradeQ1 + gradeQ2)/2.0 );
                 String remarks = (finalGrade > 74) ? "Passed" : "Failed";
                        
                 return new Object[]{
@@ -743,7 +745,6 @@ public class Model {
                     rs.getString("gender").charAt(0),
                     gradeQ1,
                     gradeQ2,
-                    rs.getDouble("sem_raw_avg"),
                     finalGrade,
                     remarks
                 };
@@ -757,7 +758,7 @@ public class Model {
         Object[][] data = {};
         String[] columnNames = {
             "#", "Student Name", "Sex", "First Quarter", 
-            "Second Quarter", "Average", "Final Grade", "Remarks"
+            "Second Quarter", "Final Grade", "Remarks"
         };
         DefaultTableModel model = new DefaultTableModel(data, columnNames);
         table.setModel(model);
@@ -1135,13 +1136,26 @@ public class Model {
     }
     
     /**
-     * Deletes a grade record in the database. This method is called whenever an activity
-     * or a user is deleted in a class record
+     * Deletes all grade records in the database based on activity id. This method 
+     * is called when an activity is deleted in a class record
      */
-    public void deleteGradeInDB(Grade grade) throws SQLException {
-        String insertQuery = "DELETE FROM grades WHERE grade_id = ?";
-        try (PreparedStatement pstmt = getConnection().prepareStatement(insertQuery)) {
-            pstmt.setInt(1, grade.getGradeId());
+    public void deleteGradeByActivity(int activityId) throws SQLException {
+        String deleteQuery = "DELETE FROM grades WHERE activity_id = ?;";
+        try (PreparedStatement pstmt = getConnection().prepareStatement(deleteQuery)) {
+            pstmt.setInt(1, activityId);
+            pstmt.executeUpdate();
+        }
+    }
+    
+     /**
+     * Deletes all grade records in the database based on student id and class id. This method 
+     * is called when a student is deleted in a class record
+     */
+    public void deleteGradeByStudent(int studentId, int classId) throws SQLException {
+        String deleteQuery = "DELETE FROM grades WHERE student_id = ? AND class_id = ?;";
+        try (PreparedStatement pstmt = getConnection().prepareStatement(deleteQuery)) {
+            pstmt.setInt(1, studentId);
+            pstmt.setInt(1, classId);
             pstmt.executeUpdate();
         }
     }
@@ -1223,14 +1237,41 @@ public class Model {
     }
     
     // Add a new grade record to the database with grade value set to null
-    public void addEmptyGradeToDB(int studentId, int classId, int activity_id) {
+    public Integer[] addEmptyGradesToDB(Integer[] studentId, int classId, int activity_id) {
         String insertQuery = "INSERT INTO grades (student_id, class_id, activity_id) VALUES (?, ?, ?);";
-        try (PreparedStatement pstmt = getConnection().prepareStatement(insertQuery)) {
-            pstmt.setInt(1, studentId);
-            pstmt.setInt(2, classId);
-            pstmt.setInt(3, activity_id);
-            pstmt.executeUpdate();
+        List<Integer> results = new ArrayList<>();
+        
+        try (PreparedStatement pstmt = getConnection().prepareStatement(insertQuery, Statement.RETURN_GENERATED_KEYS)) {
+            for (int id: studentId) {
+                pstmt.setInt(1, id);
+                pstmt.setInt(2, classId);
+                pstmt.setInt(3, activity_id);
+                pstmt.addBatch();
+            }
+            int affectedRows[] = pstmt.executeBatch();
+            
+            // Calculate total affected rows
+            int totalAffectedRows = 0;
+            for (int count : affectedRows) {
+                totalAffectedRows += count;
+            }
+            
+            if (totalAffectedRows > 0) {
+                // Retrieve the generated key
+                try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
+                    while (generatedKeys.next()) {
+                        results.add(generatedKeys.getInt(1));
+                        System.out.println(generatedKeys.getInt(1));
+                    }
+                }
+            } else {
+                System.out.println("Insert failed, no rows affected.");
+            }
+            
+            return results.toArray(Integer[]::new);
         } catch (SQLException e) { e.printStackTrace(); }
+        
+        return null;
     }
     
     // Retrieve all grades for a specific student in a class from the database

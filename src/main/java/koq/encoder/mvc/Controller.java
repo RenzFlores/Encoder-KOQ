@@ -503,15 +503,9 @@ public class Controller {
                         /**
                          * Delete all relevant records in database
                          */
-                        Row rowQ1 = model.getGradePeriod(1).getRows().get(selectedTable.getSelectedRow());
-                        Row rowQ2 = model.getGradePeriod(2).getRows().get(selectedTable.getSelectedRow());
-                        for (Grade g: rowQ1.getGrades()) {
-                            model.deleteGradeInDB(g);
-                        }
-                        for (Grade g: rowQ2.getGrades()) {
-                            model.deleteGradeInDB(g);
-                        }
-                        model.removeStudentFromClass(rowQ1.getStudent().getStudentId(), model.getClassRecord().getClassId());
+                        Row row = model.getGradePeriod(1).getRows().get(selectedTable.getSelectedRow());
+                        model.deleteGradeByStudent(row.getStudent().getStudentId(), model.getClassRecord().getClassId());
+                        model.removeStudentFromClass(row.getStudent().getStudentId(), model.getClassRecord().getClassId());
                     } catch (SQLException e) { e.printStackTrace(); }
 
                     SwingUtilities.invokeLater(() -> {
@@ -552,15 +546,14 @@ public class Controller {
                             period.getColumnName(selectedTable.getSelectedColumn()).split("\\|")[1],
                             selectedTab+1
                         );
+                        
+                        // Delete all grade records in database
+                        model.deleteGradeByActivity(activityId);
 
-                        // List to hold the grades to delete
-                        ArrayList<Grade> gradesToRemove = new ArrayList<>();
-
+                        // 
                         for (Row r: period.getRows())  {
                             Grade g = r.getGrades().get(selectedTable.getSelectedColumn()-3);
                             
-                            // Delete grade record in db
-                            model.deleteGradeInDB(g);
                             // Recalculate percentage grade in db
                             model.updatePercentageGrade(
                                 model.calculatePercentageGrade(
@@ -579,13 +572,11 @@ public class Controller {
                                 g.getClassId(), 
                                 g.getQuarter()
                             );
-                            gradesToRemove.add(g);      // Collect grade for removal after iteration
+                            
+                            r.getGrades().remove(g);
                         }
 
-                        // Now remove the grades from each row after collecting them
-                        for (Row r : period.getRows()) {
-                            r.getGrades().removeAll(gradesToRemove); // Safely remove all grades at once
-                        }
+                        // Delete activity in database
                         model.deleteActivity(activityId);
                     } catch (SQLException e) { e.printStackTrace(); }
 
