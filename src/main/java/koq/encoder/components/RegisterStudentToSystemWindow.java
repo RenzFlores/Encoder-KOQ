@@ -5,6 +5,7 @@ import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
+import javax.swing.text.AbstractDocument;
 
 public class RegisterStudentToSystemWindow extends JFrame {
     private JLabel firstNameLabel;
@@ -29,78 +30,92 @@ public class RegisterStudentToSystemWindow extends JFrame {
     private JButton confirmButton;
     
     public RegisterStudentToSystemWindow() {
-        setPreferredSize(new java.awt.Dimension(300, 350));
         setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER, 5, 10));
 
+        firstNameLabel = new JLabel("First name:");
         firstNameLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        firstNameLabel.setText("First name:");
-        firstNameLabel.setPreferredSize(new java.awt.Dimension(100, 16));
-        add(firstNameLabel);
-
+        firstNameLabel.setPreferredSize(new java.awt.Dimension(80, 16));
+        
+        firstNameField = new JTextField();
         firstNameField.setPreferredSize(new java.awt.Dimension(150, 22));
-        add(firstNameField);
-
+        
+        middleNameLabel = new JLabel("Middle name:");
         middleNameLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        middleNameLabel.setText("Middle name:");
-        middleNameLabel.setPreferredSize(new java.awt.Dimension(100, 16));
-        add(middleNameLabel);
-
+        middleNameLabel.setPreferredSize(new java.awt.Dimension(80, 16));
+        
+        middleNameField = new JTextField();
         middleNameField.setPreferredSize(new java.awt.Dimension(150, 22));
-        add(middleNameField);
-
+        
+        lastNameLabel = new JLabel("Last name:");
         lastNameLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        lastNameLabel.setText("Last name:");
-        lastNameLabel.setPreferredSize(new java.awt.Dimension(100, 16));
-        add(lastNameLabel);
-
+        lastNameLabel.setPreferredSize(new java.awt.Dimension(80, 16));
+        
+        lastNameField = new JTextField();
         lastNameField.setPreferredSize(new java.awt.Dimension(150, 22));
-        add(lastNameField);
-
+        
+        lrnLabel = new JLabel("LRN:");
         lrnLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        lrnLabel.setText("LRN:");
-        lrnLabel.setPreferredSize(new java.awt.Dimension(100, 16));
-        add(lrnLabel);
+        lrnLabel.setPreferredSize(new java.awt.Dimension(80, 16));
 
+        lrnField = new JTextField();
         lrnField.setPreferredSize(new java.awt.Dimension(150, 22));
-        add(lrnField);
 
+        genderLabel = new JLabel("Gender:");
         genderLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        genderLabel.setText("Gender:");
-        genderLabel.setPreferredSize(new java.awt.Dimension(100, 16));
-        add(genderLabel);
+        genderLabel.setPreferredSize(new java.awt.Dimension(80, 16));
 
+        genderCombo = new JComboBox();
         genderCombo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Male", "Female" }));
         genderCombo.setPreferredSize(new java.awt.Dimension(150, 22));
-        add(genderCombo);
 
+        dobLabel = new JLabel("Date of Birth:");
         dobLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        dobLabel.setText("Date of Birth:");
-        dobLabel.setPreferredSize(new java.awt.Dimension(100, 16));
-        add(dobLabel);
+        dobLabel.setPreferredSize(new java.awt.Dimension(80, 16));
 
+        dobField = new JTextField();
         dobField.setPreferredSize(new java.awt.Dimension(150, 22));
-        add(dobField);
 
+        gradeLevelLabel = new JLabel("Grade Level:");
         gradeLevelLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        gradeLevelLabel.setText("Grade Level:");
-        gradeLevelLabel.setPreferredSize(new java.awt.Dimension(100, 16));
-        add(gradeLevelLabel);
-
+        gradeLevelLabel.setPreferredSize(new java.awt.Dimension(80, 16));
+        
+        gradeLevelCombo = new JComboBox();
         gradeLevelCombo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "11", "12" }));
         gradeLevelCombo.setPreferredSize(new java.awt.Dimension(150, 22));
-        add(gradeLevelCombo);
-
+        
+        strandLabel = new JLabel("Strand:");
         strandLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        strandLabel.setText("Strand:");
-        strandLabel.setPreferredSize(new java.awt.Dimension(100, 16));
-        add(strandLabel);
-
+        strandLabel.setPreferredSize(new java.awt.Dimension(80, 16));
+        
+        strandCombo = new JComboBox();
         strandCombo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "STEM", "HUMSS", "GAS", "ABM", "ICT", "HE" }));
         strandCombo.setPreferredSize(new java.awt.Dimension(150, 22));
+        
+        confirmButton = new JButton("OK");
+        
+        ( (AbstractDocument) lrnField.getDocument()).setDocumentFilter(new NumericDocumentFilter());
+        
+        add(firstNameLabel);
+        add(firstNameField);
+        add(middleNameLabel);
+        add(middleNameField);
+        add(lastNameLabel);
+        add(lastNameField);
+        add(lrnLabel);
+        add(lrnField);
+        add(genderLabel);
+        add(genderCombo);
+        add(dobLabel);
+        add(dobField);
+        add(gradeLevelLabel);
+        add(gradeLevelCombo);
+        add(strandLabel);
         add(strandCombo);
-
-        confirmButton.setText("OK");
         add(confirmButton);
+        
+        setTitle("Register student to system:");
+        setSize(300, 340);
+        setLocationRelativeTo(null);
     }
     
     public String getFirstName() {

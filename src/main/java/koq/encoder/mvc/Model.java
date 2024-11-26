@@ -1,5 +1,6 @@
 package koq.encoder.mvc;
 
+import java.awt.Color;
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -17,6 +18,7 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.DefaultTableModel;
 import koq.encoder.classes.*;
+import koq.encoder.components.Constants;
 
 public class Model {
 
@@ -34,7 +36,6 @@ public class Model {
     private String user = "user";
     private String password = "password";
     
-    public String DATA_DIRECTORY = System.getProperty("user.dir") + "\\resources\\data\\";
     
     public static enum Fields {
         EDIT_GRADE,
@@ -71,7 +72,7 @@ public class Model {
     
     public Model() {
         // Create data directory if it doesn't exist
-        File directory = new File(DATA_DIRECTORY);
+        File directory = new File(Constants.DATA_DIRECTORY);
         if (!directory.exists()) {
             boolean created = directory.mkdir(); // Creates the directory
             if (created) {
@@ -91,7 +92,7 @@ public class Model {
             db = connectToDB();
         } catch (SQLException e) { e.printStackTrace(); }
         
-        //studentList = getAllStudents();         // UNUSED. UPDATE THIS LATER
+        studentList = getAllStudents();
         
         record = null;
     }
@@ -249,7 +250,9 @@ public class Model {
                     rs.getInt("lrn"),
                     rs.getString("gender"),
                     rs.getString("date_of_birth"),
-                    rs.getString("strand")
+                    rs.getString("strand"), 
+                    rs.getString("email"), 
+                    rs.getString("password") == null ? null : rs.getString("password").toCharArray()
                 );
             } else {
                 throw new NullPointerException("Error: Student does not exist.");
@@ -405,6 +408,25 @@ public class Model {
         }
     }
     
+    public double[] getGradeWeights(int classId) {
+        String selectQuery = """
+            SELECT *
+            FROM grade_weights gw
+            WHERE gw.class_id = ?;
+        """;
+        
+        try (PreparedStatement pstmt = getConnection().prepareStatement(selectQuery)) {
+            pstmt.setInt(1, classId);
+            ResultSet rs = pstmt.executeQuery();
+            
+            if (rs.next()) {
+                return new double[]{rs.getDouble("ww_weight"), rs.getDouble("pt_weight"), rs.getDouble("qa_weight")};
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        
+        return null;
+    }
+    
     public double[] getGradeWeights(int studentId, int classId) {
         String selectQuery = """
             SELECT *
@@ -433,7 +455,7 @@ public class Model {
             WHERE cg.class_id = ? AND cg.student_id = ?;
         """;
         
-        double[] weights = getGradeWeights(studentId, classId);
+        double[] weights = getGradeWeights(classId);
         
         try (PreparedStatement pstmt = getConnection().prepareStatement(selectQuery)) {
             pstmt.setInt(1, classId);
@@ -513,6 +535,18 @@ public class Model {
         } catch (SQLException e) { e.printStackTrace(); }
     }
     
+    public void updateGradeWeights(int classId, double wwWeight, double ptWeight, double qaWeight) {
+        String updateQuery = "UPDATE grade_weights SET ww_weight = ?, pt_weight = ?, qa_weight = ? WHERE class_id = ?;";
+        
+        try (PreparedStatement pstmt = getConnection().prepareStatement(updateQuery)) {
+            pstmt.setDouble(1, wwWeight);
+            pstmt.setDouble(2, ptWeight);
+            pstmt.setDouble(3, qaWeight);
+            pstmt.setDouble(4, classId);
+            pstmt.executeUpdate();
+        } catch (SQLException e) { e.printStackTrace(); }
+    }
+    
     /**
      * TODO: ADD DOCUMENTATION
      */
@@ -579,8 +613,8 @@ public class Model {
     }
     
     /**
-     * Retrieve all student details from database and convert into Student objects. OUTDATED
-     *
+     * Retrieve all student details from database and convert into Student objects.
+     */
     private List<Student> getAllStudents() {
         List<Student> studentList = new ArrayList<>();
         
@@ -590,8 +624,17 @@ public class Model {
             
             while (rs.next()) {
                 studentList.add(new Student(
-                    rs.getInt("student_id"), rs.getString("first_name"), rs.getString("last_name"))
-                );
+                    rs.getInt("student_id"), 
+                    rs.getString("first_name"), 
+                    rs.getString("middle_name"),
+                    rs.getString("last_name"),
+                    rs.getInt("lrn"),
+                    rs.getString("gender"),
+                    rs.getString("date_of_birth"),
+                    rs.getString("strand"), 
+                    rs.getString("email"), 
+                    rs.getString("password") == null ? null : rs.getString("password").toCharArray()
+                ));
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -599,8 +642,7 @@ public class Model {
         
         return studentList;
     }
-    */
-    
+
     /**
      * Retrieves all activity names in a given class record from the database.
      * This function is called to put labels in a JTable header
@@ -803,7 +845,7 @@ public class Model {
         
         try {
             PreparedStatement ps = getConnection().prepareStatement("""
-                SELECT s.student_id, s.first_name, s.middle_name, s.last_name, s.lrn, s.gender, s.date_of_birth, s.strand
+                SELECT *
                 FROM students s
                 JOIN student_classes sc ON s.student_id = sc.student_id
                 JOIN classes c ON sc.class_id = c.class_id
@@ -823,7 +865,9 @@ public class Model {
                     rs.getInt("lrn"),
                     rs.getString("gender"),
                     rs.getString("date_of_birth"),
-                    rs.getString("strand")
+                    rs.getString("strand"),
+                    rs.getString("email"),
+                    rs.getString("password") == null ? null : rs.getString("password").toCharArray()
                 ));
             }
             

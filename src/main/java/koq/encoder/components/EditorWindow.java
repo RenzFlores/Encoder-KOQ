@@ -39,7 +39,7 @@ public class EditorWindow extends JPanel {
     
     public EditorWindow() {
         setPreferredSize(new Dimension(1300, 720));
-        setBackground(new Color(100, 100, 140));
+        setBackground(Constants.WINDOW_COLOR_LAYER_1);
         setLayout(new BorderLayout(5, 5));
         
         editPanel = new EditPanel();

@@ -50,7 +50,7 @@ public class EditPanel extends JPanel {
         containerPanel = new JPanel();
         containerPanel.setPreferredSize(new java.awt.Dimension(180, 500));
         containerPanel.setLayout(new FlowLayout(java.awt.FlowLayout.LEFT, 10, 5));
-        containerPanel.setBackground(new Color(200, 200, 240));
+        containerPanel.setBackground(Constants.WINDOW_COLOR_LAYER_0);
 
         windowLabel = new JLabel("Encode Grades for:");
         windowLabel.setPreferredSize(new java.awt.Dimension(180, 24));

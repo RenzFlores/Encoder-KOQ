@@ -6,85 +6,101 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JSeparator;
 import javax.swing.JTextField;
+import javax.swing.text.AbstractDocument;
 
 public class SetGradeWeightsWindow extends JFrame {
     
     private JLabel writtenWorksLabel;
-    private JLabel jLabel19;
+    private JLabel wwPercLabel;
     private JLabel performanceTaskLabel;
-    private JLabel jLabel17;
+    private JLabel ptPercLabel;
     private JLabel quarterlyAssessmentLabel;
-    private JLabel jLabel16;
+    private JLabel qaPercLabel;
     
     private JTextField wwWeightField;
     private JTextField ptWeightField;
     private JTextField qaWeightField;
 
-    private JSeparator jSeparator3;
+    private JSeparator separator;
     
     private JButton confirmButton;
     
-    public SetGradeWeightsWindow() {
+    public SetGradeWeightsWindow(double[] weights) {
+        int wwWeight = (int)(weights[0] * 100);
+        int ptWeight = (int)(weights[1] * 100);
+        int qaWeight = (int)(weights[2] * 100);
+                
         setLayout(new FlowLayout(FlowLayout.CENTER));
         
         writtenWorksLabel = new JLabel("Written Work (WW)");
         writtenWorksLabel.setPreferredSize(new java.awt.Dimension(130, 16));
         
-        wwWeightField = new JTextField();
+        wwWeightField = new JTextField(String.valueOf(wwWeight));
         wwWeightField.setPreferredSize(new java.awt.Dimension(50, 22));
         
-        jLabel19 = new JLabel("%");
+        wwPercLabel = new JLabel("%");
 
         performanceTaskLabel = new JLabel("Performance Task (PT)");
         performanceTaskLabel.setPreferredSize(new java.awt.Dimension(130, 16));
         
-        ptWeightField = new JTextField();
+        ptWeightField = new JTextField(String.valueOf(ptWeight));
         ptWeightField.setPreferredSize(new java.awt.Dimension(50, 22));
         
-        jLabel17 = new JLabel("%");
+        ptPercLabel = new JLabel("%");
 
         quarterlyAssessmentLabel = new JLabel("Quarterly Assessment (QA)");
         quarterlyAssessmentLabel.setPreferredSize(new java.awt.Dimension(130, 16));
         
-        qaWeightField = new JTextField();
+        qaWeightField = new JTextField(String.valueOf(qaWeight));
         qaWeightField.setPreferredSize(new java.awt.Dimension(50, 22));
         
-        jLabel16 = new JLabel("%");
+        qaPercLabel = new JLabel("%");
         
-        jSeparator3 = new JSeparator();
-        jSeparator3.setPreferredSize(new java.awt.Dimension(200, 10));
+        separator = new JSeparator();
+        separator.setPreferredSize(new java.awt.Dimension(200, 10));
         
         confirmButton = new JButton("Confirm");
         
+        ( (AbstractDocument) wwWeightField.getDocument()).setDocumentFilter(new NumericDocumentFilter());
+        ( (AbstractDocument) ptWeightField.getDocument()).setDocumentFilter(new NumericDocumentFilter());
+        ( (AbstractDocument) qaWeightField.getDocument()).setDocumentFilter(new NumericDocumentFilter());
+        
         add(writtenWorksLabel);
         add(wwWeightField);
-        add(jLabel19);
+        add(wwPercLabel);
         add(performanceTaskLabel);
         add(ptWeightField);
-        add(jLabel17);
+        add(ptPercLabel);
         add(quarterlyAssessmentLabel);
         add(qaWeightField);
-        add(jLabel16);
-        add(jSeparator3);
+        add(qaPercLabel);
+        add(separator);
         add(confirmButton);
         
         setTitle("Set grade weights for this class record:");
-        setSize(240, 200);
+        setSize(240, 170);
         setLocationRelativeTo(null);
     }
     
-    public String getWwWeightField() {
-        return wwWeightField.getText();
+    public int getWwWeightField() {
+        if (wwWeightField.getText().isEmpty()) {
+            return 0;
+        }
+        return Integer.parseInt(wwWeightField.getText());
     }
 
-    // Getter for ptWeightField
-    public String getPtWeightField() {
-        return ptWeightField.getText();
+    public int getPtWeightField() {
+        if (ptWeightField.getText().isEmpty()) {
+            return 0;
+        }
+        return Integer.parseInt(ptWeightField.getText());
     }
 
-    // Getter for qaWeightField
-    public String getQaWeightField() {
-        return qaWeightField.getText();
+    public int getQaWeightField() {
+        if (qaWeightField.getText().isEmpty()) {
+            return 0;
+        }
+        return Integer.parseInt(qaWeightField.getText());
     }
 
     public JButton getButton() {

@@ -6,6 +6,8 @@ import java.awt.Component;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
@@ -33,6 +35,7 @@ import javax.swing.event.ListSelectionListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumnModel;
+import javax.swing.text.AbstractDocument;
 import koq.encoder.mvc.Model.Actions;
 import koq.encoder.mvc.Model.Fields;
 
@@ -330,8 +333,10 @@ public class Controller {
             }
         });
         
-        // Add document listener so this field can only receive numeric and floating-point values
-        ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).getDocument().addDocumentListener(new NumericDocumentListener());
+        // Add document filter so this field can only receive numeric values
+        ( (AbstractDocument) 
+                ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).getDocument()
+        ).setDocumentFilter(new NumericDocumentFilter());
         
         // List selection listener for Grade Period Q1 table
         tableQ1.getSelectionModel().addListSelectionListener(event -> {
@@ -389,6 +394,7 @@ public class Controller {
             // Set focus to grade text field
             ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).requestFocusInWindow();
         });
+        
         // List selection listener for Grade Sheet Q2 table
         view.getTable(2).getSelectionModel().addListSelectionListener(event -> {
             // Check if the event is adjusting (to avoid double calls during selection changes)
@@ -407,6 +413,7 @@ public class Controller {
             // Set focus to grade text field
             ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).requestFocusInWindow();
         });
+        
         // List selection listener for Final Grade table
         view.getTable(5).getSelectionModel().addListSelectionListener(event -> {
             // Check if the event is adjusting (to avoid double calls during selection changes)
@@ -425,6 +432,19 @@ public class Controller {
             // Set focus to grade text field
             ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).requestFocusInWindow();
         });
+        
+        // Add FocusListener on JTable so the edit text field will always focus whenever the table is clicked
+        view.getTable(model.getSelectedTab()).addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                // Set focus to grade text field
+                ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).requestFocusInWindow();
+            }
+
+            @Override
+            public void focusLost(FocusEvent e) {}
+        });
+
         
         // Add to Table button clicked event
         ( (JButton) view.getComponent(Actions.ADD_TO_TABLE.name()) ).addActionListener((ActionEvent e) -> {
@@ -635,18 +655,25 @@ public class Controller {
         // Add Activity event
         ( (JMenuItem) view.getComponent(Actions.ADDACTIVITY.name()) ).addActionListener(menuListener);
         
+        // Edit grade weights event
         ( (JButton) view.getComponent(Actions.EDIT_GRADE_WEIGHTS.name()) ).addActionListener(new ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                /*  OUTDATED
-                if (model.getGradePeriod() != null) {
-                    SetGradeWeightsWindow gradeWeightsWindow = new SetGradeWeightsWindow();
+                if (model.getClassRecord() != null) {
+                    SetGradeWeightsWindow setGradeWeightsWindow = new SetGradeWeightsWindow(model.getGradeWeights(model.getClassRecord().getClassId()));
 
-                    gradeWeightsWindow.setVisible(true);
-                    gradeWeightsWindow.getButton().addActionListener(new SetGradeWeightsWindowListener(gradeWeightsWindow));
+                    setGradeWeightsWindow.setVisible(true);
+                    setGradeWeightsWindow.getButton().addActionListener(new SetGradeWeightsWindowListener(setGradeWeightsWindow));
                 }
-                */
             }
         });
+        
+        new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                
+            }
+        };
+
         
         // Action to move selected row up (UNUSED COMPONENT)
         /*
@@ -844,10 +871,6 @@ public class Controller {
                 /**
                  * Update all tables inside the program
                  */
-                model.setClassRecord(model.getClassRecordInDB(1));      // FOR TESTING ONLY. CHANGE THIS LATER
-                model.initClassRecord(model.getClassRecord());
-                view.getTable(0).setModel(model.getClassRecord().getGradePeriod(1));
-                view.getTable(1).setModel(model.getClassRecord().getGradePeriod(2));
                 // Dirty update by setting the whole selectedTable model on grade sheet Q1, Q2, and final grades
                 model.initGradeSheetTable(view.getTable(2), model.getClassRecord().getGradePeriod(1).getRows(),  model.getClassRecord().getClassId(), 1);
                 model.initGradeSheetTable(view.getTable(3), model.getClassRecord().getGradePeriod(2).getRows(),  model.getClassRecord().getClassId(), 2);
@@ -870,13 +893,47 @@ public class Controller {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            // TODO: Set variables
+            int wwWeight = window.getWwWeightField();
+            int ptWeight = window.getPtWeightField();
+            int qaWeight = window.getQaWeightField();
+            int total = wwWeight + ptWeight + qaWeight;
             boolean validForm = true;
 
-            // TODO: CODE LOGIC
+            if (total != 100) {
+                JOptionPane.showMessageDialog(
+                    null,
+                    "Sum of weights must be equal to 100. The current total is " + total,
+                    "Invalid form",
+                    JOptionPane.WARNING_MESSAGE
+                );
+                validForm = false;
+            }
 
             if (validForm) {
-                // TODO: ADD CODE 
+                model.updateGradeWeights(model.getClassRecord().getClassId(), wwWeight / 100.0, ptWeight / 100.0, qaWeight / 100.0);
+                
+                /**
+                 * Recalculate grades and update all tables inside the program
+                 */
+                for (Student s: model.getClassRecord().getClassList()) {
+                    model.updateInitialGrade( 
+                        s.getStudentId(), 
+                        model.getClassRecord().getClassId(), 
+                        1
+                    );
+                    model.updateInitialGrade( 
+                        s.getStudentId(), 
+                        model.getClassRecord().getClassId(), 
+                        2
+                    );
+                }
+                // Dirty update by setting the whole selectedTable model on grade sheet Q1, Q2, and final grades
+                model.initGradeSheetTable(view.getTable(2), model.getClassRecord().getGradePeriod(1).getRows(),  model.getClassRecord().getClassId(), 1);
+                model.initGradeSheetTable(view.getTable(3), model.getClassRecord().getGradePeriod(2).getRows(),  model.getClassRecord().getClassId(), 2);
+                model.initFinalGradeTable(view.getTable(4), model.getClassRecord().getGradePeriod(1).getRows(), model.getClassRecord().getClassId());
+                view.resizeAllTables();
+                    
+                window.dispose();
             }
         }
     }

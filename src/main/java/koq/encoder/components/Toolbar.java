@@ -19,7 +19,7 @@ public class Toolbar extends JToolBar {
         Color buttonColor = Color.WHITE;
         
         setPreferredSize(new java.awt.Dimension(880, 50));
-        setBackground(new Color(180, 180, 220));
+        setBackground(Constants.WINDOW_COLOR_LAYER_0);
         setLayout(new FlowLayout(FlowLayout.LEFT, 10, 10));
         
         addButton = new JButton("Add");
