@@ -16,7 +16,7 @@ public class View {
     private final JFrame frame;
 
     private final MenuBar menuBar;
-    private final EditorWindow editorWindow;
+    private final FacultyWindow editorWindow;
     
     private LoginWindow loginWindow;
     
@@ -50,7 +50,7 @@ public class View {
         menuBar = new MenuBar();
         frame.setJMenuBar(menuBar);
         
-        editorWindow = new EditorWindow();
+        editorWindow = new FacultyWindow();
         loginWindow = new LoginWindow();
         
         addContextMenu = new AddContextMenu();
@@ -247,7 +247,7 @@ public class View {
     }
     
     public JTable getTable(int table) {
-        return ((EditorWindow) getEditorWindow()).getTable(table);
+        return ((FacultyWindow) getEditorWindow()).getTable(table);
     }
     
     public Integer getGradeFieldValue() {
@@ -268,7 +268,7 @@ public class View {
         return String.valueOf(table.getModel().getValueAt(row, col));
     }
             
-    public EditorWindow getEditorWindow() {
+    public FacultyWindow getEditorWindow() {
         return editorWindow;
     }
     
@@ -476,20 +476,6 @@ class AddContextMenu extends JPopupMenu {
         
         JMenuItem addActivity = new JMenuItem("Activity");
         addActivity.setName(Actions.ADDACTIVITY.name());
-        
-        /** UNUSED CODE
-        JMenuItem addAssignment = new JMenuItem("Assignment");
-        addAssignment.setName(Actions.ADDASSIGNMENT.name());
-        
-        JMenuItem addPT = new JMenuItem("Performance Task");
-        addPT.setName(Actions.ADDPT.name());
-        
-        JMenuItem addQuiz = new JMenuItem("Quiz");
-        addQuiz.setName(Actions.ADDQUIZ.name());
-        
-        JMenuItem addExam = new JMenuItem("Exam");
-        addExam.setName(Actions.ADDEXAM.name());
-        */
         
         // Add components
         add(addStudent);

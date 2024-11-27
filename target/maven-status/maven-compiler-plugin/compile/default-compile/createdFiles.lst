@@ -4,6 +4,7 @@ koq\encoder\components\LoginWindow.class
 koq\encoder\mvc\Controller$5.class
 koq\encoder\components\AddStudentWindow.class
 koq\encoder\components\RegisterStudentToSystemWindow.class
+koq\encoder\components\StudentWindow.class
 koq\encoder\mvc\MenuBar.class
 koq\encoder\components\Constants.class
 koq\encoder\classes\GradePeriod.class
@@ -39,8 +40,8 @@ koq\encoder\classes\Faculty.class
 koq\encoder\mvc\Model$Actions.class
 koq\encoder\mvc\Controller$7.class
 koq\encoder\components\StudentNameRenderer.class
+koq\encoder\components\FacultyWindow.class
 koq\encoder\components\Toolbar.class
-koq\encoder\components\EditorWindow.class
 koq\encoder\mvc\Controller$4.class
 koq\encoder\mvc\Main.class
 koq\encoder\mvc\Model.class

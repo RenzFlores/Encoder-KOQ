@@ -865,17 +865,7 @@ public class Controller {
             }
             
             if (validForm) {
-                //List<Activity> activities = model.getActivitiesInDB(model.getClassRecord().getClassId(), quarter);
-                //model.getClassRecord().getGradePeriod(quarter).setColumnNames(activities);
-                
-                /**
-                 * Update all tables inside the program
-                 */
-                // Dirty update by setting the whole selectedTable model on grade sheet Q1, Q2, and final grades
-                model.initGradeSheetTable(view.getTable(2), model.getClassRecord().getGradePeriod(1).getRows(),  model.getClassRecord().getClassId(), 1);
-                model.initGradeSheetTable(view.getTable(3), model.getClassRecord().getGradePeriod(2).getRows(),  model.getClassRecord().getClassId(), 2);
-                model.initFinalGradeTable(view.getTable(4), model.getClassRecord().getGradePeriod(1).getRows(), model.getClassRecord().getClassId());
-                view.resizeAllTables();
+                // TODO: ADD CODE HERE
                     
                 window.dispose();
             }

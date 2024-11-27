@@ -9,7 +9,7 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTable;
 import javax.swing.JToolBar;
 
-public class EditorWindow extends JPanel {
+public class FacultyWindow extends JPanel {
     
     private final EditPanel editPanel;
     // private final TableEditorPanel tableEditorPanel;
@@ -37,7 +37,7 @@ public class EditorWindow extends JPanel {
         return filterPanel;
     }
     
-    public EditorWindow() {
+    public FacultyWindow() {
         setPreferredSize(new Dimension(1300, 720));
         setBackground(Constants.WINDOW_COLOR_LAYER_1);
         setLayout(new BorderLayout(5, 5));
