@@ -390,10 +390,10 @@ public class Controller {
             ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).requestFocusInWindow();
         });
         // List selection listener for Grade Sheet Q2 table
-        view.getTable(2).getSelectionModel().addListSelectionListener(event -> {
+        view.getTable(3).getSelectionModel().addListSelectionListener(event -> {
             // Check if the event is adjusting (to avoid double calls during selection changes)
             if (!event.getValueIsAdjusting()) {
-                int selectedRow = view.getTable(2).getSelectedRow();
+                int selectedRow = view.getTable(3).getSelectedRow();
 
                 if (selectedRow != -1) { // Ensure a valid row is selected
                     model.setSelectedRow(selectedRow);
@@ -408,10 +408,10 @@ public class Controller {
             ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).requestFocusInWindow();
         });
         // List selection listener for Final Grade table
-        view.getTable(5).getSelectionModel().addListSelectionListener(event -> {
+        view.getTable(4).getSelectionModel().addListSelectionListener(event -> {
             // Check if the event is adjusting (to avoid double calls during selection changes)
             if (!event.getValueIsAdjusting()) {
-                int selectedRow = view.getTable(2).getSelectedRow();
+                int selectedRow = view.getTable(4).getSelectedRow();
 
                 if (selectedRow != -1) { // Ensure a valid row is selected
                     model.setSelectedRow(selectedRow);

@@ -251,7 +251,7 @@ public class View {
     }
     
     public Integer getGradeFieldValue() {
-        return Integer.parseInt(
+        return Integer.valueOf(
           ( (JTextField) getComponent(Fields.EDIT_GRADE.name()) ).getText()
         );
     }
