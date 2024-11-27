@@ -49,6 +49,7 @@ public class StudentWindow extends JFrame {
         
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setPreferredSize(new Dimension(720, 600));
+        getContentPane().setBackground(Constants.WINDOW_COLOR_LAYER_0);
 
         dashboardPanel.setBackground(new Color(250, 150, 150));
         dashboardPanel.setPreferredSize(new Dimension(400, 200));

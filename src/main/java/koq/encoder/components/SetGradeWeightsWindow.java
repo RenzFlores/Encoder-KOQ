@@ -31,6 +31,7 @@ public class SetGradeWeightsWindow extends JFrame {
         int qaWeight = (int)(weights[2] * 100);
                 
         setLayout(new FlowLayout(FlowLayout.CENTER));
+        getContentPane().setBackground(Constants.WINDOW_COLOR_LAYER_0);
         
         writtenWorksLabel = new JLabel("Written Work (WW)");
         writtenWorksLabel.setPreferredSize(new java.awt.Dimension(130, 16));

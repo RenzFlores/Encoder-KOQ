@@ -21,6 +21,7 @@ public class RegisterFacultyWindow extends JFrame {
     
     public RegisterFacultyWindow() {
         setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER, 5, 10));
+        getContentPane().setBackground(Constants.WINDOW_COLOR_LAYER_0);
 
         nameLabel = new JLabel("Name:");
         nameLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);

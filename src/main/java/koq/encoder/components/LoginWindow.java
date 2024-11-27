@@ -17,6 +17,7 @@ public class LoginWindow extends JFrame {
     
     public LoginWindow() {
         setLayout(new FlowLayout());
+        getContentPane().setBackground(Constants.WINDOW_COLOR_LAYER_0);
 
         idLabel = new JLabel("Teacher ID:");
         idLabel.setPreferredSize(new java.awt.Dimension(150, 16));

@@ -25,6 +25,7 @@ public class AddActivityWindow extends JFrame {
     
     public AddActivityWindow() {
         setLayout(new FlowLayout(FlowLayout.CENTER));
+        getContentPane().setBackground(Constants.WINDOW_COLOR_LAYER_0);
         
         quarterLabel = new JLabel("Quarter:");
         quarterLabel.setPreferredSize(new java.awt.Dimension(120, 16));

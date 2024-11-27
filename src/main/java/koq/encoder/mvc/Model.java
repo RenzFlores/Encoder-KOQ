@@ -105,7 +105,6 @@ public class Model {
     public void closeConnection() {
         try {
             db.close();
-            serverConn.close();
         } catch (SQLException e) { e.printStackTrace(); }
     }
     
@@ -614,14 +613,6 @@ public class Model {
     
     // Connect to a database
     private Connection connectToDB() throws SQLException {
-        try {
-            serverConn = DriverManager.getConnection(url, user, password);
-            if (!dbExists("encoder_data")) {
-                System.out.println("Error: Schema 'encoder_data' does not exist. Creating...");
-                new koq.encoder.components.InitializeDatabase(serverConn, url, user, password);
-            }
-        } catch (SQLException e) { e.printStackTrace(); }
-        
         return DriverManager.getConnection(url + "encoder_data", user, password);
     }
     
@@ -890,15 +881,6 @@ public class Model {
         table.getColumnModel().getColumn(6).setMinWidth(0);
         table.getColumnModel().getColumn(6).setPreferredWidth(0);
         
-        // Disable column resizing
-        table.getTableHeader().setResizingAllowed(false);
-
-        // Disable column reordering
-        table.getTableHeader().setReorderingAllowed(false);
-        
-        // Set row height
-        table.setRowHeight(30);
-        
         String selectQuery = """
             SELECT *
             FROM classes c
@@ -1105,33 +1087,6 @@ public class Model {
             return rs.getDouble("raw_grade");
         } else {
             throw new SQLException("class_id " + classId + " and student_id " + studentId + " not found.");
-        }
-    }
-    
-    /**
-     * Check if the database named with the String parameter exists
-     */
-    private boolean dbExists(String name) {
-        boolean dbExists = false;
-        
-        try {
-            ResultSet rs = serverConn.getMetaData().getCatalogs();
-            
-            while (rs.next()) {
-                String dbName = rs.getString(1);
-                if (dbName.equalsIgnoreCase(name)) {
-                    dbExists = true;
-                    break;
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        
-        if (dbExists) {
-                return true;
-            } else {
-                return false;
         }
     }
     

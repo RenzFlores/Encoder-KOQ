@@ -20,6 +20,7 @@ public class AddStudentWindow extends JFrame {
     public AddStudentWindow() {
         setTitle("Add New Student");
         setLayout(new java.awt.FlowLayout(FlowLayout.CENTER));
+        getContentPane().setBackground(Constants.WINDOW_COLOR_LAYER_0);
 
         jLabel7 = new JLabel("Add new student to class record:");
         jLabel7.setPreferredSize(new java.awt.Dimension(260, 16));

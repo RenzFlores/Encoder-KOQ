@@ -9,6 +9,16 @@ public class OpenClassRecordWindow extends JFrame {
     
     public OpenClassRecordWindow() {
         table = new JTable();
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        
+        // Disable column resizing
+        table.getTableHeader().setResizingAllowed(false);
+
+        // Disable column reordering
+        table.getTableHeader().setReorderingAllowed(false);
+        
+        // Set row height
+        table.setRowHeight(30);
 
         scrollPane = new JScrollPane();
         scrollPane.setViewportView(table);
@@ -21,6 +31,7 @@ public class OpenClassRecordWindow extends JFrame {
         setTitle("Open Class Record");
         setSize(new java.awt.Dimension(720, 360));
         setLocationRelativeTo(null);
+        getContentPane().setBackground(Constants.WINDOW_COLOR_LAYER_0);
     }
     
     public JTable getTable() {

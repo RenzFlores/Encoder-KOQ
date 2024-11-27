@@ -43,6 +43,8 @@ public class Controller {
     
     private final View view;
     private final Model model;
+    
+    private int lastSelectedRow = -1;
             
     public Controller(Model model, View view) {
         this.model = model;
@@ -50,6 +52,11 @@ public class Controller {
         
         JTable tableQ1 = view.getTable(0);
         JTable tableQ2 = view.getTable(1);
+        
+        // Set ListSelectionListeners for Grade Sheet Q1, Grade Sheet Q2, and Final Grade table
+        setListSelectionListener(2);
+        setListSelectionListener(3);
+        setListSelectionListener(4);
         
         /**
          * Window listener for exit event
@@ -153,10 +160,12 @@ public class Controller {
             view.showAbout();
         });
         
-        // View keyboard shortcuts event
+        // View keyboard shortcuts event UNUSED
+        /*
         ( (JMenuItem) view.getComponent(Actions.VIEWSHORTCUTS.name()) ).addActionListener((ActionEvent ev) -> {
-            // TODO: Add code
+            
         });
+        */
         
         // Tab selection listeners
         view.getTabbedPane().addChangeListener(e -> {
@@ -170,18 +179,22 @@ public class Controller {
             switch (index) {
                 case 0:
                     view.getTable(0).setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
+                    //System.out.println("Updating edit panel for tab: " + model.getSelectedTab());
                     view.updateEditPanel(
                             model.getSelectedTab(),
                             0,
                             model.getGradePeriod(1).getRowAt(view.getTable(0).getSelectedRow())
-                    );  break;
+                    );  
+                    break;
                 case 1:
                     view.getTable(1).setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
+                    //System.out.println("Updating edit panel for tab: " + model.getSelectedTab());
                     view.updateEditPanel(
                             model.getSelectedTab(),
                             0,
                             model.getGradePeriod(2).getRowAt(view.getTable(1).getSelectedRow())
-                    );  break;
+                    );
+                    break;
                 default:
                     view.getTable(index).setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
                     break;
@@ -195,11 +208,15 @@ public class Controller {
             model.setSelectedActivity(
                 ((JComboBox) view.getComponent(Fields.SELECT_ACTIVITY.name())).getSelectedIndex()
             );
+            //System.out.println("Updating edit panel for activity: " + model.getSelectedActivity());
             view.updateEditPanel(
                 model.getSelectedTab(), 
                 model.getSelectedActivity(), 
                 model.getGradePeriod(model.getSelectedTab()+1).getRowAt(model.getSelectedRow())
             );
+            
+            // Set focus to grade text field
+            ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).requestFocusInWindow();
         });
         
         // Select previous student keystroke event
@@ -344,19 +361,29 @@ public class Controller {
         tableQ1.getSelectionModel().addListSelectionListener(event -> {
             // Check if the event is adjusting (to avoid double calls during selection changes)
             if (!event.getValueIsAdjusting()) {
+                
                 int selectedRow = tableQ1.getSelectedRow();
 
                 if (selectedRow != -1) { // Ensure a valid row is selected
                     model.setSelectedRow(selectedRow);
+                    //System.out.println("Updating edit panel for table Q1: " + model.getSelectedRow());
+                    
                     view.updateEditPanel(
                         model.getSelectedTab(),
                         model.getSelectedActivity(),
                         model.getGradePeriod(1).getRowAt(selectedRow)
                     );
+                    
+                    // Check if selected row has changed
+                    if (selectedRow != lastSelectedRow) {
+                        // Set focus to grade text field
+                        ((JTextField) view.getComponent(Fields.EDIT_GRADE.name())).requestFocusInWindow();
+                    }
+
+                    // Update the last selected row
+                    lastSelectedRow = selectedRow;
                 }
             }
-            // Set focus to grade text field
-            ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).requestFocusInWindow();
         });
         
         // List selection listener for Grade Period Q2 table
@@ -367,63 +394,7 @@ public class Controller {
 
                 if (selectedRow != -1) { // Ensure a valid row is selected
                     model.setSelectedRow(selectedRow);
-                    view.updateEditPanel(
-                        model.getSelectedTab(),
-                        model.getSelectedActivity(),
-                        model.getGradePeriod(2).getRowAt(selectedRow)
-                    );
-                }
-            }
-            // Set focus to grade text field
-            ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).requestFocusInWindow();
-        });
-        
-        // List selection listener for Grade Sheet Q1 table
-        view.getTable(2).getSelectionModel().addListSelectionListener(event -> {
-            // Check if the event is adjusting (to avoid double calls during selection changes)
-            if (!event.getValueIsAdjusting()) {
-                int selectedRow = view.getTable(2).getSelectedRow();
-
-                if (selectedRow != -1) { // Ensure a valid row is selected
-                    model.setSelectedRow(selectedRow);
-                    view.updateEditPanel(
-                        model.getSelectedTab(),
-                        model.getSelectedActivity(),
-                        model.getGradePeriod(2).getRowAt(selectedRow)
-                    );
-                }
-            }
-            // Set focus to grade text field
-            ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).requestFocusInWindow();
-        });
-        
-        // List selection listener for Grade Sheet Q2 table
-        view.getTable(2).getSelectionModel().addListSelectionListener(event -> {
-            // Check if the event is adjusting (to avoid double calls during selection changes)
-            if (!event.getValueIsAdjusting()) {
-                int selectedRow = view.getTable(2).getSelectedRow();
-
-                if (selectedRow != -1) { // Ensure a valid row is selected
-                    model.setSelectedRow(selectedRow);
-                    view.updateEditPanel(
-                        model.getSelectedTab(),
-                        model.getSelectedActivity(),
-                        model.getGradePeriod(2).getRowAt(selectedRow)
-                    );
-                }
-            }
-            // Set focus to grade text field
-            ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).requestFocusInWindow();
-        });
-        
-        // List selection listener for Final Grade table
-        view.getTable(5).getSelectionModel().addListSelectionListener(event -> {
-            // Check if the event is adjusting (to avoid double calls during selection changes)
-            if (!event.getValueIsAdjusting()) {
-                int selectedRow = view.getTable(2).getSelectedRow();
-
-                if (selectedRow != -1) { // Ensure a valid row is selected
-                    model.setSelectedRow(selectedRow);
+                    //System.out.println("Updating edit panel for table Q2: " + model.getSelectedRow());
                     view.updateEditPanel(
                         model.getSelectedTab(),
                         model.getSelectedActivity(),
@@ -436,6 +407,7 @@ public class Controller {
         });
         
         // Add FocusListener on JTable so the edit text field will always focus whenever the table is clicked
+        /*
         view.getTable(model.getSelectedTab()).addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
@@ -446,8 +418,8 @@ public class Controller {
             @Override
             public void focusLost(FocusEvent e) {}
         });
+        */
 
-        
         // Add to Table button clicked event
         ( (JButton) view.getComponent(Actions.ADD_TO_TABLE.name()) ).addActionListener((ActionEvent e) -> {
             if (model.getClassRecord() != null) {
@@ -714,7 +686,7 @@ public class Controller {
                 
             }
         };
-
+        
         // Action to move selected row up (UNUSED COMPONENT)
         /*
         ( (JButton) view.getComponent( Actions.MOVE_ROW_UP.name() ) ).addActionListener((ActionEvent e) -> {
@@ -738,6 +710,26 @@ public class Controller {
         */
     }
     
+    // Method to handle selection changes for a table
+    private void setListSelectionListener(int tableIndex) {
+        JTable table = view.getTable(tableIndex);
+
+        table.getSelectionModel().addListSelectionListener(event -> {
+            // Check if the event is adjusting to avoid double calls during selection changes
+            if (!event.getValueIsAdjusting()) {
+                int selectedRow = table.getSelectedRow();
+
+                // Ensure a valid row is selected
+                if (selectedRow != -1) { 
+                    model.setSelectedRow(selectedRow);
+                }
+            }
+
+            // Set focus to grade text field
+            ((JTextField) view.getComponent(Fields.EDIT_GRADE.name())).requestFocusInWindow();
+        });
+    }
+        
     // Listener for the confirmation button in AddStudentWindow
     class AddStudentWindowListener implements ActionListener {
 
@@ -894,7 +886,7 @@ public class Controller {
             boolean validForm = true;
 
             // Empty fields will show an error
-            if (firstName.isBlank() || lastName.isBlank() || lrn.isBlank() || dob.isBlank()) {
+            if (firstName.isBlank() || lastName.isBlank() || lrn.isBlank()) {
                 JOptionPane.showMessageDialog(
                     null,
                     "Please provide all the necessary details.",
@@ -906,6 +898,14 @@ public class Controller {
             
             if (validForm) {
                 // TODO: ADD CODE HERE
+                System.out.println(dob);
+                
+                JOptionPane.showMessageDialog(
+                    null,
+                    "Student registered successfully",
+                    "Success",
+                    JOptionPane.DEFAULT_OPTION
+                );
                 
                 window.dispose();
             }
@@ -962,7 +962,14 @@ public class Controller {
                 model.initGradeSheetTable(view.getTable(3), model.getClassRecord().getGradePeriod(2).getRows(),  model.getClassRecord().getClassId(), 2);
                 model.initFinalGradeTable(view.getTable(4), model.getClassRecord().getGradePeriod(1).getRows(), model.getClassRecord().getClassId());
                 view.resizeAllTables();
-                    
+                
+                JOptionPane.showMessageDialog(
+                    null,
+                    "Grade weights updated successfully",
+                    "Success",
+                    JOptionPane.DEFAULT_OPTION
+                );
+                
                 window.dispose();
             }
         }

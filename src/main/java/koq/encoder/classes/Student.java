@@ -74,6 +74,11 @@ public class Student {
     public String getDateOfBirth() { 
         return dateOfBirth; 
     }
+    public String getDateOfBirthFormatted() { 
+        String[] dob = dateOfBirth.split("-");  // YYYY-MM-DD
+        
+        return dob[1] + "/" + dob[2] + "/" + dob[0];  // MM/DD/YYYY
+    }
     public String getStrand() { 
         return strand; 
     }

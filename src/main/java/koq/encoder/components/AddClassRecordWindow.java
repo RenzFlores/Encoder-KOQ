@@ -30,6 +30,7 @@ public class AddClassRecordWindow extends JFrame {
     
     public AddClassRecordWindow() {
         setLayout(new FlowLayout(FlowLayout.LEFT));
+        getContentPane().setBackground(Constants.WINDOW_COLOR_LAYER_0);
         
         gradeLevelLabel = new JLabel("Grade Level:");
         gradeLevelLabel.setPreferredSize(new java.awt.Dimension(80, 16));
@@ -51,26 +52,6 @@ public class AddClassRecordWindow extends JFrame {
         jLabel6.setHorizontalAlignment(TRAILING);
         
         subjectCombo = new JComboBox();
-        subjectCombo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] {
-            "21st Century Literature from the Philippines and the World",
-            "Komunikasyon at Pananaliksik sa Wika at Kulturang Pilipino",
-            "Pagbasa at Pagsusuri ng Iba’t-Ibang Teksto Tungo sa Pananaliksik",
-            "Oral Communication",
-            "Reading and Writing",
-            "Personal Development",
-            "Understanding Culture, Society and Politics",
-            "Introduction to the Philosophy of the Human Person",
-            "Contemporary Philippine Arts from the Regions",
-            "Media and Information Literacy",
-            "General Math",
-            "Statistics and Probability",
-            "Earth and Life Science",
-            "Physical Science",
-            "Physical Education and Health 1",
-            "Physical Education and Health 2",
-            "Physical Education and Health 3",
-            "Physical Education and Health 4"
-        }));
         subjectCombo.setPreferredSize(new java.awt.Dimension(210, 22));
         
         termLabel = new JLabel("Term:");

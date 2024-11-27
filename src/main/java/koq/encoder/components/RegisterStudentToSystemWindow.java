@@ -1,5 +1,6 @@
 package koq.encoder.components;
 
+import java.util.stream.IntStream;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
@@ -23,7 +24,11 @@ public class RegisterStudentToSystemWindow extends JFrame {
     private JTextField lrnField;
     private JTextField dobField;
     
+    
     private JComboBox genderCombo;
+    private JComboBox monthCombo;
+    private JComboBox dayCombo;
+    private JComboBox yearCombo;
     private JComboBox gradeLevelCombo;
     private JComboBox strandCombo;
     
@@ -31,34 +36,35 @@ public class RegisterStudentToSystemWindow extends JFrame {
     
     public RegisterStudentToSystemWindow() {
         setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.CENTER, 5, 10));
+        getContentPane().setBackground(Constants.WINDOW_COLOR_LAYER_0);
 
         firstNameLabel = new JLabel("First name:");
         firstNameLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         firstNameLabel.setPreferredSize(new java.awt.Dimension(80, 16));
         
         firstNameField = new JTextField();
-        firstNameField.setPreferredSize(new java.awt.Dimension(150, 22));
+        firstNameField.setPreferredSize(new java.awt.Dimension(180, 22));
         
         middleNameLabel = new JLabel("Middle name:");
         middleNameLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         middleNameLabel.setPreferredSize(new java.awt.Dimension(80, 16));
         
         middleNameField = new JTextField();
-        middleNameField.setPreferredSize(new java.awt.Dimension(150, 22));
+        middleNameField.setPreferredSize(new java.awt.Dimension(180, 22));
         
         lastNameLabel = new JLabel("Last name:");
         lastNameLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         lastNameLabel.setPreferredSize(new java.awt.Dimension(80, 16));
         
         lastNameField = new JTextField();
-        lastNameField.setPreferredSize(new java.awt.Dimension(150, 22));
+        lastNameField.setPreferredSize(new java.awt.Dimension(180, 22));
         
         lrnLabel = new JLabel("LRN:");
         lrnLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         lrnLabel.setPreferredSize(new java.awt.Dimension(80, 16));
 
         lrnField = new JTextField();
-        lrnField.setPreferredSize(new java.awt.Dimension(150, 22));
+        lrnField.setPreferredSize(new java.awt.Dimension(180, 22));
 
         genderLabel = new JLabel("Gender:");
         genderLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
@@ -66,14 +72,30 @@ public class RegisterStudentToSystemWindow extends JFrame {
 
         genderCombo = new JComboBox();
         genderCombo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Male", "Female" }));
-        genderCombo.setPreferredSize(new java.awt.Dimension(150, 22));
+        genderCombo.setPreferredSize(new java.awt.Dimension(180, 22));
 
         dobLabel = new JLabel("Date of Birth:");
         dobLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         dobLabel.setPreferredSize(new java.awt.Dimension(80, 16));
 
-        dobField = new JTextField();
-        dobField.setPreferredSize(new java.awt.Dimension(150, 22));
+        monthCombo = new JComboBox<>(new String[]{
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        });
+        monthCombo.setPreferredSize(new java.awt.Dimension(80, 22));
+        
+        dayCombo = new JComboBox<>(
+            IntStream.rangeClosed(1, 31).boxed().toArray(Integer[]::new)
+        );
+        dayCombo.setPreferredSize(new java.awt.Dimension(40, 22));
+        
+        yearCombo = new JComboBox<>(
+            IntStream.range(1970, 2025)  // 1970 to 2024
+                .map(i -> 2024 - (i - 1970))   // Reverse the range
+                .boxed()
+                .toArray(Integer[]::new)
+        );
+        yearCombo.setPreferredSize(new java.awt.Dimension(50, 22));
 
         gradeLevelLabel = new JLabel("Grade Level:");
         gradeLevelLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
@@ -81,7 +103,7 @@ public class RegisterStudentToSystemWindow extends JFrame {
         
         gradeLevelCombo = new JComboBox();
         gradeLevelCombo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "11", "12" }));
-        gradeLevelCombo.setPreferredSize(new java.awt.Dimension(150, 22));
+        gradeLevelCombo.setPreferredSize(new java.awt.Dimension(180, 22));
         
         strandLabel = new JLabel("Strand:");
         strandLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
@@ -89,7 +111,7 @@ public class RegisterStudentToSystemWindow extends JFrame {
         
         strandCombo = new JComboBox();
         strandCombo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "STEM", "HUMSS", "GAS", "ABM", "ICT", "HE" }));
-        strandCombo.setPreferredSize(new java.awt.Dimension(150, 22));
+        strandCombo.setPreferredSize(new java.awt.Dimension(180, 22));
         
         confirmButton = new JButton("OK");
         
@@ -106,7 +128,9 @@ public class RegisterStudentToSystemWindow extends JFrame {
         add(genderLabel);
         add(genderCombo);
         add(dobLabel);
-        add(dobField);
+        add(monthCombo);
+        add(dayCombo);
+        add(yearCombo);
         add(gradeLevelLabel);
         add(gradeLevelCombo);
         add(strandLabel);
@@ -135,7 +159,7 @@ public class RegisterStudentToSystemWindow extends JFrame {
     }
 
     public String getDob() {
-        return dobField.getText();
+        return yearCombo.getSelectedItem() + "-" + (monthCombo.getSelectedIndex()+1) + "-" + dayCombo.getSelectedItem();
     }
 
     public String getGender() {

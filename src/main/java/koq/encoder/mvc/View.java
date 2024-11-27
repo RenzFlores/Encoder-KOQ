@@ -3,6 +3,7 @@ package koq.encoder.mvc;
 import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.event.ActionListener;
 import javax.swing.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -191,6 +192,7 @@ public class View {
             dialog.setSize(450, 400);
             dialog.setLocationRelativeTo(null);
             dialog.setLayout(new java.awt.BorderLayout());
+            dialog.getContentPane().setBackground(Constants.WINDOW_COLOR_LAYER_0);
 
             dialog.add(new JLabel("""
                 <html>
@@ -251,9 +253,13 @@ public class View {
     }
     
     public Integer getGradeFieldValue() {
-        return Integer.parseInt(
+        return Integer.valueOf(
           ( (JTextField) getComponent(Fields.EDIT_GRADE.name()) ).getText()
         );
+    }
+    
+    public JTextField getGradeField() {
+        return ( (JTextField) getComponent(Fields.EDIT_GRADE.name()) );
     }
     
     public void setGradeFieldValue(String value) {
@@ -345,12 +351,6 @@ public class View {
             return;
         }
         
-        if (selectedRow == null) {
-            setStudentNameInEditor("");
-        } else {
-            setStudentNameInEditor(selectedRow.getStudent().getStudentNameFormatted());
-        }
-        
         /**
          * Set combo box to contain the list of activities in the current table
          */
@@ -361,20 +361,26 @@ public class View {
             comboModel.addElement(table.getModel().getColumnName(i));
         }
         selectActivity.setModel(comboModel);
-        
+
         // Set selected item in view
         try {
             setOutputNumberInEditor(selectedActivity);
-        } catch (java.lang.IllegalArgumentException e) {}       // Ignore and do nothing instead
+        } catch (java.lang.IllegalArgumentException e) {}
+        
+        if (selectedRow == null) {
+            setStudentNameInEditor("");
+        } else {
+            setStudentNameInEditor(selectedRow.getStudent().getStudentNameFormatted());
+        }
         
         // Update grade text field with the value of current selection
         Integer value = selectedRow.getGrades().get(selectActivity.getSelectedIndex()).getGrade();
-        if (value == null) {
-            setGradeFieldValue("");
-        } else {
+        if (value != null) {
             setGradeFieldValue(String.valueOf(value));
+        } else {
+            setGradeFieldValue("");
         }
-        
+
         // Update the value of max grade with the value of current selected activity
         String s;
         try {
@@ -446,7 +452,7 @@ class MenuBar extends JMenuBar {
         menuKeyboardShortcuts = new JMenuItem("Keyboard Shortcuts");
         menuAbout = new JMenuItem("About");
         
-        menuHelp.add(menuKeyboardShortcuts);
+        // menuHelp.add(menuKeyboardShortcuts);
         menuHelp.add(menuAbout);
         
         // Set actions to each JMenuItem
