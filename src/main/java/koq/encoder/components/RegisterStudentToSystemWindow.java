@@ -22,8 +22,6 @@ public class RegisterStudentToSystemWindow extends JFrame {
     private JTextField middleNameField;
     private JTextField lastNameField;
     private JTextField lrnField;
-    private JTextField dobField;
-    
     
     private JComboBox genderCombo;
     private JComboBox monthCombo;
@@ -110,7 +108,7 @@ public class RegisterStudentToSystemWindow extends JFrame {
         strandLabel.setPreferredSize(new java.awt.Dimension(80, 16));
         
         strandCombo = new JComboBox();
-        strandCombo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "STEM", "HUMSS", "GAS", "ABM", "ICT", "HE" }));
+        strandCombo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "STEM", "HUMSS", "ABM", "ICT" }));
         strandCombo.setPreferredSize(new java.awt.Dimension(180, 22));
         
         confirmButton = new JButton("OK");

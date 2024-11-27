@@ -9,7 +9,7 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import koq.encoder.classes.Student;
 
-public class StudentWindow extends JFrame {
+public class StudentWindow extends JPanel {
     private JLabel emailContent;
     private JLabel emailLabel;
     private Filler filler1;
@@ -28,7 +28,7 @@ public class StudentWindow extends JFrame {
     private JLabel studentNameContent;
     private JButton viewGradesButton;
     
-    public StudentWindow(Student s) {
+    public StudentWindow() {
         dashboardPanel = new JPanel();
         studentNameContent = new JLabel();
         separator = new JSeparator();
@@ -47,16 +47,14 @@ public class StudentWindow extends JFrame {
         scrollPane = new JScrollPane();
         table = new JTable();
         
-        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setPreferredSize(new Dimension(720, 600));
-        getContentPane().setBackground(Constants.WINDOW_COLOR_LAYER_0);
+        setBackground(Constants.WINDOW_COLOR_LAYER_0);
 
         dashboardPanel.setBackground(new Color(250, 150, 150));
         dashboardPanel.setPreferredSize(new Dimension(400, 200));
         dashboardPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
 
         studentNameContent.setFont(new Font("Segoe UI", 0, 18)); // NOI18N
-        studentNameContent.setText(s.getStudentFullName());
         dashboardPanel.add(studentNameContent);
 
         separator.setPreferredSize(new Dimension(690, 10));
@@ -76,22 +74,21 @@ public class StudentWindow extends JFrame {
         lrnLabel.setText("LRN:");
         containerPanel.add(lrnLabel);
 
-        lrnContent.setText(String.valueOf(s.getLrn()));
         containerPanel.add(lrnContent);
         containerPanel.add(filler2);
 
         strandLabel.setText("Strand:");
         containerPanel.add(strandLabel);
 
-        strandContent.setText(s.getStrand());
         containerPanel.add(strandContent);
         containerPanel.add(filler3);
 
         previewReportCardButton.setText("Preview Report Card");
+        previewReportCardButton.setPreferredSize(new Dimension(130, 30));
         containerPanel.add(previewReportCardButton);
 
         viewGradesButton.setText("View Grades");
-        viewGradesButton.setPreferredSize(new Dimension(138, 23));
+        viewGradesButton.setPreferredSize(new Dimension(130, 30));
         containerPanel.add(viewGradesButton);
         
         scrollPane.setViewportView(table);
@@ -101,6 +98,10 @@ public class StudentWindow extends JFrame {
         add(dashboardPanel, BorderLayout.NORTH);
     }
     
-    
+    public void initWindow(Student s) {
+        studentNameContent.setText(s.getStudentFullName());
+        lrnContent.setText(String.valueOf(s.getLrn()));
+        strandContent.setText(s.getStrand());
+    }
     
 }

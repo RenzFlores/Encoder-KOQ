@@ -17,9 +17,11 @@ public class View {
     private final JFrame frame;
 
     private final MenuBar menuBar;
-    private final FacultyWindow editorWindow;
+    private final FacultyWindow facultyWindow;
     
-    private LoginWindow loginWindow;
+    private LoginFacultyWindow loginWindow;
+    private MenuWindow menuWindow;
+    private StudentWindow studentWindow;
     
     private final AddContextMenu addContextMenu;
     
@@ -51,8 +53,10 @@ public class View {
         menuBar = new MenuBar();
         frame.setJMenuBar(menuBar);
         
-        editorWindow = new FacultyWindow();
-        loginWindow = new LoginWindow();
+        facultyWindow = new FacultyWindow();
+        studentWindow = new StudentWindow();
+        loginWindow = new LoginFacultyWindow();
+        menuWindow = new MenuWindow();
         
         addContextMenu = new AddContextMenu();
         addContextMenu.setName("Add Context Menu");
@@ -66,12 +70,33 @@ public class View {
         ( (JTextField) getComponent(Fields.EDIT_GRADE.name())).getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke("LEFT"), "previousActivity");
         ( (JTextField) getComponent(Fields.EDIT_GRADE.name())).getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke("RIGHT"), "nextActivity");
        
-        setLoginWindow();
+        setMenuWindow();
     }
     
-    public void setLoginWindow() {
-        frame.remove(editorWindow);
-        loginWindow.setVisible(true);
+    public void setMenuWindow() {
+        frame.remove(studentWindow);
+        frame.remove(facultyWindow);
+        frame.setVisible(false);
+        menuWindow.setVisible(true);
+    }
+    
+    public void initFacultyWindow() {
+        frame.setJMenuBar(menuBar);
+        frame.remove(studentWindow);
+        frame.add(facultyWindow);
+        facultyWindow.disableWindow();
+        frame.pack();
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+    }
+    
+    public void initStudentWindow() {
+        frame.setJMenuBar(menuBar);
+        frame.remove(facultyWindow);
+        frame.add(studentWindow);
+        frame.pack();
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
     }
     
     /**
@@ -81,12 +106,10 @@ public class View {
     */
     private void initializeComponentList() {
         // Grade editor
-        componentList.addAll(Arrays.asList(
-                ( (EditPanel) editorWindow.getGradeEditor() ).getContainer().getComponents()));
+        componentList.addAll(Arrays.asList(( (EditPanel) facultyWindow.getGradeEditor() ).getContainer().getComponents()));
         
         // Toolbar
-        componentList.addAll(Arrays.asList(
-                editorWindow.getToolbar().getComponents()));
+        componentList.addAll(Arrays.asList(facultyWindow.getToolbar().getComponents()));
         
         // Table editor
         //componentList.addAll(Arrays.asList(
@@ -96,8 +119,7 @@ public class View {
         // componentList.add(( (TableView) tableEditor).getTab());
         
         // Filter
-        componentList.addAll(Arrays.asList(
-                ( (FilterPanel) editorWindow.getFilter() ).getContainer().getComponents()));
+        componentList.addAll(Arrays.asList(( (FilterPanel) facultyWindow.getFilter() ).getContainer().getComponents()));
         
         // "Add to table" context menu
         componentList.add(addContextMenu);
@@ -142,27 +164,24 @@ public class View {
         }
     }
     
-    public LoginWindow getLoginWindow() {
+    public LoginFacultyWindow getLoginWindow() {
         return loginWindow;
     }
     
-    public void initEditWindow() {
-        frame.setJMenuBar(menuBar);
-        frame.add(editorWindow);
-        editorWindow.disableWindow();
-        frame.pack();
-    }
-    
     public void enableTabs() {
-        editorWindow.enableWindow();
+        facultyWindow.enableWindow();
     }
     
     public void resetTables() {
-        ( (TableView) editorWindow.getTableView()).resetTables();
+        ( (TableView) facultyWindow.getTableView()).resetTables();
     }
     
     public JFrame getFrame() {
         return frame;
+    }
+    
+    public MenuWindow getMenuWindow() {
+        return menuWindow;
     }
     
     public JDialog createPopupDialog(String message) {
@@ -219,7 +238,7 @@ public class View {
     }
     
     public void setStudentNameInEditor(String name) {
-        ( (EditPanel) editorWindow.getGradeEditor() ).getStudentNameContent().setText(name);
+        ( (EditPanel) facultyWindow.getGradeEditor() ).getStudentNameContent().setText(name);
     }
     
     /* TODO: Change
@@ -229,11 +248,11 @@ public class View {
     */
     
     public String getOutputTypeInEditor() {
-        return (String) ( (EditPanel) editorWindow.getGradeEditor() ).getOutputTypeCombo().getSelectedItem();
+        return (String) ( (EditPanel) facultyWindow.getGradeEditor() ).getOutputTypeCombo().getSelectedItem();
     }
     
     public int getOutputNumberInEditor() {
-        return (int) ( (EditPanel) editorWindow.getGradeEditor() ).getOutputNumberCombo().getSelectedItem();
+        return (int) ( (EditPanel) facultyWindow.getGradeEditor() ).getOutputNumberCombo().getSelectedItem();
     }
     
     public void setOutputNumberInEditor(int index) {
@@ -275,11 +294,11 @@ public class View {
     }
             
     public FacultyWindow getEditorWindow() {
-        return editorWindow;
+        return facultyWindow;
     }
     
     public JTabbedPane getTabbedPane() {
-        return editorWindow.getTableView();
+        return facultyWindow.getTableView();
     }
     
     public void setTabNames(int semester) {
@@ -345,7 +364,7 @@ public class View {
      * Set editor panel values
      */
     public void updateEditPanel(int selectedTab, int selectedActivity, Row selectedRow) {
-        JTable table = editorWindow.getTable(selectedTab);
+        JTable table = facultyWindow.getTable(selectedTab);
         
         if (selectedTab > 1) {
             return;

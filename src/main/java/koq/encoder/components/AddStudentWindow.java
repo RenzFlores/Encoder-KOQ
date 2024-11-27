@@ -1,62 +1,82 @@
 package koq.encoder.components;
 
-import java.awt.FlowLayout;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JTextField;
+import java.awt.Dimension;
+import javax.swing.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import javax.swing.table.TableModel;
+import javax.swing.table.TableRowSorter;
 
 public class AddStudentWindow extends JFrame {
-    
-    private JLabel jLabel7;
-    private JLabel jLabel8;
-    private JLabel jLabel9;
-    
-    private JTextField jTextField5;
-    private JTextField jTextField6;
-    
-    private JButton jButton3;
+    private JTable table;
+    private JScrollPane scrollPane;
+    private JTextField filterTextField;
+    private JButton addButton;
     
     public AddStudentWindow() {
-        setTitle("Add New Student");
-        setLayout(new java.awt.FlowLayout(FlowLayout.CENTER));
-        getContentPane().setBackground(Constants.WINDOW_COLOR_LAYER_0);
-
-        jLabel7 = new JLabel("Add new student to class record:");
-        jLabel7.setPreferredSize(new java.awt.Dimension(260, 16));
+        table = new JTable();
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         
-        jLabel8 = new JLabel("First name:");
+        // Disable column resizing
+        table.getTableHeader().setResizingAllowed(false);
+
+        // Disable column reordering
+        table.getTableHeader().setReorderingAllowed(false);
         
-        jTextField5 = new JTextField();
-        jTextField5.setPreferredSize(new java.awt.Dimension(200, 22));
+        // Set row height
+        table.setRowHeight(30);
 
-        jLabel9 = new JLabel("Last name:");
+        scrollPane = new JScrollPane();
+        scrollPane.setViewportView(table);
 
-        jTextField6 = new JTextField();
-        jTextField6.setPreferredSize(new java.awt.Dimension(200, 22));
+        addButton = new JButton("Open");
 
-        jButton3 = new JButton("OK");
-
-        add(jLabel7);
-        add(jLabel8);
-        add(jTextField5);
-        add(jLabel9);
-        add(jTextField6);
-        add(jButton3);
-
-        setSize(300, 150);
+        JPanel panel = new JPanel();
+        
+        filterTextField = new JTextField();
+        filterTextField.setPreferredSize(new Dimension(200, 22));
+        
+        panel.add(new JLabel("Filter by Name: "));
+        panel.add(filterTextField);
+        
+        add(panel, java.awt.BorderLayout.NORTH);
+        add(scrollPane, java.awt.BorderLayout.CENTER);
+        add(addButton, java.awt.BorderLayout.PAGE_END);
+        
+        setTitle("Add student");
+        setSize(new java.awt.Dimension(720, 360));
         setLocationRelativeTo(null);
+        getContentPane().setBackground(Constants.WINDOW_COLOR_LAYER_0);
+    }
+    
+    public JTable getTable() {
+        return table;
     }
     
     public JButton getButton() {
-        return jButton3;
+        return addButton;
     }
     
-    public String getFirstName() {
-        return jTextField5.getText();
-    }
-    
-    public String getLastName() {
-        return jTextField6.getText();
+    public void initRowSorter() {
+        // TableRowSorter for the JTable
+        TableRowSorter<TableModel> sorter = new TableRowSorter<>(table.getModel());
+        table.setRowSorter(sorter);
+
+        // Create a text field for filtering by name
+        filterTextField.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                // Create a RowFilter based on the text input
+                RowFilter<TableModel, Object> rf = null;
+                try {
+                    // Use case-insensitive regex filter, and trim spaces
+                    String filterText = filterTextField.getText().trim();
+                    rf = RowFilter.regexFilter("(?i)" + filterText, 0); // Filter by column index 1 (Name)
+                } catch (java.util.regex.PatternSyntaxException ex) {
+                    return;  // Ignore invalid regex patterns
+                }
+                sorter.setRowFilter(rf);  // Apply the filter to the sorter
+            }
+        });
     }
 }

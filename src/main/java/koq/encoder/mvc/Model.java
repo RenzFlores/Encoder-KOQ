@@ -32,7 +32,6 @@ public class Model {
     private Student currentStudent;
     
     private Connection db;
-    private Connection serverConn;
     private String url = "jdbc:mysql://localhost:3306/";
     private String user = "user";
     private String password = "password";
@@ -93,7 +92,8 @@ public class Model {
             db = connectToDB();
         } catch (SQLException e) { e.printStackTrace(); }
         
-        studentList = getAllStudents();
+        studentList = new ArrayList<>();
+        getAllStudents();
         
         record = null;
     }
@@ -108,7 +108,7 @@ public class Model {
         } catch (SQLException e) { e.printStackTrace(); }
     }
     
-    public boolean checkForLogin(String name, char[] password) {
+    public boolean checkForFacultyLogin(String name, char[] password) {
         String query = "SELECT teacher_id, password FROM faculty;";
         List<String> idList = new ArrayList<>();
         List<String> passwordList = new ArrayList<>();
@@ -131,6 +131,17 @@ public class Model {
         }
         
         return false;           // No match
+    }
+    
+    public Student checkForStudentLogin(String email, char[] password) {
+        for (Student s: studentList) {
+            // Compare the arrays
+            if (email.equals(s.getEmail()) && Arrays.equals(password, s.getPassword())) {
+                return s;    // Match
+            }
+        }
+        
+        return null;           // No match
     }
     
     public GradePeriod getGradePeriod(int quarter) {
@@ -227,9 +238,12 @@ public class Model {
         if (user instanceof Faculty) {
             currentFaculty = (Faculty) user;
             currentStudent = null;
-        } else {
+        } else if (user instanceof Student) {
             currentFaculty = null;
             currentStudent = (Student) user;
+        } else {
+            currentFaculty = null;
+            currentStudent = null;
         }
     }
     
@@ -264,7 +278,8 @@ public class Model {
                     rs.getString("date_of_birth"),
                     rs.getString("strand"), 
                     rs.getString("email"), 
-                    rs.getString("password") == null ? null : rs.getString("password").toCharArray()
+                    rs.getString("password") == null ? null : rs.getString("password").toCharArray(),
+                    rs.getInt("grade_level")
                 );
             } else {
                 throw new NullPointerException("Error: Student does not exist.");
@@ -619,9 +634,7 @@ public class Model {
     /**
      * Retrieve all student details from database and convert into Student objects.
      */
-    private List<Student> getAllStudents() {
-        List<Student> studentList = new ArrayList<>();
-        
+    private void getAllStudents() {
         try {
             Statement s = getConnection().createStatement();
             ResultSet rs = s.executeQuery("SELECT * FROM students;");
@@ -637,14 +650,13 @@ public class Model {
                     rs.getString("date_of_birth"),
                     rs.getString("strand"), 
                     rs.getString("email"), 
-                    rs.getString("password") == null ? null : rs.getString("password").toCharArray()
+                    rs.getString("password") == null ? null : rs.getString("password").toCharArray(),
+                    rs.getInt("grade_level")
                 ));
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        
-        return studentList;
     }
 
     /**
@@ -863,6 +875,36 @@ public class Model {
         return percentageScore * weight;
     }
     
+    public void initAddStudentTable(JTable table) {
+        Object[][] data = {};
+        String[] columnNames = {
+            "Student Name", "Grade Level", "Strand", "LRN", "Gender", "Student ID"
+        };
+        DefaultTableModel model = new DefaultTableModel(data, columnNames) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                // Set all cells to be uneditable
+                return false;
+            }
+        };
+        table.setModel(model);
+        // Hide last column
+        table.getColumnModel().getColumn(5).setMaxWidth(0);
+        table.getColumnModel().getColumn(5).setMinWidth(0);
+        table.getColumnModel().getColumn(5).setPreferredWidth(0);
+        
+        for (Student s: studentList) {
+            model.addRow(new Object[] {
+                s.getStudentFullName(),
+                s.getGradeLevel(),
+                s.getStrand(),
+                s.getLrn(),
+                s.getGender(),
+                s.getStudentId()
+            });
+        }
+    }
+    
     public void initOpenClassRecordTable(JTable table, int facultyId) {
         Object[][] data = {};
         String[] columnNames = {
@@ -941,7 +983,8 @@ public class Model {
                     rs.getString("date_of_birth"),
                     rs.getString("strand"),
                     rs.getString("email"),
-                    rs.getString("password") == null ? null : rs.getString("password").toCharArray()
+                    rs.getString("password") == null ? null : rs.getString("password").toCharArray(), 
+                    rs.getInt("grade_level")
                 ));
             }
             

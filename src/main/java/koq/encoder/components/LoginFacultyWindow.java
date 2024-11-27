@@ -7,7 +7,7 @@ import javax.swing.JLabel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
-public class LoginWindow extends JFrame {
+public class LoginFacultyWindow extends JFrame {
     
     private JLabel idLabel;
     private JLabel passwordLabel;
@@ -15,7 +15,7 @@ public class LoginWindow extends JFrame {
     private JPasswordField passwordField;
     private JButton loginButton;
     
-    public LoginWindow() {
+    public LoginFacultyWindow() {
         setLayout(new FlowLayout());
         getContentPane().setBackground(Constants.WINDOW_COLOR_LAYER_0);
 

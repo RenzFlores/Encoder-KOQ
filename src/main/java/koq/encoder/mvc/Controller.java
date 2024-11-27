@@ -2,37 +2,24 @@ package koq.encoder.mvc;
 
 import koq.encoder.components.*;
 import koq.encoder.classes.*;
-import java.awt.Component;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.File;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 import javax.swing.AbstractAction;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
-import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
-import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.border.LineBorder;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumnModel;
 import javax.swing.text.AbstractDocument;
@@ -43,8 +30,6 @@ public class Controller {
     
     private final View view;
     private final Model model;
-    
-    private int lastSelectedRow = -1;
             
     public Controller(Model model, View view) {
         this.model = model;
@@ -69,7 +54,78 @@ public class Controller {
                 System.exit(0);
             }
         });
-         
+        
+        view.getMenuWindow().getLoginButton().addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (view.getMenuWindow().getRadioButtonSelection().equals("Teacher")) {
+                    LoginFacultyWindow facultyWindow = new LoginFacultyWindow();
+                    
+                    facultyWindow.setVisible(true);
+                    
+                    facultyWindow.getButton().addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            String id = facultyWindow.getId();
+                            char[] password = facultyWindow.getPassword();
+
+                            // Check for matching credentials
+                            if (!(model.checkForFacultyLogin(id, password))) {
+                                JOptionPane.showMessageDialog(
+                                    null,
+                                    "Incorrect ID and password",
+                                    "Invalid form",
+                                    JOptionPane.WARNING_MESSAGE
+                                );
+                            } else {
+                                // Login successful. Start the main window and remove the login window
+                                view.initFacultyWindow();
+                                model.setCurrentUser(model.getFaculty(Integer.parseInt(id)));
+                                facultyWindow.dispose();
+                                view.getMenuWindow().dispose();
+                            }
+                        }
+                    });
+                } else {
+                    LoginStudentWindow studentWindow = new LoginStudentWindow();
+                    
+                    studentWindow.setVisible(true);
+                    
+                    studentWindow.getButton().addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            String email = studentWindow.getEmail();
+                            char[] password = studentWindow.getPassword();
+
+                            // Check for matching credentials
+                            Student student = model.checkForStudentLogin(email, password);
+                            if (student == null) {
+                                JOptionPane.showMessageDialog(
+                                    null,
+                                    "Incorrect email and password",
+                                    "Invalid form",
+                                    JOptionPane.WARNING_MESSAGE
+                                );
+                            } else {
+                                // Login successful. Start the main window and remove the login window
+                                view.initStudentWindow();
+                                model.setCurrentUser(student);
+                                studentWindow.dispose();
+                                view.getMenuWindow().dispose();
+                            }
+                        }
+                    });
+                }
+            }
+        });
+        
+        view.getMenuWindow().getRegisterButton().addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Add CODE
+            }
+        });
+        
         /**
          * New Table event
          */
@@ -79,34 +135,12 @@ public class Controller {
             window.getButton().addActionListener(new AddClassRecordWindowListener(window));
         });
         
-        // Login button event handler
-        view.getLoginWindow().getButton().addActionListener((ActionEvent ev) -> {
-            LoginWindow window = view.getLoginWindow();
-            String id = window.getId();
-            char[] password = window.getPassword();
-            
-            // Check for matching credentials
-            if (!(model.checkForLogin(id, password))) {
-                JOptionPane.showMessageDialog(
-                    null,
-                    "Incorrect ID and password",
-                    "Invalid form",
-                    JOptionPane.WARNING_MESSAGE
-                );
-            } else {
-                // Login successful. Start the main window and remove the login window
-                view.initEditWindow();
-                model.setCurrentUser(model.getFaculty(Integer.parseInt(id)));
-                window.dispose();
-            }
-        });
-        
         // Logout event
         ( (JMenuItem) view.getComponent(Actions.LOGOUT.name()) ).addActionListener((ActionEvent ev) -> {
             model.setCurrentUser(null);
             model.setClassRecord(null);
             view.resetTables();
-            view.setLoginWindow();
+            view.setMenuWindow();
         });
         
         // Open class record event
@@ -373,15 +407,6 @@ public class Controller {
                         model.getSelectedActivity(),
                         model.getGradePeriod(1).getRowAt(selectedRow)
                     );
-                    
-                    // Check if selected row has changed
-                    if (selectedRow != lastSelectedRow) {
-                        // Set focus to grade text field
-                        ((JTextField) view.getComponent(Fields.EDIT_GRADE.name())).requestFocusInWindow();
-                    }
-
-                    // Update the last selected row
-                    lastSelectedRow = selectedRow;
                 }
             }
         });
@@ -406,20 +431,6 @@ public class Controller {
             ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).requestFocusInWindow();
         });
         
-        // Add FocusListener on JTable so the edit text field will always focus whenever the table is clicked
-        /*
-        view.getTable(model.getSelectedTab()).addFocusListener(new FocusListener() {
-            @Override
-            public void focusGained(FocusEvent e) {
-                // Set focus to grade text field
-                ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).requestFocusInWindow();
-            }
-
-            @Override
-            public void focusLost(FocusEvent e) {}
-        });
-        */
-
         // Add to Table button clicked event
         ( (JButton) view.getComponent(Actions.ADD_TO_TABLE.name()) ).addActionListener((ActionEvent e) -> {
             if (model.getClassRecord() != null) {
@@ -599,14 +610,20 @@ public class Controller {
         ActionListener menuListener = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                AddActivityWindow activityWindow = new AddActivityWindow();
-                AddStudentWindow studentWindow = new AddStudentWindow();
                 JMenuItem source = (JMenuItem) e.getSource();
                 
                 if (source.getText().equals("Student")) {
+                    AddStudentWindow studentWindow = new AddStudentWindow();
+                    JTable studentTable = studentWindow.getTable();
+                    
+                    model.initAddStudentTable(studentTable);
+                    studentWindow.initRowSorter();
+
                     studentWindow.setVisible(true);
+
                     studentWindow.getButton().addActionListener(new AddStudentWindowListener(studentWindow));
                 } else if (source.getText().equals("Activity")) {
+                    AddActivityWindow activityWindow = new AddActivityWindow();
                     activityWindow.setVisible(true);
                     activityWindow.getButton().addActionListener(new AddActivityWindowListener(activityWindow));
                 }
@@ -614,7 +631,7 @@ public class Controller {
             }
         };
 
-        // Add Student to System event
+        // Register Student to System event
         ( (JMenuItem) view.getComponent(Actions.REGISTER_STUDENT_SYSTEM.name()) ).addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -624,7 +641,7 @@ public class Controller {
             }
         });
         
-        // Add Student event
+        // Add Student to class record event
         ( (JMenuItem) view.getComponent(Actions.ADDSTUDENT.name()) ).addActionListener(menuListener);
         // Add Activity event
         ( (JMenuItem) view.getComponent(Actions.ADDACTIVITY.name()) ).addActionListener(menuListener);
@@ -734,38 +751,33 @@ public class Controller {
     class AddStudentWindowListener implements ActionListener {
 
         AddStudentWindow window;
-        boolean validForm;
 
         public AddStudentWindowListener(AddStudentWindow window) {
             this.window = window;
-            validForm = false;
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            String firstName = window.getFirstName();
-            String lastName = window.getLastName();
-            validForm = true;
+            if (window.getTable().getSelectedRow() != -1) {
+                System.out.println("Student selected");
+                /*
+                view.getTable(0).setModel(model.getClassRecord().getGradePeriod(1));
+                view.getTable(1).setModel(model.getClassRecord().getGradePeriod(2));
+                model.setTableListeners(view.getTable(0));
+                model.setTableListeners(view.getTable(1));
+                model.initGradeSheetTable(view.getTable(2), model.getClassRecord().getGradePeriod(1).getRows(), model.getClassRecord().getClassId(), 1);
+                model.initGradeSheetTable(view.getTable(3), model.getClassRecord().getGradePeriod(2).getRows(), model.getClassRecord().getClassId(), 2);
+                model.initFinalGradeTable(view.getTable(4), model.getClassRecord().getGradePeriod(2).getRows(), model.getClassRecord().getClassId());
+                view.enableTabs();
+                if (!model.getClassRecord().getClassList().isEmpty()) {
+                    view.getTable(0).setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
+                }
+                view.resizeAllTables();
+                view.setTabNames(model.getClassRecord().getSemester());
+                */
 
-            if (firstName.isBlank() || lastName.isBlank()) {
-                JOptionPane.showMessageDialog(
-                    null,
-                    "Please provide the first and last name.",
-                    "Invalid form",
-                    JOptionPane.WARNING_MESSAGE
-                );
-                validForm = false;
-            }
-
-            if (validForm) {
-                //model.addStudentToClassRecord(firstName, lastName);
-                view.resizeTable(model.getSelectedTab());
                 window.dispose();
             }
-        }
-        
-        public boolean isFormValid() {
-            return validForm;
         }
     }
     
@@ -897,8 +909,7 @@ public class Controller {
             }
             
             if (validForm) {
-                // TODO: ADD CODE HERE
-                System.out.println(dob);
+                //model.addStudentToDb(firstName, lastName);
                 
                 JOptionPane.showMessageDialog(
                     null,

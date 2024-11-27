@@ -11,9 +11,10 @@ public class Student {
     private String strand;
     private String email;
     private char[] password;
+    private int gradeLevel;
 
     // Default constructor for existing student with email and password
-    public Student(int studentId, String firstName, String middleName, String lastName, int lrn, String gender, String dateOfBirth, String strand, String email, char[] password) {
+    public Student(int studentId, String firstName, String middleName, String lastName, int lrn, String gender, String dateOfBirth, String strand, String email, char[] password, int gradeLevel) {
         this.studentId = studentId;
         this.firstName = firstName;
         this.middleName = middleName;
@@ -24,10 +25,11 @@ public class Student {
         this.strand = strand;
         this.email = email;
         this.password = password;
+        this.gradeLevel = gradeLevel;
     }
     
     // Constructor for student with no email and password
-    public Student(int studentId, String firstName, String middleName, String lastName, int lrn, String gender, String dateOfBirth, String strand) {
+    public Student(int studentId, String firstName, String middleName, String lastName, int lrn, String gender, String dateOfBirth, String strand, int gradeLevel) {
         this.studentId = studentId;
         this.firstName = firstName;
         this.middleName = middleName;
@@ -38,10 +40,11 @@ public class Student {
         this.strand = strand;
         this.email = null;
         this.password = null;
+        this.gradeLevel = gradeLevel;
     }
     
     // Constructor for new student (No student_id yet)
-    public Student(String firstName, String middleName, String lastName, int lrn, String gender, String dateOfBirth, String strand, String email, char[] password) {
+    public Student(String firstName, String middleName, String lastName, int lrn, String gender, String dateOfBirth, String strand, String email, char[] password, int gradeLevel) {
         this.firstName = firstName;
         this.middleName = middleName;
         this.lastName = lastName;
@@ -51,6 +54,7 @@ public class Student {
         this.strand = strand;
         this.email = email;
         this.password = password;
+        this.gradeLevel = gradeLevel;
     }
 
     public int getStudentId() { 
@@ -79,8 +83,17 @@ public class Student {
         
         return dob[1] + "/" + dob[2] + "/" + dob[0];  // MM/DD/YYYY
     }
+    public int getGradeLevel() { 
+        return gradeLevel; 
+    }
     public String getStrand() { 
         return strand; 
+    }
+    public String getEmail() { 
+        return email; 
+    }
+    public char[] getPassword() { 
+        return password; 
     }
     public String getStudentName() { 
         return firstName + " " + lastName;
