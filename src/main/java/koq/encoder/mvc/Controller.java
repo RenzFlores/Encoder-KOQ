@@ -89,6 +89,7 @@ public class Controller {
             } else {
                 // Login successful. Start the main window and remove the login window
                 view.initEditWindow();
+                model.setCurrentUser(model.getFaculty(Integer.parseInt(id)));
                 window.dispose();
             }
         });
@@ -101,26 +102,39 @@ public class Controller {
             view.setLoginWindow();
         });
         
-        // Open File event
+        // Open class record event
         ( (JMenuItem) view.getComponent(Actions.OPEN_RECORD.name()) ).addActionListener((ActionEvent ev) -> {
-            /**
-             * This part is for testing only. Replace setClassRecord() to selectedItem on final version
-             */
-            model.setClassRecord(model.getClassRecordInDB(1));
-            model.initClassRecord(model.getClassRecord());
-            view.getTable(0).setModel(model.getClassRecord().getGradePeriod(1));
-            view.getTable(1).setModel(model.getClassRecord().getGradePeriod(2));
-            model.setTableListeners(view.getTable(0));
-            model.setTableListeners(view.getTable(1));
-            model.initGradeSheetTable(view.getTable(2), model.getClassRecord().getGradePeriod(1).getRows(), model.getClassRecord().getClassId(), 1);
-            model.initGradeSheetTable(view.getTable(3), model.getClassRecord().getGradePeriod(2).getRows(), model.getClassRecord().getClassId(), 2);
-            model.initFinalGradeTable(view.getTable(4), model.getClassRecord().getGradePeriod(2).getRows(), model.getClassRecord().getClassId());
-            view.enableTabs();
-            if (!model.getClassRecord().getClassList().isEmpty()) {
-                view.getTable(0).setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
-            }
-            view.resizeAllTables();
-            view.setTabNames(model.getClassRecord().getSemester());
+            OpenClassRecordWindow window = new OpenClassRecordWindow();
+            JTable table = window.getTable();
+            
+            model.initOpenClassRecordTable(table, ((Faculty) model.getCurrentUser()).getFacultyId());
+            
+            window.setVisible(true);
+            
+            window.getButton().addActionListener(new ActionListener(){
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    if (table.getSelectedRow() != -1) {
+                        model.setClassRecord(model.getClassRecordInDB((int)table.getValueAt(table.getSelectedRow(), 6)));
+                        model.initClassRecord(model.getClassRecord());
+                        view.getTable(0).setModel(model.getClassRecord().getGradePeriod(1));
+                        view.getTable(1).setModel(model.getClassRecord().getGradePeriod(2));
+                        model.setTableListeners(view.getTable(0));
+                        model.setTableListeners(view.getTable(1));
+                        model.initGradeSheetTable(view.getTable(2), model.getClassRecord().getGradePeriod(1).getRows(), model.getClassRecord().getClassId(), 1);
+                        model.initGradeSheetTable(view.getTable(3), model.getClassRecord().getGradePeriod(2).getRows(), model.getClassRecord().getClassId(), 2);
+                        model.initFinalGradeTable(view.getTable(4), model.getClassRecord().getGradePeriod(2).getRows(), model.getClassRecord().getClassId());
+                        view.enableTabs();
+                        if (!model.getClassRecord().getClassList().isEmpty()) {
+                            view.getTable(0).setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
+                        }
+                        view.resizeAllTables();
+                        view.setTabNames(model.getClassRecord().getSemester());
+                        
+                        window.dispose();
+                    }
+                }  
+            });
         });
         
         /** Export File event (UNUSED)
@@ -144,20 +158,6 @@ public class Controller {
             // TODO: Add code
         });
         
-        // Select previous student event
-        ( (JButton) view.getComponent(Actions.PREVIOUS_STUDENT.name()) ).addActionListener((ActionEvent ev) -> {
-            /* OUTDATED
-        
-            */
-        });
-        
-        // Select next student event
-        ( (JButton) view.getComponent(Actions.NEXT_STUDENT.name()) ).addActionListener((ActionEvent ev) -> {
-            /* OUTDATED
-            
-            */
-        });
-        
         // Tab selection listeners
         view.getTabbedPane().addChangeListener(e -> {
             int index = view.getTabbedPane().getSelectedIndex();
@@ -167,22 +167,24 @@ public class Controller {
                 return;
             }
             
-            if (index == 0) {
-                view.getTable(0).setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
-                view.updateEditPanel(
-                    model.getSelectedTab(), 
-                    0, 
-                    model.getGradePeriod(1).getRowAt(view.getTable(0).getSelectedRow())
-                );
-            } else if (index == 1) {
-                view.getTable(1).setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
-                view.updateEditPanel(
-                    model.getSelectedTab(), 
-                    0, 
-                    model.getGradePeriod(2).getRowAt(view.getTable(1).getSelectedRow())
-                );
-            } else {
-                view.getTable(index).setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
+            switch (index) {
+                case 0:
+                    view.getTable(0).setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
+                    view.updateEditPanel(
+                            model.getSelectedTab(),
+                            0,
+                            model.getGradePeriod(1).getRowAt(view.getTable(0).getSelectedRow())
+                    );  break;
+                case 1:
+                    view.getTable(1).setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
+                    view.updateEditPanel(
+                            model.getSelectedTab(),
+                            0,
+                            model.getGradePeriod(2).getRowAt(view.getTable(1).getSelectedRow())
+                    );  break;
+                default:
+                    view.getTable(index).setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
+                    break;
             }
             // Set focus to grade text field
             ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).requestFocusInWindow();
@@ -667,6 +669,45 @@ public class Controller {
             }
         });
         
+        // Generate report card event
+        ( (JButton) view.getComponent(Actions.GENERATE_REPORT.name()) ).addActionListener(new ActionListener() {
+            
+            int index = model.getSelectedRow();
+            
+            private void setIndex(int i) {
+                index = i;
+            }
+            
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                if (model.getClassRecord() != null) {
+                    ReportCardWindow reportCardWindow = new ReportCardWindow(model.getClassRecord().getClassList().get(model.getSelectedRow()));
+
+                    reportCardWindow.setVisible(true);
+                    
+                    reportCardWindow.getPreviousButton().addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            if (index > 0) {
+                                reportCardWindow.setData(model.getClassRecord().getClassList().get(index - 1));
+                                setIndex(index-1);
+                            }
+                        }
+                    });
+
+                    reportCardWindow.getNextButton().addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            if (index < model.getClassRecord().getClassList().size() - 1 && index >= 0) {
+                                reportCardWindow.setData(model.getClassRecord().getClassList().get(index + 1));
+                                setIndex(index+1);
+                            }
+                        }
+                    });
+                }
+            }
+        });
+        
         new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -674,7 +715,6 @@ public class Controller {
             }
         };
 
-        
         // Action to move selected row up (UNUSED COMPONENT)
         /*
         ( (JButton) view.getComponent( Actions.MOVE_ROW_UP.name() ) ).addActionListener((ActionEvent e) -> {
@@ -866,7 +906,7 @@ public class Controller {
             
             if (validForm) {
                 // TODO: ADD CODE HERE
-                    
+                
                 window.dispose();
             }
         }

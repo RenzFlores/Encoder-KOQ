@@ -1,123 +1,158 @@
 package koq.encoder.components;
 
 import javax.swing.*;
+import koq.encoder.classes.Student;
 
 public class ReportCardWindow extends JFrame {
-    public ReportCardWindow() {
-        reportCard.setPreferredSize(new java.awt.Dimension(500, 500));
-        reportCard.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
+    
+    private JLabel studentNameLabel;
+    private JLabel studentNameContent;
+    private JLabel gradeLabel;
+    private JLabel gradeContent;
+    private JLabel sectionLabel;
+    private JLabel sectionContent;
+    private JLabel strandLabel;
+    private JLabel strandContent;
+    private JLabel birthdayLabel;
+    private JLabel birthdayContent;
+    private JLabel sexLabel;
+    private JLabel sexContent;
+    private JLabel lrnLabel;
+    private JLabel lrnContent;
+    private JLabel schoolYearLabel;
+    private JLabel schoolYearContent;
+    private JLabel titleLabel;
+    private JLabel firstSemesterLabel;
+    private JLabel secondSemesterLabel;
+    private JScrollPane scrollPaneQ1;
+    private JScrollPane scrollPaneQ2;
+    private JTable tableQ1;
+    private JTable tableQ2;
+    private JButton prevButton;
+    private JButton nextButton;
+    private javax.swing.Box.Filler buttonFiller;
+    
+    public ReportCardWindow(Student s) {
+        setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
 
-        jLabel2.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
-        jLabel2.setText("Name:");
-        reportCard.add(jLabel2);
+        studentNameLabel = new JLabel("Name:");
+        studentNameLabel.setPreferredSize(new java.awt.Dimension(80, 16));
+        
+        studentNameContent = new JLabel("Renz Ken Flores");
+        studentNameContent.setPreferredSize(new java.awt.Dimension(260, 16));
+        
+        gradeLabel = new JLabel("Grade:");
+        gradeLabel.setPreferredSize(new java.awt.Dimension(80, 16));
+        
+        gradeContent = new JLabel("12");
+        gradeContent.setPreferredSize(new java.awt.Dimension(260, 16));
+        
+        sectionLabel = new JLabel("Section:");
+        sectionLabel.setPreferredSize(new java.awt.Dimension(80, 16));
+        
+        sectionContent = new JLabel("Dalton");
+        sectionContent.setPreferredSize(new java.awt.Dimension(260, 16));
+        
+        strandLabel = new JLabel("Strand:");
+        strandLabel.setPreferredSize(new java.awt.Dimension(80, 16));
+        
+        strandContent = new JLabel("STEM");
+        strandContent.setPreferredSize(new java.awt.Dimension(260, 16));
+        
+        birthdayLabel = new JLabel("Birthday:");
+        birthdayLabel.setPreferredSize(new java.awt.Dimension(80, 16));
+        
+        birthdayContent = new JLabel("01/01/1970");
+        birthdayContent.setPreferredSize(new java.awt.Dimension(260, 16));
+        
+        sexLabel = new JLabel("Sex:");
+        sexLabel.setPreferredSize(new java.awt.Dimension(80, 16));
+        
+        sexContent = new JLabel("Male");
+        sexContent.setPreferredSize(new java.awt.Dimension(260, 16));
+        
+        lrnLabel = new JLabel("LRN:");
+        lrnLabel.setPreferredSize(new java.awt.Dimension(80, 16));
+        
+        lrnContent = new JLabel("136543090290");
+        lrnContent.setPreferredSize(new java.awt.Dimension(260, 16));
+        
+        schoolYearLabel = new JLabel("School Year:");
+        schoolYearLabel.setPreferredSize(new java.awt.Dimension(80, 16));
+        
+        schoolYearContent = new JLabel("2024-2025");
+        schoolYearContent.setPreferredSize(new java.awt.Dimension(260, 16));
+        
+        titleLabel = new JLabel("REPORT ON LEARNING PROGRESS AND ACHIEVEMENT");
+        titleLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        titleLabel.setPreferredSize(new java.awt.Dimension(710, 16));
+        
+        firstSemesterLabel = new JLabel("First Semester");
+        firstSemesterLabel.setPreferredSize(new java.awt.Dimension(100, 16));
+        
+        tableQ1 = new JTable();
+        tableQ1.setPreferredSize(new java.awt.Dimension(490, 100));
+        
+        scrollPaneQ1 = new JScrollPane();
+        scrollPaneQ1.setPreferredSize(new java.awt.Dimension(690, 275));
+        scrollPaneQ1.setViewportView(tableQ1);
+        
+        secondSemesterLabel = new JLabel("Second Semester");
+        
+        scrollPaneQ2 = new JScrollPane();
+        scrollPaneQ2.setPreferredSize(new java.awt.Dimension(690, 275));
 
-        jLabel11.setText("Renz Ken Flores");
-        jLabel11.setPreferredSize(new java.awt.Dimension(450, 16));
-        reportCard.add(jLabel11);
+        tableQ2 = new JTable();
+        tableQ2.setPreferredSize(new java.awt.Dimension(490, 100));
+        scrollPaneQ2.setViewportView(tableQ2);
 
-        jLabel14.setText("Grade:");
-        reportCard.add(jLabel14);
-
-        jLabel15.setText("12");
-        jLabel15.setPreferredSize(new java.awt.Dimension(450, 16));
-        reportCard.add(jLabel15);
-
-        jLabel21.setText("Section:");
-        reportCard.add(jLabel21);
-
-        jLabel22.setText("Newton");
-        jLabel22.setPreferredSize(new java.awt.Dimension(440, 16));
-        reportCard.add(jLabel22);
-
-        jLabel18.setText("School Year:");
-        reportCard.add(jLabel18);
-
-        jLabel19.setText("2024-2025");
-        jLabel19.setPreferredSize(new java.awt.Dimension(420, 16));
-        reportCard.add(jLabel19);
-
-        jLabel23.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel23.setText("REPORT ON LEARNING PROGRESS AND ACHIEVEMENT");
-        jLabel23.setPreferredSize(new java.awt.Dimension(500, 16));
-        reportCard.add(jLabel23);
-
-        jLabel24.setText("First Semester");
-        jLabel24.setPreferredSize(new java.awt.Dimension(100, 16));
-        reportCard.add(jLabel24);
-
-        jScrollPane1.setPreferredSize(new java.awt.Dimension(490, 275));
-
-        jTable1.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {"Pagbasa at Pagsusuri ng Iba’t-Ibang Teksto Tungo sa Pananaliksik", "93", "94", "94"},
-                {"21st Century Literature from the Philippines and the World", "94", "93", null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "SUBJECTS", "Quarter 1", "Quarter 2", "Semester Final Grades"
-            }
-        ) {
-            boolean[] canEdit = new boolean [] {
-                false, false, false, false
-            };
-
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
-            }
-        });
-        jTable1.setPreferredSize(new java.awt.Dimension(490, 100));
-        jScrollPane1.setViewportView(jTable1);
-        if (jTable1.getColumnModel().getColumnCount() > 0) {
-            jTable1.getColumnModel().getColumn(0).setPreferredWidth(200);
-            jTable1.getColumnModel().getColumn(1).setResizable(false);
-            jTable1.getColumnModel().getColumn(1).setPreferredWidth(100);
-            jTable1.getColumnModel().getColumn(2).setResizable(false);
-            jTable1.getColumnModel().getColumn(2).setPreferredWidth(100);
-            jTable1.getColumnModel().getColumn(3).setResizable(false);
-            jTable1.getColumnModel().getColumn(3).setPreferredWidth(100);
-        }
-
-        reportCard.add(jScrollPane1);
-
-        jLabel25.setText("Second Semester");
-        reportCard.add(jLabel25);
-
-        jScrollPane2.setPreferredSize(new java.awt.Dimension(490, 275));
-
-        jTable2.setModel(new javax.swing.table.DefaultTableModel(
-            new Object [][] {
-                {"Pagbasa at Pagsusuri ng Iba’t-Ibang Teksto Tungo sa Pananaliksik", "93", "94", "94"},
-                {"21st Century Literature from the Philippines and the World", "94", "93", null},
-                {null, null, null, null},
-                {null, null, null, null},
-                {null, null, null, null}
-            },
-            new String [] {
-                "SUBJECTS", "Quarter 1", "Quarter 2", "Semester Final Grades"
-            }
-        ) {
-            boolean[] canEdit = new boolean [] {
-                false, false, false, false
-            };
-
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
-            }
-        });
-        jTable2.setPreferredSize(new java.awt.Dimension(490, 100));
-        jScrollPane2.setViewportView(jTable2);
-        if (jTable2.getColumnModel().getColumnCount() > 0) {
-            jTable2.getColumnModel().getColumn(0).setPreferredWidth(200);
-            jTable2.getColumnModel().getColumn(1).setResizable(false);
-            jTable2.getColumnModel().getColumn(1).setPreferredWidth(100);
-            jTable2.getColumnModel().getColumn(2).setResizable(false);
-            jTable2.getColumnModel().getColumn(2).setPreferredWidth(100);
-            jTable2.getColumnModel().getColumn(3).setResizable(false);
-            jTable2.getColumnModel().getColumn(3).setPreferredWidth(100);
-        }
-
-        reportCard.add(jScrollPane2);
+        prevButton = new JButton("Previous");
+        prevButton.setPreferredSize(new java.awt.Dimension(80, 24));
+        
+        buttonFiller = new Box.Filler(new java.awt.Dimension(0, 30), new java.awt.Dimension(0, 30), new java.awt.Dimension(0, 30));
+        
+        nextButton = new JButton("Next");
+        nextButton.setPreferredSize(new java.awt.Dimension(80, 24));
+        
+        add(studentNameLabel);
+        add(studentNameContent);
+        add(gradeLabel);
+        add(gradeContent);
+        add(sectionLabel);
+        add(sectionContent);
+        add(strandLabel);
+        add(strandContent);
+        add(birthdayLabel);
+        add(birthdayContent);
+        add(sexLabel);
+        add(sexContent);
+        add(lrnLabel);
+        add(lrnContent);
+        add(schoolYearLabel);
+        add(schoolYearContent);
+        add(titleLabel);
+        add(firstSemesterLabel);
+        add(scrollPaneQ1);
+        add(secondSemesterLabel);
+        add(scrollPaneQ2);
+        add(prevButton);
+        add(buttonFiller);
+        add(nextButton);
+        
+        setTitle("Report Card");
+        setSize(new java.awt.Dimension(720, 800));
+        setLocationRelativeTo(null);
+    }
+    
+    public JButton getPreviousButton() {
+        return prevButton;
+    }
+    
+    public JButton getNextButton() {
+        return nextButton;
+    }
+    
+    public void setData(Student s) {
+        
     }
 }

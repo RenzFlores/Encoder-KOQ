@@ -28,7 +28,8 @@ public class Model {
     private int selectedTab;
     private List<Student> studentList;
     private ClassRecord record;
-    private Faculty currentUser;
+    private Faculty currentFaculty;
+    private Student currentStudent;
     
     private Connection db;
     private Connection serverConn;
@@ -222,11 +223,23 @@ public class Model {
     public int getSelectedTab() {
         return selectedTab;
     }
-    public void setCurrentUser(Faculty user) {
-        currentUser = user;
+    
+    public void setCurrentUser(Object user) {
+        if (user instanceof Faculty) {
+            currentFaculty = (Faculty) user;
+            currentStudent = null;
+        } else {
+            currentFaculty = null;
+            currentStudent = (Student) user;
+        }
     }
-    public Faculty getCurrentUser() {
-        return currentUser;
+    
+    public Object getCurrentUser() {
+        if (currentFaculty == null) {
+            return currentStudent;
+        } else {
+            return currentFaculty;
+        }
     }
     
     /**
@@ -680,6 +693,31 @@ public class Model {
         return activities;
     }
     
+    public Faculty getFaculty(int teacherId) {
+        String selectQuery = """
+            SELECT *
+            FROM faculty
+            WHERE teacher_id = ?;
+        """;
+        
+        try (PreparedStatement pstmt = getConnection().prepareStatement(selectQuery)) {
+            pstmt.setInt(1, teacherId);
+            ResultSet rs = pstmt.executeQuery();
+            
+            if (rs.next()) {
+                return new Faculty(
+                    rs.getInt("faculty_id"),
+                    rs.getInt("teacher_id"),
+                    rs.getString("name"),
+                    rs.getString("role"),
+                    rs.getString("password").toCharArray()
+                );
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        
+        return null;
+    }
+    
     /**
      * Initializes a JTable that uses the GradePeriod class model with the 
      * appropriate listeners
@@ -834,7 +872,61 @@ public class Model {
         return percentageScore * weight;
     }
     
+    public void initOpenClassRecordTable(JTable table, int facultyId) {
+        Object[][] data = {};
+        String[] columnNames = {
+            "Grade Level", "Section", "Strand", "Subject", "Semester", "School Year", "Class ID"
+        };
+        DefaultTableModel model = new DefaultTableModel(data, columnNames) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                // Set all cells to be uneditable
+                return false;
+            }
+        };
+        table.setModel(model);
+        // Hide last column
+        table.getColumnModel().getColumn(6).setMaxWidth(0);
+        table.getColumnModel().getColumn(6).setMinWidth(0);
+        table.getColumnModel().getColumn(6).setPreferredWidth(0);
+        
+        // Disable column resizing
+        table.getTableHeader().setResizingAllowed(false);
+
+        // Disable column reordering
+        table.getTableHeader().setReorderingAllowed(false);
+        
+        // Set row height
+        table.setRowHeight(30);
+        
+        String selectQuery = """
+            SELECT *
+            FROM classes c
+            JOIN subjects s ON s.subject_id = c.subject_id
+            WHERE c.faculty_id = ?
+            ORDER BY academic_year DESC, semester DESC, strand, grade_level, section;
+        """;
+        
+        try (PreparedStatement pstmt = getConnection().prepareStatement(selectQuery)) {
+            pstmt.setInt(1, facultyId);
+            ResultSet rs = pstmt.executeQuery();
+            
+            while (rs.next()) {
+                model.addRow(new Object[]{
+                    rs.getString("grade_level"),
+                    rs.getString("section"),
+                    rs.getString("strand"),
+                    rs.getString("name"),
+                    rs.getString("semester"),
+                    rs.getString("academic_year"),
+                    rs.getInt("class_id"),
+                });
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+    }
+    
     /**
+     * OUTDATED DOCUMENTATION
      * Retrieve all student records belonging to a class using class_id.
      * Returns a list of rows with all the student objects and empty grades list.
      * Must call getClassPeriodInDB() to populate the grades.

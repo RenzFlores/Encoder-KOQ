@@ -34,11 +34,6 @@ public class EditPanel extends JPanel {
     private final JTextField gradeField;
     private final JLabel maxGradeLabel;
     
-    private final Box.Filler buttonFiller1;
-    private final JButton prevButton;
-    private final Box.Filler buttonFiller2;
-    private final JButton nextButton;
-    
     private final JLabel rearrangeLabel;
     private final JButton moveDownButton;
     private final JButton moveUpButton;
@@ -124,15 +119,6 @@ public class EditPanel extends JPanel {
         //maxGradeLabel.setBorder(new LineBorder(java.awt.Color.RED, 1));       // DEBUG
         containerPanel.add(maxGradeLabel);
         
-        prevButton = new JButton("Previous");
-        prevButton.setPreferredSize(new java.awt.Dimension(80, 24));
-        
-        buttonFiller1 = new Box.Filler(new java.awt.Dimension(40, 20), new java.awt.Dimension(40, 20), new java.awt.Dimension(40, 20));
-        buttonFiller2 = new Box.Filler(new java.awt.Dimension(0, 30), new java.awt.Dimension(0, 30), new java.awt.Dimension(0, 30));
-        
-        nextButton = new JButton("Next");
-        nextButton.setPreferredSize(new java.awt.Dimension(80, 24));
-        
         rearrangeLabel = new JLabel("Rearrange:");
         rearrangeLabel.setHorizontalAlignment(java.awt.FlowLayout.TRAILING);
         rearrangeLabel.setPreferredSize(new java.awt.Dimension(110, 24));
@@ -144,21 +130,8 @@ public class EditPanel extends JPanel {
         outputNumberCombo.setName(Fields.SELECT_ACTIVITY.name());
         gradeField.setName(Fields.EDIT_GRADE.name());
         maxGradeLabel.setName(Fields.MAX_GRADE.name());
-        prevButton.setName(Actions.PREVIOUS_STUDENT.name());
-        nextButton.setName(Actions.NEXT_STUDENT.name());
         moveUpButton.setName(Actions.MOVE_ROW_UP.name());
         moveDownButton.setName(Actions.MOVE_ROW_DOWN.name());
-        
-        //containerPanel.add(buttonFiller1);
-        containerPanel.add(prevButton);
-        containerPanel.add(buttonFiller2);
-        containerPanel.add(nextButton);
-        
-        /* UNUSED COMPONENTS
-        containerPanel.add(rearrangeLabel);
-        containerPanel.add(moveUpButton);
-        containerPanel.add(moveDownButton);
-        */
         
         add(containerPanel);
     }
