@@ -29,7 +29,7 @@ public class MenuWindow extends JFrame {
     public MenuWindow() {
         setLayout(new FlowLayout(FlowLayout.CENTER, 10, 10));
         
-        titleLabel = new JLabel("ENCODER");
+        titleLabel = new JLabel("grade.edu");
         titleLabel.setFont(new java.awt.Font("Constantia", 1, 72)); // NOI18N
         titleLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         titleLabel.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);

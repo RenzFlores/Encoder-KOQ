@@ -6,9 +6,11 @@ koq\encoder\components\RegisterStudentToSystemWindow.class
 koq\encoder\components\StudentWindow.class
 koq\encoder\mvc\MenuBar.class
 koq\encoder\mvc\Model$3.class
+koq\encoder\mvc\Controller$3$1.class
 koq\encoder\mvc\Controller$12.class
 koq\encoder\components\Constants.class
 koq\encoder\mvc\Controller$12$1.class
+koq\encoder\components\RegisterStudentWindow.class
 koq\encoder\classes\GradePeriod.class
 koq\encoder\mvc\Controller$2.class
 koq\encoder\mvc\Controller$AddStudentWindowListener.class
@@ -25,6 +27,7 @@ koq\encoder\mvc\Controller$2$1.class
 koq\encoder\mvc\Controller$SetGradeWeightsWindowListener.class
 koq\encoder\components\MenuWindow.class
 koq\encoder\components\WrappedHeaderRenderer.class
+koq\encoder\mvc\Controller$3$2.class
 koq\encoder\components\AddStudentWindow$1.class
 koq\encoder\classes\Activity.class
 koq\encoder\mvc\Controller$3.class

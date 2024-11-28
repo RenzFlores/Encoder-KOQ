@@ -87,6 +87,7 @@ public class Controller {
                                 model.setCurrentUser(model.getFaculty(Integer.parseInt(id)));
                                 facultyWindow.dispose();
                                 view.getMenuWindow().dispose();
+                                view.getFrame().setTitle("");
                             }
                         }
                     });
@@ -119,6 +120,7 @@ public class Controller {
                                 model.setCurrentUser(student);
                                 studentWindow.dispose();
                                 view.getMenuWindow().dispose();
+                                view.getFrame().setTitle("");
                             }
                         }
                     });
@@ -126,10 +128,78 @@ public class Controller {
             }
         });
         
+        // Register button in menu window
         view.getMenuWindow().getRegisterButton().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Add CODE
+                if (view.getMenuWindow().getRadioButtonSelection().equals("Teacher")) {
+                    RegisterFacultyWindow facultyWindow = new RegisterFacultyWindow();
+                    
+                    facultyWindow.setVisible(true);
+                    
+                    facultyWindow.getButton().addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            String name = facultyWindow.getFacultyName();
+                            String id = facultyWindow.getFacultyId();
+                            String role = facultyWindow.getRole();
+                            char[] password = facultyWindow.getPassword();
+
+                            if (name.isBlank() || id.isBlank() || role.isBlank() || password.length == 0) {
+                                JOptionPane.showMessageDialog(
+                                    null,
+                                    "Please provide all the necessary details.",
+                                    "Invalid form",
+                                    JOptionPane.WARNING_MESSAGE
+                                );
+                            } else {
+                                model.addFacultyToDb(name, Integer.parseInt(id), role, password);
+                                JOptionPane.showMessageDialog(
+                                    null,
+                                    "Registered successfully. You may now login",
+                                    "Success",
+                                    JOptionPane.DEFAULT_OPTION
+                                );
+                                facultyWindow.dispose();
+                                view.setMenuWindow();
+                            }
+                        }
+                    });
+                } else {
+                    RegisterStudentWindow studentWindow = new RegisterStudentWindow();
+                    
+                    studentWindow.setVisible(true);
+                    
+                    studentWindow.getButton().addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            String lrn = studentWindow.getLrn();
+                            String email = studentWindow.getEmail();
+                            char[] password = studentWindow.getPassword();
+
+                            if (lrn.isBlank() || email.isBlank() || password.length == 0) {
+                                JOptionPane.showMessageDialog(
+                                    null,
+                                    "Please provide all the necessary details.",
+                                    "Invalid form",
+                                    JOptionPane.WARNING_MESSAGE
+                                );
+                            } else {
+                                /*
+                                model.addFacultyToDb(name, Integer.parseInt(id), role, password);
+                                */
+                                JOptionPane.showMessageDialog(
+                                    null,
+                                    "Registered successfully. You may now login",
+                                    "Success",
+                                    JOptionPane.DEFAULT_OPTION
+                                );
+                                studentWindow.dispose();
+                                view.setMenuWindow();
+                            }
+                        }
+                    });
+                }
             }
         });
         
@@ -178,6 +248,8 @@ public class Controller {
                         }
                         view.resizeAllTables();
                         view.setTabNames(model.getClassRecord().getSemester());
+                        
+                        view.getFrame().setTitle(model.getClassRecord().toString());
                         
                         window.dispose();
                     }
@@ -867,6 +939,7 @@ public class Controller {
                         model.initGradeSheetTable(view.getTable(3), model.getClassRecord().getGradePeriod(2).getRows(), model.getClassRecord().getClassId(), 2);
                         model.initFinalGradeTable(view.getTable(4), model.getClassRecord().getGradePeriod(1).getRows(), model.getClassRecord().getClassId());
                         view.resizeAllTables();
+                        view.getFrame().setTitle(model.getClassRecord().toString());
                         dialog.dispose();
                     });
                 }).start();
@@ -1002,7 +1075,7 @@ public class Controller {
             }
             
             if (validForm) {
-                //model.addStudentToDb(firstName, lastName);
+                //model.addStudentToDb(firstName, lastName);        TODO
                 
                 JOptionPane.showMessageDialog(
                     null,

@@ -5,6 +5,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
+import javax.swing.text.AbstractDocument;
 
 public class RegisterFacultyWindow extends JFrame {
     
@@ -27,6 +28,7 @@ public class RegisterFacultyWindow extends JFrame {
         nameLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
         nameLabel.setPreferredSize(new java.awt.Dimension(100, 16));
         
+        nameField = new JTextField();
         nameField.setPreferredSize(new java.awt.Dimension(150, 22));
         
         facultyIdLabel = new JLabel("Faculty ID:");
@@ -35,7 +37,6 @@ public class RegisterFacultyWindow extends JFrame {
         
         facultyIdField = new JTextField();
         facultyIdField.setPreferredSize(new java.awt.Dimension(150, 22));
-        
         
         roleLabel = new JLabel("Role:");
         roleLabel.setHorizontalAlignment(javax.swing.SwingConstants.TRAILING);
@@ -51,7 +52,9 @@ public class RegisterFacultyWindow extends JFrame {
         passwordField = new JPasswordField();
         passwordField.setPreferredSize(new java.awt.Dimension(150, 22));
         
-        registerButton.setText("Register");
+        registerButton = new JButton("Register");
+        
+        ( (AbstractDocument) facultyIdField.getDocument()).setDocumentFilter(new NumericDocumentFilter());
         
         add(nameLabel);
         add(nameField);
@@ -64,27 +67,27 @@ public class RegisterFacultyWindow extends JFrame {
         add(registerButton);
         
         setTitle("Register as a faculty");
-        setSize(new java.awt.Dimension(300, 350));
+        setSize(new java.awt.Dimension(300, 220));
         setLocationRelativeTo(null);
     }
     
-    public JTextField getNameField() {
-        return nameField;
+    public String getFacultyName() {
+        return nameField.getText();
     }
 
-    public JTextField getFacultyIdField() {
-        return facultyIdField;
+    public String getFacultyId() {
+        return facultyIdField.getText();
     }
 
-    public JTextField getRoleField() {
-        return roleField;
+    public String getRole() {
+        return roleField.getText();
     }
 
-    public JPasswordField getPasswordField() {
-        return passwordField;
+    public char[] getPassword() {
+        return passwordField.getPassword();
     }
 
-    public JButton getRegisterButton() {
+    public JButton getButton() {
         return registerButton;
     }
 }

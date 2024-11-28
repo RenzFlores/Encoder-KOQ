@@ -290,35 +290,6 @@ public class Model {
     }
     
     /**
-     * Add student to database, retrieve their data, create a Student object and add it to the current GradePeriod
-     */
-    public void addStudentToClassRecord(Student student) {
-        /*
-        try {
-            addStudentToClass(s.getStudentId(), getGradePeriod().getClassId());
-            
-            Row row = new Row(s, new ArrayList<Grade>(), null);
-
-            // Populate the row with empty grade values if there are student entries in the GradePeriod
-            if (getGradePeriod().getClassList().size() != 0) {
-                for (Grade g: getGradePeriod().getClassList().getFirst().getGrades()) {
-                    addEmptyGradeToDB(s.getStudentId(), g.getClassId(), g.getActivityId());
-                }
-            }
-            
-            row.setGrades(getGrades(s.getStudentId(), getGradePeriod().getClassId()));
-            
-            for (Grade g: row.getGrades()) {
-                System.out.println(g.getActivityId());
-            }
-
-            getGradePeriod().getClassList().add(row);
-            getGradePeriod().fireTableDataChanged();
-        } catch (SQLException err) {}
-        */
-    }
-    
-    /**
      * TODO: ADD DOCUMENTATION
      */
     public void addNewActivity(int index, String name, int totalScore, int activityTypeId, int quarter) {
@@ -1363,6 +1334,17 @@ public class Model {
         } else {
             System.out.println("Student already exists.");
         }
+    }
+    
+    public void addFacultyToDb(String name, int id, String role, char[] password) {
+        String insertQuery = "INSERT INTO faculty (name, teacher_id, role, password) VALUES (?, ?, ?, ?)";
+        try (PreparedStatement pstmt = getConnection().prepareStatement(insertQuery)) {
+            pstmt.setString(1, name);
+            pstmt.setInt(2, id);
+            pstmt.setString(3, role);
+            pstmt.setString(4, String.valueOf(password));
+            pstmt.executeUpdate();
+        }  catch (SQLException e) { e.printStackTrace(); }
     }
     
     /**
