@@ -184,6 +184,10 @@ public class View {
         return menuWindow;
     }
     
+    public JMenuBar getMenuBar() {
+        return menuBar;
+    }
+    
     public JDialog createPopupDialog(String message) {
         JDialog dialog = new JDialog(frame, "Processing", true);
         JLabel label = new JLabel(message);
@@ -295,6 +299,10 @@ public class View {
             
     public FacultyWindow getEditorWindow() {
         return facultyWindow;
+    }
+    
+    public StudentWindow getStudentWindow() {
+        return studentWindow;
     }
     
     public JTabbedPane getTabbedPane() {
@@ -485,6 +493,19 @@ class MenuBar extends JMenuBar {
         menuAbout.setName(Actions.VIEWABOUT.name());
         
         // Add all menus to menu bar
+        add(menuFile);
+        //add(menuEdit);        // UNUSED
+        add(menuAccount);
+        add(menuHelp);
+    }
+    
+    public void setStudentMode() {
+        remove(menuFile);
+        add(menuAccount);
+        add(menuHelp);
+    }
+    
+    public void setFacultyMode() {
         add(menuFile);
         //add(menuEdit);        // UNUSED
         add(menuAccount);

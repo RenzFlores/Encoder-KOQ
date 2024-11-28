@@ -29,7 +29,7 @@ public class AddStudentWindow extends JFrame {
         scrollPane = new JScrollPane();
         scrollPane.setViewportView(table);
 
-        addButton = new JButton("Open");
+        addButton = new JButton("Add");
 
         JPanel panel = new JPanel();
         

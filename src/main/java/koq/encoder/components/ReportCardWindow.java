@@ -32,55 +32,55 @@ public class ReportCardWindow extends JFrame {
     private JButton nextButton;
     private javax.swing.Box.Filler buttonFiller;
     
-    public ReportCardWindow(Student s) {
+    public ReportCardWindow(boolean viewingAsFaculty) {
         setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
 
         studentNameLabel = new JLabel("Name:");
         studentNameLabel.setPreferredSize(new java.awt.Dimension(80, 16));
         
-        studentNameContent = new JLabel("Renz Ken Flores");
+        studentNameContent = new JLabel();
         studentNameContent.setPreferredSize(new java.awt.Dimension(260, 16));
         
         gradeLabel = new JLabel("Grade:");
         gradeLabel.setPreferredSize(new java.awt.Dimension(80, 16));
         
-        gradeContent = new JLabel("12");
+        gradeContent = new JLabel();
         gradeContent.setPreferredSize(new java.awt.Dimension(260, 16));
         
         sectionLabel = new JLabel("Section:");
         sectionLabel.setPreferredSize(new java.awt.Dimension(80, 16));
         
-        sectionContent = new JLabel("Dalton");
+        sectionContent = new JLabel();
         sectionContent.setPreferredSize(new java.awt.Dimension(260, 16));
         
         strandLabel = new JLabel("Strand:");
         strandLabel.setPreferredSize(new java.awt.Dimension(80, 16));
         
-        strandContent = new JLabel("STEM");
+        strandContent = new JLabel();
         strandContent.setPreferredSize(new java.awt.Dimension(260, 16));
         
         birthdayLabel = new JLabel("Birthday:");
         birthdayLabel.setPreferredSize(new java.awt.Dimension(80, 16));
         
-        birthdayContent = new JLabel("01/01/1970");
+        birthdayContent = new JLabel();
         birthdayContent.setPreferredSize(new java.awt.Dimension(260, 16));
         
         sexLabel = new JLabel("Sex:");
         sexLabel.setPreferredSize(new java.awt.Dimension(80, 16));
         
-        sexContent = new JLabel("Male");
+        sexContent = new JLabel();
         sexContent.setPreferredSize(new java.awt.Dimension(260, 16));
         
         lrnLabel = new JLabel("LRN:");
         lrnLabel.setPreferredSize(new java.awt.Dimension(80, 16));
         
-        lrnContent = new JLabel("136543090290");
+        lrnContent = new JLabel();
         lrnContent.setPreferredSize(new java.awt.Dimension(260, 16));
         
         schoolYearLabel = new JLabel("School Year:");
         schoolYearLabel.setPreferredSize(new java.awt.Dimension(80, 16));
         
-        schoolYearContent = new JLabel("2024-2025");
+        schoolYearContent = new JLabel();
         schoolYearContent.setPreferredSize(new java.awt.Dimension(260, 16));
         
         titleLabel = new JLabel("REPORT ON LEARNING PROGRESS AND ACHIEVEMENT");
@@ -91,7 +91,7 @@ public class ReportCardWindow extends JFrame {
         firstSemesterLabel.setPreferredSize(new java.awt.Dimension(100, 16));
         
         tableQ1 = new JTable();
-        tableQ1.setPreferredSize(new java.awt.Dimension(490, 100));
+        //tableQ1.setPreferredSize(new java.awt.Dimension(490, 100));
         
         scrollPaneQ1 = new JScrollPane();
         scrollPaneQ1.setPreferredSize(new java.awt.Dimension(690, 275));
@@ -103,7 +103,7 @@ public class ReportCardWindow extends JFrame {
         scrollPaneQ2.setPreferredSize(new java.awt.Dimension(690, 275));
 
         tableQ2 = new JTable();
-        tableQ2.setPreferredSize(new java.awt.Dimension(490, 100));
+        //tableQ2.setPreferredSize(new java.awt.Dimension(490, 100));
         scrollPaneQ2.setViewportView(tableQ2);
 
         prevButton = new JButton("Previous");
@@ -118,8 +118,8 @@ public class ReportCardWindow extends JFrame {
         add(studentNameContent);
         add(gradeLabel);
         add(gradeContent);
-        add(sectionLabel);
-        add(sectionContent);
+        //add(sectionLabel);
+        //add(sectionContent);
         add(strandLabel);
         add(strandContent);
         add(birthdayLabel);
@@ -135,13 +135,34 @@ public class ReportCardWindow extends JFrame {
         add(scrollPaneQ1);
         add(secondSemesterLabel);
         add(scrollPaneQ2);
-        add(prevButton);
-        add(buttonFiller);
-        add(nextButton);
+        
+        if (viewingAsFaculty) {
+            add(prevButton);
+            add(buttonFiller);
+            add(nextButton);
+        }
         
         setTitle("Report Card");
         setSize(new java.awt.Dimension(720, 800));
         setLocationRelativeTo(null);
+    }
+    
+    public void setStudentData(Student s, String schoolYear) {
+        studentNameContent.setText(s.getStudentFullName());
+        gradeContent.setText(String.valueOf(s.getGradeLevel()));
+        lrnContent.setText(String.valueOf(s.getLrn()));
+        strandContent.setText(s.getStrand());
+        birthdayContent.setText(s.getDateOfBirthFormatted());
+        sexContent.setText(s.getGender());
+        schoolYearContent.setText(schoolYear);
+    }
+    
+    public JTable getTableSem1() {
+        return tableQ1;
+    }
+    
+    public JTable getTableSem2() {
+        return tableQ2;
     }
     
     public JButton getPreviousButton() {
@@ -150,9 +171,5 @@ public class ReportCardWindow extends JFrame {
     
     public JButton getNextButton() {
         return nextButton;
-    }
-    
-    public void setData(Student s) {
-        
     }
 }

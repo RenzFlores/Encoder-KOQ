@@ -949,6 +949,196 @@ public class Model {
         } catch (SQLException e) { e.printStackTrace(); }
     }
     
+    public void initViewGradesTable(JTable table, int studentId, int classId, int quarter) {
+        Object[][] data = {};
+        String[] columnNames = {
+            "0", "1"
+        };
+        DefaultTableModel model = new DefaultTableModel(data, columnNames) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                // Set all cells to be uneditable
+                return false;
+            }
+        };
+        table.setModel(model);
+        table.getTableHeader().setVisible(false);
+        
+        String selectQuery = """
+            SELECT a.name, g.grade, a.total_score
+            FROM grades g
+            JOIN classes c ON g.class_id = c.class_id
+            JOIN students s ON g.student_id = s.student_id
+            JOIN activities a ON g.activity_id = a.activity_id
+            JOIN calculated_grades cg ON cg.class_id = g.class_id AND cg.student_id = g.student_id
+            WHERE s.student_id = ? AND c.class_id = ? AND a.quarter = ?
+            ORDER BY a.activity_type_id;
+        """;
+        
+        try (PreparedStatement pstmt = getConnection().prepareStatement(selectQuery)) {
+            pstmt.setInt(1, studentId);
+            pstmt.setInt(2, classId);
+            pstmt.setInt(3, quarter);
+            ResultSet rs = pstmt.executeQuery();
+            
+            while (rs.next()) {
+                String score = String.valueOf(rs.getInt("grade"));
+                
+                if (rs.wasNull()) {
+                    score = "Not Yet Graded";
+                }
+                
+                model.addRow(new Object[]{
+                    rs.getString("name"),
+                    score + "/" + String.valueOf(rs.getInt("total_score"))
+                });
+            }
+            
+            model.addRow(new Object[] {
+                "Quarter Grade", initGetQuarterGrade(studentId, classId)[quarter-1]
+            });
+        } catch (SQLException e) { e.printStackTrace(); }
+    }
+    
+    public int[] initGetQuarterGrade(int studentId, int classId) {
+        String selectQuery = """
+            SELECT q1_raw_grade, q2_raw_grade
+            FROM calculated_grades cg
+            WHERE cg.student_id = ? AND cg.class_id = ?;
+        """;
+        
+        try (PreparedStatement pstmt = getConnection().prepareStatement(selectQuery)) {
+            pstmt.setInt(1, studentId);
+            pstmt.setInt(2, classId);
+            ResultSet rs = pstmt.executeQuery();
+            
+            if (rs.next()) {
+                return new int[]{ rs.getInt("q1_raw_grade"), rs.getInt("q2_raw_grade") };
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        
+        return null;
+    }
+    
+    public void initStudentWindowTable(JTable table, int studentId) {
+        Object[][] data = {};
+        String[] columnNames = {
+            "Grade Level", "Subject", "Section", "Semester", "School Year", "Teacher", "Class ID"
+        };
+        DefaultTableModel model = new DefaultTableModel(data, columnNames) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                // Set all cells to be uneditable
+                return false;
+            }
+        };
+        table.setModel(model);
+        // Hide last column
+        table.getColumnModel().getColumn(6).setMaxWidth(0);
+        table.getColumnModel().getColumn(6).setMinWidth(0);
+        table.getColumnModel().getColumn(6).setPreferredWidth(0);
+        
+        String selectQuery = """
+            SELECT c.grade_level, su.name AS subject, c.section, c.semester, c.academic_year, f.name AS teacher, c.class_id
+            FROM student_classes sc
+            JOIN classes c ON sc.class_id = c.class_id
+            JOIN students s ON sc.student_id = s.student_id
+            JOIN subjects su ON su.subject_id = c.subject_id
+            JOIN faculty f ON c.class_id = f.faculty_id
+            WHERE s.student_id = ?
+            ORDER BY c.academic_year DESC, c.semester DESC, c.section;
+        """;
+        
+        try (PreparedStatement pstmt = getConnection().prepareStatement(selectQuery)) {
+            pstmt.setInt(1, studentId);
+            ResultSet rs = pstmt.executeQuery();
+            
+            while (rs.next()) {
+                System.out.println("added row");
+                model.addRow(new Object[]{
+                    rs.getInt("grade_level"),
+                    rs.getString("subject"),
+                    rs.getString("section"),
+                    rs.getInt("semester"),
+                    rs.getString("academic_year"),
+                    rs.getString("teacher"),
+                    rs.getInt("class_id")
+                });
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+    }
+    
+    public void initReportCardTable(JTable table, int studentId, String schoolYear) {
+        Object[][] data = {};
+        String[] columnNames = {
+            "Subject Name", "Quarter 1", "Quarter 2", "Semester Final Grades"
+        };
+        DefaultTableModel model = new DefaultTableModel(data, columnNames) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                // Set all cells to be uneditable
+                return false;
+            }
+        };
+        table.setModel(model);
+        
+        String selectQuery = """
+            SELECT su.name, su.type, cg.q1_raw_grade, cg.q2_raw_grade
+            FROM student_classes sc
+            JOIN classes c ON sc.class_id = c.class_id
+            JOIN subjects su ON c.subject_id = su.subject_id
+            JOIN students st ON st.student_id = sc.student_id
+            JOIN calculated_grades cg ON cg.class_id = sc.class_id AND cg.student_id = sc.student_id
+            WHERE sc.student_id = ? AND c.academic_year = ?
+            ORDER BY 
+              CASE su.type
+                WHEN 'Core' THEN 1
+                WHEN 'Applied' THEN 2
+                WHEN 'Specialized' THEN 3
+              END,
+              su.name;
+        """;
+        
+        try (PreparedStatement pstmt = getConnection().prepareStatement(selectQuery)) {
+            pstmt.setInt(1, studentId);
+            pstmt.setString(2, schoolYear);
+            ResultSet rs = pstmt.executeQuery();
+            String toCompare = "Core";
+            
+            model.addRow(new Object[]{"CORE SUBJECTS", null, null, null});
+            
+            int totalGrade = 0;
+            int subjectCount = 0;
+            
+            while (rs.next()) {
+                int q1 = transmute(rs.getDouble("q1_raw_grade"));
+                int q2 = transmute(rs.getDouble("q2_raw_grade"));
+                int finalGrade = (int) Math.round( (q1 + q2)/2.0 );
+                
+                totalGrade += finalGrade;
+                subjectCount++;
+                
+                if (!toCompare.equals(rs.getString("type"))) {
+                    toCompare = rs.getString("type");
+                    
+                    if (toCompare.equals("Applied")) {
+                        model.addRow(new Object[]{"APPLIED SUBJECTS", null, null, null});
+                    } else if (toCompare.equals("Specialized")) {
+                        model.addRow(new Object[]{"SPECIALIZED SUBJECTS", null, null, null});
+                    }
+                }
+                
+                model.addRow(new Object[]{
+                    rs.getString("name"),
+                    q1,
+                    q2,
+                    finalGrade
+                });
+            }
+            model.addRow(new Object[]{null, null, "General Average", (int) Math.round( totalGrade/(double)subjectCount )});
+        } catch (SQLException e) { e.printStackTrace(); }
+    }
+    
     /**
      * OUTDATED DOCUMENTATION
      * Retrieve all student records belonging to a class using class_id.
@@ -1136,14 +1326,24 @@ public class Model {
     /**
      * Creates a new class-student relationship in the database
      */
-    public void addStudentToClass(int studentId, int classId) throws SQLException {
+    public void addStudentToClass(int studentId, int classId) {
         String insertQuery = "INSERT INTO student_classes (student_id, class_id) VALUES (?, ?)";
         try (PreparedStatement pstmt = getConnection().prepareStatement(insertQuery)) {
             pstmt.setInt(1, studentId);
             pstmt.setInt(2, classId);
             pstmt.executeUpdate();
             System.out.println("Student added to class successfully.");
-        }
+        } catch(SQLException e) { e.printStackTrace(); }
+    }
+    
+    public void addCalculatedGrades(int studentId, int classId) {
+        String insertQuery = "INSERT INTO calculated_grades (student_id, class_id) VALUES (?, ?)";
+        try (PreparedStatement pstmt = getConnection().prepareStatement(insertQuery)) {
+            pstmt.setInt(1, studentId);
+            pstmt.setInt(2, classId);
+            pstmt.executeUpdate();
+            System.out.println("Calculated grades added successfully.");
+        } catch(SQLException e) { e.printStackTrace(); }
     }
     
     /**
@@ -1289,7 +1489,20 @@ public class Model {
         String deleteQuery = "DELETE FROM grades WHERE student_id = ? AND class_id = ?;";
         try (PreparedStatement pstmt = getConnection().prepareStatement(deleteQuery)) {
             pstmt.setInt(1, studentId);
-            pstmt.setInt(1, classId);
+            pstmt.setInt(2, classId);
+            pstmt.executeUpdate();
+        }
+    }
+     
+    /**
+     * Deletes all grade records in the database based on student id and class id. This method 
+     * is called when a student is deleted in a class record
+     */
+    public void deleteCalculatedGrades(int studentId, int classId) throws SQLException {
+        String deleteQuery = "DELETE FROM calculated_grades WHERE student_id = ? AND class_id = ?;";
+        try (PreparedStatement pstmt = getConnection().prepareStatement(deleteQuery)) {
+            pstmt.setInt(1, studentId);
+            pstmt.setInt(2, classId);
             pstmt.executeUpdate();
         }
     }

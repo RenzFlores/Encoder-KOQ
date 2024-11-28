@@ -20,8 +20,10 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
 import javax.swing.border.LineBorder;
+import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumnModel;
+import javax.swing.table.TableModel;
 import javax.swing.text.AbstractDocument;
 import koq.encoder.mvc.Model.Actions;
 import koq.encoder.mvc.Model.Fields;
@@ -55,6 +57,7 @@ public class Controller {
             }
         });
         
+        // Login button in menu window
         view.getMenuWindow().getLoginButton().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -79,6 +82,7 @@ public class Controller {
                                 );
                             } else {
                                 // Login successful. Start the main window and remove the login window
+                                ((MenuBar) view.getMenuBar()).setFacultyMode();
                                 view.initFacultyWindow();
                                 model.setCurrentUser(model.getFaculty(Integer.parseInt(id)));
                                 facultyWindow.dispose();
@@ -108,7 +112,10 @@ public class Controller {
                                 );
                             } else {
                                 // Login successful. Start the main window and remove the login window
+                                ((MenuBar) view.getMenuBar()).setStudentMode();
                                 view.initStudentWindow();
+                                view.getStudentWindow().initWindow(student);
+                                model.initStudentWindowTable(view.getStudentWindow().getTable(), student.getStudentId());
                                 model.setCurrentUser(student);
                                 studentWindow.dispose();
                                 view.getMenuWindow().dispose();
@@ -193,13 +200,6 @@ public class Controller {
         ( (JMenuItem) view.getComponent(Actions.VIEWABOUT.name()) ).addActionListener((ActionEvent ev) -> {
             view.showAbout();
         });
-        
-        // View keyboard shortcuts event UNUSED
-        /*
-        ( (JMenuItem) view.getComponent(Actions.VIEWSHORTCUTS.name()) ).addActionListener((ActionEvent ev) -> {
-            
-        });
-        */
         
         // Tab selection listeners
         view.getTabbedPane().addChangeListener(e -> {
@@ -511,6 +511,7 @@ public class Controller {
                         Row row = model.getGradePeriod(1).getRows().get(selectedTable.getSelectedRow());
                         model.deleteGradeByStudent(row.getStudent().getStudentId(), model.getClassRecord().getClassId());
                         model.removeStudentFromClass(row.getStudent().getStudentId(), model.getClassRecord().getClassId());
+                        model.deleteCalculatedGrades(row.getStudent().getStudentId(), model.getClassRecord().getClassId());
                     } catch (SQLException e) { e.printStackTrace(); }
 
                     SwingUtilities.invokeLater(() -> {
@@ -670,15 +671,22 @@ public class Controller {
             @Override
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 if (model.getClassRecord() != null) {
-                    ReportCardWindow reportCardWindow = new ReportCardWindow(model.getClassRecord().getClassList().get(model.getSelectedRow()));
+                    ReportCardWindow reportCardWindow = new ReportCardWindow(true);
+                    Student student = model.getClassRecord().getClassList().get(model.getSelectedRow());
 
+                    reportCardWindow.setStudentData(student, model.getClassRecord().getSY());
+                    model.initReportCardTable(reportCardWindow.getTableSem1(), student.getStudentId(), model.getClassRecord().getSY());
+                    model.initReportCardTable(reportCardWindow.getTableSem2(), student.getStudentId(), model.getClassRecord().getSY());
                     reportCardWindow.setVisible(true);
                     
                     reportCardWindow.getPreviousButton().addActionListener(new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             if (index > 0) {
-                                reportCardWindow.setData(model.getClassRecord().getClassList().get(index - 1));
+                                Student prevStudent = model.getClassRecord().getClassList().get(index - 1);
+                                reportCardWindow.setStudentData(prevStudent, model.getClassRecord().getSY());
+                                model.initReportCardTable(reportCardWindow.getTableSem1(), prevStudent.getStudentId(), model.getClassRecord().getSY());
+                                model.initReportCardTable(reportCardWindow.getTableSem2(), prevStudent.getStudentId(), model.getClassRecord().getSY());
                                 setIndex(index-1);
                             }
                         }
@@ -688,7 +696,10 @@ public class Controller {
                         @Override
                         public void actionPerformed(ActionEvent e) {
                             if (index < model.getClassRecord().getClassList().size() - 1 && index >= 0) {
-                                reportCardWindow.setData(model.getClassRecord().getClassList().get(index + 1));
+                                Student nextStudent = model.getClassRecord().getClassList().get(index + 1);
+                                reportCardWindow.setStudentData(nextStudent, model.getClassRecord().getSY());
+                                model.initReportCardTable(reportCardWindow.getTableSem1(), nextStudent.getStudentId(), model.getClassRecord().getSY());
+                                model.initReportCardTable(reportCardWindow.getTableSem2(), nextStudent.getStudentId(), model.getClassRecord().getSY());
                                 setIndex(index+1);
                             }
                         }
@@ -697,12 +708,61 @@ public class Controller {
             }
         });
         
-        new ActionListener() {
+        // Preview report card button event in student window
+        view.getStudentWindow().getPreviewReportCardButton().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                
+                String schoolYear = view.getStudentWindow().getSYField();
+                Student student = ((Student)model.getCurrentUser());
+                ReportCardWindow reportCardWindow = new ReportCardWindow(false);
+
+                reportCardWindow.setStudentData(student, schoolYear);
+                model.initReportCardTable(reportCardWindow.getTableSem1(), student.getStudentId(), schoolYear);
+                model.initReportCardTable(reportCardWindow.getTableSem2(), student.getStudentId(), schoolYear);
+                reportCardWindow.setVisible(true);
+                    
+                JOptionPane.showMessageDialog(
+                    null,
+                    """
+                        This report card is a preview only and is not indicative of your final grades.
+                        Please contact your teacher if you have any concerns.""",
+                    "Please Note",
+                    JOptionPane.WARNING_MESSAGE
+                );
             }
-        };
+        });
+        
+        // View grades button event in student window
+        view.getStudentWindow().getViewGradesButton().addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int selectedRow = view.getStudentWindow().getTable().getSelectedRow();
+                
+                if (selectedRow != -1) {
+                    int classId = (int) view.getStudentWindow().getTable().getValueAt(selectedRow, 6);
+                    ViewGradesWindow window = new ViewGradesWindow();
+                    
+                    model.initViewGradesTable(window.getTableQ1(), ((Student)model.getCurrentUser()).getStudentId(), classId, 1);
+                    model.initViewGradesTable(window.getTableQ2(), ((Student)model.getCurrentUser()).getStudentId(), classId, 2);
+                    
+                    window.setVisible(true);
+                    
+                    JOptionPane.showMessageDialog(
+                        null,
+                        "Quarter grades may not be final. Please contact your teacher if you have any concerns.",
+                        "Please Note",
+                        JOptionPane.WARNING_MESSAGE
+                    );
+                } else {
+                    JOptionPane.showMessageDialog(
+                        null,
+                        "Please select class from the table first.",
+                        "Note",
+                        JOptionPane.WARNING_MESSAGE
+                    );
+                }
+            }
+        });
         
         // Action to move selected row up (UNUSED COMPONENT)
         /*
@@ -758,25 +818,58 @@ public class Controller {
 
         @Override
         public void actionPerformed(ActionEvent e) {
+            JDialog dialog = view.createPopupDialog("Creating records. Please wait...");
+            
             if (window.getTable().getSelectedRow() != -1) {
-                System.out.println("Student selected");
-                /*
-                view.getTable(0).setModel(model.getClassRecord().getGradePeriod(1));
-                view.getTable(1).setModel(model.getClassRecord().getGradePeriod(2));
-                model.setTableListeners(view.getTable(0));
-                model.setTableListeners(view.getTable(1));
-                model.initGradeSheetTable(view.getTable(2), model.getClassRecord().getGradePeriod(1).getRows(), model.getClassRecord().getClassId(), 1);
-                model.initGradeSheetTable(view.getTable(3), model.getClassRecord().getGradePeriod(2).getRows(), model.getClassRecord().getClassId(), 2);
-                model.initFinalGradeTable(view.getTable(4), model.getClassRecord().getGradePeriod(2).getRows(), model.getClassRecord().getClassId());
-                view.enableTabs();
-                if (!model.getClassRecord().getClassList().isEmpty()) {
-                    view.getTable(0).setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
+                for (Student s: model.getClassRecord().getClassList()) {
+                    if ((int)window.getTable().getValueAt(window.getTable().getSelectedRow(), 5) == s.getStudentId()) {
+                        JOptionPane.showMessageDialog(
+                            null,
+                            "Student already in class record.",
+                            "Invalid",
+                            JOptionPane.WARNING_MESSAGE
+                        );
+                        return;
+                    }
                 }
-                view.resizeAllTables();
-                view.setTabNames(model.getClassRecord().getSemester());
-                */
-
+                
                 window.dispose();
+                
+                SwingUtilities.invokeLater(() -> {
+                    dialog.setVisible(true);
+                });
+
+                // Create a new thread
+                new Thread(() -> {
+                    // Add student to model
+                    int id = (int) window.getTable().getValueAt(window.getTable().getSelectedRow(), 5);
+                    int classId = model.getClassRecord().getClassId();
+
+                    SwingUtilities.invokeLater(() -> {
+                        // Add empty grade records to db
+                        for (Activity a: model.getActivitiesInDB(classId, 1)) {
+                            model.addEmptyGradesToDB(new Integer[]{id}, classId, a.getActivityId());
+                        }
+                        for (Activity a: model.getActivitiesInDB(classId, 2)) {
+                            model.addEmptyGradesToDB(new Integer[]{id}, classId, a.getActivityId());
+                        }
+                        model.addStudentToClass(id, classId);
+                        model.addCalculatedGrades(id, classId);
+                        
+                        model.setClassRecord(model.getClassRecordInDB(model.getClassRecord().getClassId()));
+                        model.initClassRecord(model.getClassRecord());
+                        view.getTable(0).setModel(model.getClassRecord().getGradePeriod(1));
+                        view.getTable(1).setModel(model.getClassRecord().getGradePeriod(2));
+                        model.setTableListeners(view.getTable(0));
+                        model.setTableListeners(view.getTable(1));
+                        // Dirty update by setting the whole table model
+                        model.initGradeSheetTable(view.getTable(2), model.getClassRecord().getGradePeriod(1).getRows(), model.getClassRecord().getClassId(), 1);
+                        model.initGradeSheetTable(view.getTable(3), model.getClassRecord().getGradePeriod(2).getRows(), model.getClassRecord().getClassId(), 2);
+                        model.initFinalGradeTable(view.getTable(4), model.getClassRecord().getGradePeriod(1).getRows(), model.getClassRecord().getClassId());
+                        view.resizeAllTables();
+                        dialog.dispose();
+                    });
+                }).start();
             }
         }
     }

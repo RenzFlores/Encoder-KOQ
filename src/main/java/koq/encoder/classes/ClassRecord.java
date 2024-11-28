@@ -118,6 +118,9 @@ public class ClassRecord {
                 return "Invalid";
         }
     }
+    public void addStudent(Student s) {
+        classList.add(s);
+    }
     
     public String toString() {
         return String.format("%d | %s | %s | %s", 
