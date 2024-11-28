@@ -62,11 +62,13 @@ koq\encoder\mvc\Controller$14.class
 koq\encoder\mvc\Model.class
 koq\encoder\mvc\Controller$11.class
 koq\encoder\mvc\Controller$2$2.class
+koq\encoder\components\MultipleCriteriaSearch$SearchCriteria.class
 koq\encoder\components\NumericDocumentFilter.class
 koq\encoder\mvc\Controller$8.class
 koq\encoder\components\AddActivityWindow.class
 koq\encoder\components\LoginStudentWindow.class
 koq\encoder\mvc\Controller$1.class
+koq\encoder\components\MultipleCriteriaSearch.class
 koq\encoder\components\FilterPanel.class
 koq\encoder\classes\FinalGradeSheet.class
 koq\encoder\mvc\Model$5.class

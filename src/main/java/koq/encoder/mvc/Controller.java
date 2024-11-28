@@ -185,9 +185,17 @@ public class Controller {
                                     JOptionPane.WARNING_MESSAGE
                                 );
                             } else {
-                                /*
-                                model.addFacultyToDb(name, Integer.parseInt(id), role, password);
-                                */
+                                try {
+                                    model.registerStudentToDb(Long.parseLong(lrn), email, password);
+                                } catch (NullPointerException err) {
+                                    JOptionPane.showMessageDialog(
+                                        null,
+                                        "You are still not registered in the system. Please contact your teacher.",
+                                        "Invalid form",
+                                        JOptionPane.WARNING_MESSAGE
+                                    );
+                                    return;
+                                }
                                 JOptionPane.showMessageDialog(
                                     null,
                                     "Registered successfully. You may now login",
@@ -1075,7 +1083,7 @@ public class Controller {
             }
             
             if (validForm) {
-                //model.addStudentToDb(firstName, lastName);        TODO
+                model.addStudentToDb(firstName, middleName, lastName, Long.parseLong(lrn), gender, dob, strand);
                 
                 JOptionPane.showMessageDialog(
                     null,
@@ -1083,6 +1091,8 @@ public class Controller {
                     "Success",
                     JOptionPane.DEFAULT_OPTION
                 );
+                
+                model.getAllStudents();
                 
                 window.dispose();
             }
@@ -1152,7 +1162,7 @@ public class Controller {
         }
     }
     
-    // Listener for the confirmation button in AddStudentWindow
+    // Listener for the confirmation button in AddClassRecordWindow
     class AddClassRecordWindowListener implements ActionListener {
 
         AddClassRecordWindow window;
@@ -1165,7 +1175,7 @@ public class Controller {
         public void actionPerformed(ActionEvent e) {
             int gradeLevel = Integer.parseInt(window.getGradeLevel());
             String section = window.getSection();
-            String subject = window.getSubject();
+            int subjectId = window.getSubjectId();
             int term = window.getTerm();
             String schoolYear = window.getSY();
             boolean validForm = true;
@@ -1180,28 +1190,38 @@ public class Controller {
                 validForm = false;
             }
 
-            /**
-             * OUTDATED. UPDATE THIS
-             */
-            
-            /*
             if (validForm) {
-                if (!model.classRecordExists(gradeLevel, section, subject, term, schoolYear)) {
-                    model.addClassRecordInDB(gradeLevel, section, subject, term, schoolYear);
-                    int classId = model.getClassIdInDB(gradeLevel, section, subject, term, schoolYear);
+                Faculty faculty = ((Faculty)model.getCurrentUser());
+                
+                if (!model.classRecordExists(faculty.getFacultyId(), gradeLevel, section, subjectId, term, schoolYear)) {
+                    model.addClassRecordInDB(faculty.getFacultyId(), gradeLevel, section, subjectId, term, schoolYear);
+                    int classId = model.getClassIdInDB(faculty.getFacultyId(), gradeLevel, section, subjectId, term, schoolYear);
+                    model.addGradeWeightsToDb(classId);
 
-                    try {
-                        model.setClassRecord(model.getClassRecordInDB(classId));
-                    } catch (SQLException err) { err.printStackTrace(); }
+                    model.setClassRecord(model.getClassRecordInDB(classId));
+                    model.initClassRecord(model.getClassRecord());
+                    
+                    model.addQAToTable("Quarterly Exam", 50, 1);
+                    model.addQAToTable("Quarterly Exam", 50, 2);
+                    
+                    view.getTable(0).setModel(model.getClassRecord().getGradePeriod(1));
+                    view.getTable(1).setModel(model.getClassRecord().getGradePeriod(2));
+                    model.setTableListeners(view.getTable(0));
+                    model.setTableListeners(view.getTable(1));
+                    model.initGradeSheetTable(view.getTable(2), model.getClassRecord().getGradePeriod(1).getRows(), model.getClassRecord().getClassId(), 1);
+                    model.initGradeSheetTable(view.getTable(3), model.getClassRecord().getGradePeriod(2).getRows(), model.getClassRecord().getClassId(), 2);
+                    model.initFinalGradeTable(view.getTable(4), model.getClassRecord().getGradePeriod(2).getRows(), model.getClassRecord().getClassId());
+                    view.enableTabs();
+                    if (!model.getClassRecord().getClassList().isEmpty()) {
+                        view.getTable(0).setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
+                    }
+                    view.resizeAllTables();
+                    view.setTabNames(model.getClassRecord().getSemester());
 
-                    model.serializeClassRecord(model.getGradePeriod());         // Serialize class record
+                    view.getFrame().setTitle(model.getClassRecord().toString());
 
-                    model.getGradePeriod().initClassList();                     // Initialize arrayList
-                    model.initClassRecord(model.getGradePeriod());              // Populate arrayList
-                    model.initTable(
-                        view.getTable(model.getSelectedTab()), model.getGradePeriod());   // Set selectedTable model
-                    view.resizeTable(model.getSelectedTab());                                         // Setup selectedTable
-                    view.setWindowTitle(model.getGradePeriod().toString());     // Set window title
+                    window.dispose();
+                    
                     System.out.println("Class Record set");
                     window.dispose();
                 } else {
@@ -1213,7 +1233,6 @@ public class Controller {
                     );
                 }
             }
-            */
         }
     }
 }

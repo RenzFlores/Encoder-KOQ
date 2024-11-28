@@ -107,15 +107,11 @@ public class ClassRecord {
     public String getFormattedTerm() {
         switch(semester) {
             case 1:
-                return "1st Quarter";
+                return "1st Semester";
             case 2:
-                return "2nd Quarter";
-            case 3:
-                return "3rd Quarter";
-            case 4:
-                return "4th Quarter";
+                return "2nd Semester";
             default:
-                return "Invalid";
+                return "Invawlid";
         }
     }
     public void addStudent(Student s) {

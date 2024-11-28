@@ -5,7 +5,7 @@ public class Student {
     private String firstName;
     private String middleName;
     private String lastName;
-    private int lrn;
+    private long lrn;
     private String gender;
     private String dateOfBirth;
     private String strand;
@@ -14,7 +14,7 @@ public class Student {
     private int gradeLevel;
 
     // Default constructor for existing student with email and password
-    public Student(int studentId, String firstName, String middleName, String lastName, int lrn, String gender, String dateOfBirth, String strand, String email, char[] password, int gradeLevel) {
+    public Student(int studentId, String firstName, String middleName, String lastName, long lrn, String gender, String dateOfBirth, String strand, String email, char[] password, int gradeLevel) {
         this.studentId = studentId;
         this.firstName = firstName;
         this.middleName = middleName;
@@ -29,7 +29,7 @@ public class Student {
     }
     
     // Constructor for student with no email and password
-    public Student(int studentId, String firstName, String middleName, String lastName, int lrn, String gender, String dateOfBirth, String strand, int gradeLevel) {
+    public Student(int studentId, String firstName, String middleName, String lastName, long lrn, String gender, String dateOfBirth, String strand, int gradeLevel) {
         this.studentId = studentId;
         this.firstName = firstName;
         this.middleName = middleName;
@@ -44,7 +44,7 @@ public class Student {
     }
     
     // Constructor for new student (No student_id yet)
-    public Student(String firstName, String middleName, String lastName, int lrn, String gender, String dateOfBirth, String strand, String email, char[] password, int gradeLevel) {
+    public Student(String firstName, String middleName, String lastName, long lrn, String gender, String dateOfBirth, String strand, String email, char[] password, int gradeLevel) {
         this.firstName = firstName;
         this.middleName = middleName;
         this.lastName = lastName;
@@ -66,7 +66,7 @@ public class Student {
     public String getLastName() { 
         return lastName; 
     }
-    public int getLrn() { 
+    public long getLrn() { 
         return lrn; 
     }
     public String getGender() { 

@@ -31,7 +31,7 @@ public class LoginStudentWindow extends JFrame {
         passwordLabel.setPreferredSize(new java.awt.Dimension(150, 16));
         add(passwordLabel);
 
-        passwordField = new JPasswordField("password");
+        passwordField = new JPasswordField();
         passwordField.setPreferredSize(new java.awt.Dimension(150, 22));
         add(passwordField);
 

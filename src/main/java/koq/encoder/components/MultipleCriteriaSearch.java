@@ -5,12 +5,12 @@ import javax.swing.table.DefaultTableModel;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MultipleCriteriaSearchExample {
+public class MultipleCriteriaSearch {
 
     private JTable table;
     private DefaultTableModel model;
 
-    public MultipleCriteriaSearchExample() {
+    public MultipleCriteriaSearch() {
         // Sample data and model setup
         model = new DefaultTableModel();
         model.addColumn("ID");
@@ -86,7 +86,7 @@ public class MultipleCriteriaSearchExample {
 
     // Example usage
     public static void main(String[] args) {
-        MultipleCriteriaSearchExample example = new MultipleCriteriaSearchExample();
+        MultipleCriteriaSearch example = new MultipleCriteriaSearch();
 
         // Define multiple criteria
         List<SearchCriteria> criteriaList = new ArrayList<>();

@@ -23,7 +23,7 @@ public class LoginFacultyWindow extends JFrame {
         idLabel.setPreferredSize(new java.awt.Dimension(150, 16));
         add(idLabel);
 
-        idField = new JTextField("1234");
+        idField = new JTextField();
         idField.setPreferredSize(new java.awt.Dimension(150, 22));
         add(idField);
 
@@ -31,7 +31,7 @@ public class LoginFacultyWindow extends JFrame {
         passwordLabel.setPreferredSize(new java.awt.Dimension(150, 16));
         add(passwordLabel);
 
-        passwordField = new JPasswordField("password");
+        passwordField = new JPasswordField();
         passwordField.setPreferredSize(new java.awt.Dimension(150, 22));
         add(passwordField);
 

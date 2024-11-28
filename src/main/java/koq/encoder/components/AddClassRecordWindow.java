@@ -11,13 +11,14 @@ import javax.swing.JTextField;
 public class AddClassRecordWindow extends JFrame {
     
     private JLabel gradeLevelLabel;
-    private JLabel jLabel4;
-    private JLabel jLabel6;
+    private JLabel sectionLabel;
+    private JLabel subjectLabel;
     private JLabel termLabel;
     private JLabel schoolYearLabel;
     
     private JComboBox gradeLevelCombo;
     private JComboBox subjectCombo;
+    private JComboBox strandCombo;
     private JTextField sectionField;
     private JTextField schoolYearField;
     private JComboBox termCombo;
@@ -40,25 +41,49 @@ public class AddClassRecordWindow extends JFrame {
         gradeLevelCombo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] {"11", "12"}));
         gradeLevelCombo.setPreferredSize(new java.awt.Dimension(150, 22));
         
-        jLabel4 = new JLabel("Section:");
-        jLabel4.setPreferredSize(new java.awt.Dimension(80, 16));
-        jLabel4.setHorizontalAlignment(TRAILING);
+        sectionLabel = new JLabel("Section:");
+        sectionLabel.setPreferredSize(new java.awt.Dimension(80, 16));
+        sectionLabel.setHorizontalAlignment(TRAILING);
         
         sectionField = new JTextField();
         sectionField.setPreferredSize(new java.awt.Dimension(150, 22));
 
-        jLabel6 = new JLabel("Subject:");
-        jLabel6.setPreferredSize(new java.awt.Dimension(80, 16));
-        jLabel6.setHorizontalAlignment(TRAILING);
+        subjectLabel = new JLabel("Subject:");
+        subjectLabel.setPreferredSize(new java.awt.Dimension(80, 16));
+        subjectLabel.setHorizontalAlignment(TRAILING);
         
         subjectCombo = new JComboBox();
         subjectCombo.setPreferredSize(new java.awt.Dimension(210, 22));
+        subjectCombo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { 
+            "Oral Communication in Context", 
+            "Reading and Writing Skills", 
+            "21st Century Literature from the Philippines and the World", 
+            "Contemporary Philippine Arts from the Regions",
+            "Komunikasyon at Pananaliksik sa Wika at Kulturang Pilipino",
+            "Pagbasa at Pagsusuri ng Iba’t-Ibang Teksto Tungo sa Pananaliksik",
+            "General Mathematics",
+            "Earth Science",
+            "Statistics and Probability",
+            "Disaster Readiness and Risk Reduction",
+            "Understanding Culture, Society and Politics",
+            "Media and Information Literacy",
+            "Personal Development",
+            "Introduction to the Philosophy of the Human Person",
+            "Physical Education and Health 1",
+            "Physical Education and Health 2",
+            "Physical Education and Health 3",
+            "Physical Education and Health 4",
+            "Empowerment Technologies",
+            "Practical Research 1",
+            "Practical Research 2",
+            "Entrepreneurship"
+        }));
         
         termLabel = new JLabel("Term:");
         termLabel.setPreferredSize(new java.awt.Dimension(80, 16));
         termLabel.setHorizontalAlignment(TRAILING);
         termCombo = new JComboBox();
-        termCombo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "1st Quarter", "2nd Quarter", "3rd Quarter", "4th Quarter" }));
+        termCombo.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "1st Semester", "2nd Semester" }));
         
         filler1 = new javax.swing.Box.Filler(new java.awt.Dimension(100, 10), new java.awt.Dimension(70, 10), new java.awt.Dimension(100, 10));
         
@@ -77,20 +102,20 @@ public class AddClassRecordWindow extends JFrame {
         
         add(gradeLevelLabel);
         add(gradeLevelCombo);
-        add(jLabel4);
+        add(sectionLabel);
         add(sectionField);
-        add(jLabel6);
+        add(subjectLabel);
         add(subjectCombo);
-        //add(termLabel);
-        //add(termCombo);
-        //add(filler1);
+        add(termLabel);
+        add(termCombo);
+        add(filler1);
         add(schoolYearLabel);
         add(schoolYearField);
         add(filler2);
         add(filler3);
         add(confirmButton);
                 
-        setSize(320, 180);
+        setSize(320, 200);
         setTitle("Add a new class record");
         setLocationRelativeTo(null);
     }
@@ -107,8 +132,8 @@ public class AddClassRecordWindow extends JFrame {
         return sectionField.getText();
     }
     
-    public String getSubject() {
-        return (String) subjectCombo.getSelectedItem();
+    public int getSubjectId() {
+        return subjectCombo.getSelectedIndex()+1;
     }
     
     public int getTerm() {

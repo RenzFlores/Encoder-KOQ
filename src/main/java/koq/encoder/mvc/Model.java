@@ -597,6 +597,24 @@ public class Model {
         addNewActivity(index, name, totalScore, 2, quarter);
     }
     
+    public void addQAToTable(String name, int totalScore, int quarter) {
+        List<String> columns;
+        int index;
+        
+        if (quarter == 1) {
+            columns = getClassRecord().getGradePeriod(1).getColumns().stream()
+                .filter(e -> e.contains("Sex")).collect(Collectors.toList());
+        } else {
+            columns = getClassRecord().getGradePeriod(2).getColumns().stream()
+                .filter(e -> e.contains("Sex")).collect(Collectors.toList());
+        }
+        
+        // Get index
+        index = getGradePeriod(quarter).findColumn(columns.getLast());
+        
+        addNewActivity(index, name, totalScore, 3, quarter);
+    }
+    
     // Connect to a database
     private Connection connectToDB() throws SQLException {
         return DriverManager.getConnection(url + "encoder_data", user, password);
@@ -605,7 +623,7 @@ public class Model {
     /**
      * Retrieve all student details from database and convert into Student objects.
      */
-    private void getAllStudents() {
+    public void getAllStudents() {
         try {
             Statement s = getConnection().createStatement();
             ResultSet rs = s.executeQuery("SELECT * FROM students;");
@@ -616,7 +634,7 @@ public class Model {
                     rs.getString("first_name"), 
                     rs.getString("middle_name"),
                     rs.getString("last_name"),
-                    rs.getInt("lrn"),
+                    rs.getLong("lrn"),
                     rs.getString("gender"),
                     rs.getString("date_of_birth"),
                     rs.getString("strand"), 
@@ -1134,12 +1152,13 @@ public class Model {
             ResultSet rs = ps.executeQuery();
             
             while (rs.next()) {
+                System.out.println(rs.getInt("student_id"));
                 students.add(new Student(
                     rs.getInt("student_id"), 
                     rs.getString("first_name"), 
                     rs.getString("middle_name"),
                     rs.getString("last_name"),
-                    rs.getInt("lrn"),
+                    rs.getLong("lrn"),
                     rs.getString("gender"),
                     rs.getString("date_of_birth"),
                     rs.getString("strand"),
@@ -1158,21 +1177,36 @@ public class Model {
      * Add a class record into the database. Must call getClassId() to get the corresponding class_id
      * OUTDATED
      */
-    public void addClassRecordInDB(int gradeLevel, String section, String subject, int term, String schoolYear) {
+    public void addClassRecordInDB(int facultyId, int gradeLevel, String section, int subjectId, int semester, String schoolYear) {
         try {
             PreparedStatement ps = getConnection().prepareStatement("""
-                INSERT INTO classes
-                (grade_level, section, subject, term, academic_year)
+                INSERT INTO classes (faculty_id, subject_id, grade_level, section, semester, academic_year)
                 VALUES
-                (?, ?, ?, ?, ?);
+                (?, ?, ?, ?, ?, ?);
             """);
-            ps.setInt(1, gradeLevel);
-            ps.setString(2, section);
-            ps.setString(3, subject);
-            ps.setInt(4, term);
-            ps.setString(5, schoolYear);
+            ps.setInt(1, facultyId);
+            ps.setInt(2, subjectId);
+            ps.setInt(3, gradeLevel);
+            ps.setString(4, section);
+            ps.setInt(5, semester);
+            ps.setString(6, schoolYear);
             ps.executeUpdate();
             System.out.println("Added class record to database");
+        } catch (SQLException e) { e.printStackTrace(); }
+    }
+    
+    public void addGradeWeightsToDb(int classId) {
+        try {
+            PreparedStatement ps = getConnection().prepareStatement("""
+                INSERT INTO grade_weights (class_id, ww_weight, pt_weight, qa_weight)
+                VALUES
+                (?, ?, ?, ?);
+            """);
+            ps.setInt(1, classId);
+            ps.setDouble(2, 0.25);
+            ps.setDouble(3, 0.5);
+            ps.setDouble(4, 0.25);
+            ps.executeUpdate();
         } catch (SQLException e) { e.printStackTrace(); }
     }
     
@@ -1270,31 +1304,7 @@ public class Model {
         return rows;
     }
     
-    /**
-     * Retrieve the computed grades of a student in a class from the database
-     * 
-     * NOTE: Currently WIP. Add TODO
-     */
-    private Double getComputedGradesInDB(int classId, int studentId) throws SQLException {
-        PreparedStatement ps = getConnection().prepareStatement("""
-            SELECT cg.raw_grade
-            FROM computed_grades cg
-            JOIN students s ON cg.student_id = s.student_id
-            JOIN classes c ON c.class_id = c.class_id
-            WHERE c.class_id = ? AND student_id = ?;
-        """);
-        ps.setInt(1, classId);
-        ps.setInt(2, studentId);
-        ResultSet rs = ps.executeQuery();
-        
-        if (rs.next()) {
-            return rs.getDouble("raw_grade");
-        } else {
-            throw new SQLException("class_id " + classId + " and student_id " + studentId + " not found.");
-        }
-    }
-    
-    /**
+    /*
      * Creates a new class-student relationship in the database
      */
     public void addStudentToClass(int studentId, int classId) {
@@ -1317,22 +1327,38 @@ public class Model {
         } catch(SQLException e) { e.printStackTrace(); }
     }
     
+    public void addStudentToDb(String firstName, String middleName, String lastName, long lrn, String gender, String dateOfBirth, String strand) {
+        String insertQuery = "INSERT INTO students (first_name, middle_name, last_name, lrn, gender, date_of_birth, strand) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        try (PreparedStatement pstmt = getConnection().prepareStatement(insertQuery)) {
+            pstmt.setString(1, firstName);
+            pstmt.setString(2, middleName);
+            pstmt.setString(3, lastName);
+            pstmt.setLong(4, lrn);
+            pstmt.setString(5, gender);
+            pstmt.setString(6, dateOfBirth);
+            pstmt.setString(7, strand);
+            pstmt.executeUpdate();
+        } catch(SQLException e) { e.printStackTrace(); }
+    }
+    
+    
     /**
      * OUTDATED DOCUMENTATION
      * Adds a new student to the database if they do not exist yet. getStudentInDB() must be called
      * after this query to get the assigned student_id
      */
-    public void addStudentToDb(String firstName, String lastName) throws SQLException {
-        if (!studentExists(firstName, lastName)) {
-            String insertQuery = "INSERT INTO students (first_name, last_name) VALUES (?, ?)";
+    public void registerStudentToDb(long lrn, String email, char[] password) {
+        if (studentExists(lrn)) {
+            String insertQuery = "UPDATE students SET email = ?, password = ? WHERE lrn = ?;";
             try (PreparedStatement pstmt = getConnection().prepareStatement(insertQuery)) {
-                pstmt.setString(1, firstName);
-                pstmt.setString(2, lastName);
+                pstmt.setString(1, email);
+                pstmt.setString(2, String.valueOf(password));
+                pstmt.setLong(3, lrn);
                 pstmt.executeUpdate();
                 System.out.println("Student added successfully.");
-            }
+            } catch (SQLException e) { e.printStackTrace(); }
         } else {
-            System.out.println("Student already exists.");
+            throw new NullPointerException("Student not found");
         }
     }
     
@@ -1350,18 +1376,16 @@ public class Model {
     /**
      * Check if student already exists in the database
      */
-    private boolean studentExists(String firstName, String lastName) throws SQLException {
-        String checkQuery = "SELECT COUNT(*) FROM students WHERE first_name = ? AND last_name = ?";
+    private boolean studentExists(long lrn) {
+        String checkQuery = "SELECT COUNT(*) FROM students WHERE lrn = ?";
         try (PreparedStatement pstmt = getConnection().prepareStatement(checkQuery)) {
-            pstmt.setString(1, firstName);
-            pstmt.setString(2, lastName);
-
-            try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getInt(1) > 0; // If count > 0, student exists
-                }
+            pstmt.setLong(1, lrn);
+            ResultSet rs = pstmt.executeQuery();
+            
+            if (rs.next()) {
+                return rs.getInt(1) > 0; // If count > 0, student exists
             }
-        }
+        } catch (SQLException e) { e.printStackTrace(); }
         return false; // Student does not exist
     }
     
@@ -1369,23 +1393,25 @@ public class Model {
      * Check if class record already exists in the database
      * OUTDATED
      */
-    public boolean classRecordExists(int gradeLevel, String section, String subject, int term, String schoolYear) {
+    public boolean classRecordExists(int facultyId, int gradeLevel, String section, int subject_id, int term, String schoolYear) {
         String checkQuery = """
            SELECT class_id FROM classes c 
            WHERE 
+                c.faculty_id = ? AND
                 c.grade_level = ? AND
                 c.section = ? AND 
-                c.subject = ? AND 
-                c.term = ? AND 
+                c.subject_id = ? AND 
+                c.semester = ? AND 
                 c.academic_year = ?
         """;
         
         try (PreparedStatement pstmt = getConnection().prepareStatement(checkQuery)) {
-            pstmt.setInt(1, gradeLevel);
-            pstmt.setString(2, section);
-            pstmt.setString(3, subject);
-            pstmt.setInt(4, term);
-            pstmt.setString(5, schoolYear);
+            pstmt.setInt(1, facultyId);
+            pstmt.setInt(2, gradeLevel);
+            pstmt.setString(3, section);
+            pstmt.setInt(4, subject_id);
+            pstmt.setInt(5, term);
+            pstmt.setString(6, schoolYear);
             ResultSet rs = pstmt.executeQuery();
 
             if (rs.next()) {
@@ -1511,25 +1537,27 @@ public class Model {
     /**
      * Retrieve a GradePeriod's class_id from the database
      */
-    public int getClassIdInDB(int gradeLevel, String section, String subject, int term, String schoolYear) {
+    public int getClassIdInDB(int facultyId, int gradeLevel, String section, int subjectId, int term, String schoolYear) {
         int id = -1;
         
         String query = """
            SELECT class_id FROM classes c 
            WHERE 
+                c.faculty_id = ? AND
                 c.grade_level = ? AND
                 c.section = ? AND 
-                c.subject = ? AND 
-                c.term = ? AND 
+                c.subject_id = ? AND 
+                c.semester = ? AND 
                 c.academic_year = ?
         """;
         
         try (PreparedStatement pstmt = getConnection().prepareStatement(query)) {
-            pstmt.setInt(1, gradeLevel);
-            pstmt.setString(2, section);
-            pstmt.setString(3, subject);
-            pstmt.setInt(4, term);
-            pstmt.setString(5, schoolYear);
+            pstmt.setInt(1, facultyId);
+            pstmt.setInt(2, gradeLevel);
+            pstmt.setString(3, section);
+            pstmt.setInt(4, subjectId);
+            pstmt.setInt(5, term);
+            pstmt.setString(6, schoolYear);
             ResultSet rs = pstmt.executeQuery();
             
             if (rs.next()) {
@@ -1542,29 +1570,7 @@ public class Model {
         }
         return id;
     }
-    
-    /**
-     * Retrieve student ID from the database. This function is called after a new student is
-     * inserted into the database to get their assigned student_id. See usages.
-     */
-    public int getStudentIdInDB(String firstName, String lastName) throws SQLException {;
-        if (studentExists(firstName, lastName)) {
-            String insertQuery = "SELECT student_id FROM students s WHERE s.first_name = ? AND s.last_name = ?";
-            try (PreparedStatement pstmt = getConnection().prepareStatement(insertQuery)) {
-                pstmt.setString(1, firstName);
-                pstmt.setString(2, lastName);
-                ResultSet rs = pstmt.executeQuery();
-                if (rs.next()) {
-                    return rs.getInt("student_id");
-                } else {
-                    throw new SQLException("Error: Student does not exist.");
-                }
-            }
-        } else {
-            throw new SQLException("Error: Student does not exist.");
-        }
-    }
-    
+   
     // Add a new grade record to the database with grade value set to null
     public Integer[] addEmptyGradesToDB(Integer[] studentId, int classId, int activity_id) {
         String insertQuery = "INSERT INTO grades (student_id, class_id, activity_id) VALUES (?, ?, ?);";
