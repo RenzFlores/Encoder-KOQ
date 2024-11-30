@@ -755,8 +755,8 @@ public class Controller {
                     Student student = model.getClassRecord().getClassList().get(model.getSelectedRow());
 
                     reportCardWindow.setStudentData(student, model.getClassRecord().getSY());
-                    model.initReportCardTable(reportCardWindow.getTableSem1(), student.getStudentId(), model.getClassRecord().getSY());
-                    model.initReportCardTable(reportCardWindow.getTableSem2(), student.getStudentId(), model.getClassRecord().getSY());
+                    model.initReportCardTable(reportCardWindow.getTableSem1(), student.getStudentId(), model.getClassRecord().getSY(), 1);
+                    model.initReportCardTable(reportCardWindow.getTableSem2(), student.getStudentId(), model.getClassRecord().getSY(), 2);
                     reportCardWindow.setVisible(true);
                     
                     reportCardWindow.getPreviousButton().addActionListener(new ActionListener() {
@@ -765,8 +765,8 @@ public class Controller {
                             if (index > 0) {
                                 Student prevStudent = model.getClassRecord().getClassList().get(index - 1);
                                 reportCardWindow.setStudentData(prevStudent, model.getClassRecord().getSY());
-                                model.initReportCardTable(reportCardWindow.getTableSem1(), prevStudent.getStudentId(), model.getClassRecord().getSY());
-                                model.initReportCardTable(reportCardWindow.getTableSem2(), prevStudent.getStudentId(), model.getClassRecord().getSY());
+                                model.initReportCardTable(reportCardWindow.getTableSem1(), prevStudent.getStudentId(), model.getClassRecord().getSY(), 1);
+                                model.initReportCardTable(reportCardWindow.getTableSem2(), prevStudent.getStudentId(), model.getClassRecord().getSY(), 2);
                                 setIndex(index-1);
                             }
                         }
@@ -778,8 +778,8 @@ public class Controller {
                             if (index < model.getClassRecord().getClassList().size() - 1 && index >= 0) {
                                 Student nextStudent = model.getClassRecord().getClassList().get(index + 1);
                                 reportCardWindow.setStudentData(nextStudent, model.getClassRecord().getSY());
-                                model.initReportCardTable(reportCardWindow.getTableSem1(), nextStudent.getStudentId(), model.getClassRecord().getSY());
-                                model.initReportCardTable(reportCardWindow.getTableSem2(), nextStudent.getStudentId(), model.getClassRecord().getSY());
+                                model.initReportCardTable(reportCardWindow.getTableSem1(), nextStudent.getStudentId(), model.getClassRecord().getSY(), 1);
+                                model.initReportCardTable(reportCardWindow.getTableSem2(), nextStudent.getStudentId(), model.getClassRecord().getSY(), 2);
                                 setIndex(index+1);
                             }
                         }
@@ -797,8 +797,9 @@ public class Controller {
                 ReportCardWindow reportCardWindow = new ReportCardWindow(false);
 
                 reportCardWindow.setStudentData(student, schoolYear);
-                model.initReportCardTable(reportCardWindow.getTableSem1(), student.getStudentId(), schoolYear);
-                model.initReportCardTable(reportCardWindow.getTableSem2(), student.getStudentId(), schoolYear);
+                model.initReportCardTable(reportCardWindow.getTableSem1(), student.getStudentId(), schoolYear, 1
+                );
+                model.initReportCardTable(reportCardWindow.getTableSem2(), student.getStudentId(), schoolYear, 2);
                 reportCardWindow.setVisible(true);
                     
                 JOptionPane.showMessageDialog(

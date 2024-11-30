@@ -16,18 +16,31 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `activity_types`
+-- Table structure for table `faculty`
 --
 
-DROP TABLE IF EXISTS `activity_types`;
+DROP TABLE IF EXISTS `faculty`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `activity_types` (
-  `activity_type_id` int NOT NULL,
-  `name` varchar(30) NOT NULL,
-  PRIMARY KEY (`activity_type_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE `faculty` (
+  `faculty_id` int NOT NULL AUTO_INCREMENT,
+  `teacher_id` int NOT NULL,
+  `name` varchar(50) NOT NULL,
+  `role` varchar(50) NOT NULL,
+  `password` varchar(50) DEFAULT NULL,
+  PRIMARY KEY (`faculty_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `faculty`
+--
+
+LOCK TABLES `faculty` WRITE;
+/*!40000 ALTER TABLE `faculty` DISABLE KEYS */;
+INSERT INTO `faculty` VALUES (1,12345,'Teresa R. Corpuz','Teacher I','password'),(2,12346,'Abigail F. Diaz','Teacher I','password'),(3,12347,'Erwin M. Mariano','Teacher III','password');
+/*!40000 ALTER TABLE `faculty` ENABLE KEYS */;
+UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -38,4 +51,4 @@ CREATE TABLE `activity_types` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-11-30 17:06:26
+-- Dump completed on 2024-11-30 17:06:05

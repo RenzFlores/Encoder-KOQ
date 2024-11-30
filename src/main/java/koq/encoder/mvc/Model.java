@@ -1033,7 +1033,7 @@ public class Model {
             JOIN classes c ON sc.class_id = c.class_id
             JOIN students s ON sc.student_id = s.student_id
             JOIN subjects su ON su.subject_id = c.subject_id
-            JOIN faculty f ON c.class_id = f.faculty_id
+            LEFT JOIN faculty f ON c.class_id = f.faculty_id
             WHERE s.student_id = ?
             ORDER BY c.academic_year DESC, c.semester DESC, c.section;
         """;
@@ -1057,7 +1057,7 @@ public class Model {
         } catch (SQLException e) { e.printStackTrace(); }
     }
     
-    public void initReportCardTable(JTable table, int studentId, String schoolYear) {
+    public void initReportCardTable(JTable table, int studentId, String schoolYear, int semester) {
         Object[][] data = {};
         String[] columnNames = {
             "Subject Name", "Quarter 1", "Quarter 2", "Semester Final Grades"
@@ -1078,7 +1078,7 @@ public class Model {
             JOIN subjects su ON c.subject_id = su.subject_id
             JOIN students st ON st.student_id = sc.student_id
             JOIN calculated_grades cg ON cg.class_id = sc.class_id AND cg.student_id = sc.student_id
-            WHERE sc.student_id = ? AND c.academic_year = ?
+            WHERE sc.student_id = ? AND c.academic_year = ? AND c.semester = ?
             ORDER BY 
               CASE su.type
                 WHEN 'Core' THEN 1
@@ -1091,6 +1091,7 @@ public class Model {
         try (PreparedStatement pstmt = getConnection().prepareStatement(selectQuery)) {
             pstmt.setInt(1, studentId);
             pstmt.setString(2, schoolYear);
+            pstmt.setInt(3, semester);
             ResultSet rs = pstmt.executeQuery();
             String toCompare = "Core";
             

@@ -16,18 +16,33 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `activity_types`
+-- Table structure for table `student_classes`
 --
 
-DROP TABLE IF EXISTS `activity_types`;
+DROP TABLE IF EXISTS `student_classes`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `activity_types` (
-  `activity_type_id` int NOT NULL,
-  `name` varchar(30) NOT NULL,
-  PRIMARY KEY (`activity_type_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE `student_classes` (
+  `student_class_id` int NOT NULL AUTO_INCREMENT,
+  `class_id` int NOT NULL,
+  `student_id` int NOT NULL,
+  PRIMARY KEY (`student_class_id`),
+  KEY `class_id` (`class_id`),
+  KEY `student_id` (`student_id`),
+  CONSTRAINT `student_classes_ibfk_1` FOREIGN KEY (`class_id`) REFERENCES `classes` (`class_id`),
+  CONSTRAINT `student_classes_ibfk_2` FOREIGN KEY (`student_id`) REFERENCES `students` (`student_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=34 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `student_classes`
+--
+
+LOCK TABLES `student_classes` WRITE;
+/*!40000 ALTER TABLE `student_classes` DISABLE KEYS */;
+INSERT INTO `student_classes` VALUES (12,1,1),(16,1,3),(17,1,4),(18,1,5),(19,1,6),(23,1,2),(26,14,1),(27,14,7),(28,14,6),(29,14,4),(30,13,1),(31,13,4),(32,13,6),(33,13,7);
+/*!40000 ALTER TABLE `student_classes` ENABLE KEYS */;
+UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -38,4 +53,4 @@ CREATE TABLE `activity_types` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-11-30 17:06:26
+-- Dump completed on 2024-11-30 17:06:04

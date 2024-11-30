@@ -16,18 +16,31 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `activity_types`
+-- Table structure for table `grade_period`
 --
 
-DROP TABLE IF EXISTS `activity_types`;
+DROP TABLE IF EXISTS `grade_period`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `activity_types` (
-  `activity_type_id` int NOT NULL,
-  `name` varchar(30) NOT NULL,
-  PRIMARY KEY (`activity_type_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE `grade_period` (
+  `grade_period_id` int NOT NULL AUTO_INCREMENT,
+  `class_id` int NOT NULL,
+  `quarter` int NOT NULL,
+  PRIMARY KEY (`grade_period_id`),
+  KEY `class_id_idx` (`class_id`),
+  CONSTRAINT `class_id` FOREIGN KEY (`class_id`) REFERENCES `classes` (`class_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `grade_period`
+--
+
+LOCK TABLES `grade_period` WRITE;
+/*!40000 ALTER TABLE `grade_period` DISABLE KEYS */;
+INSERT INTO `grade_period` VALUES (1,1,1),(2,1,2);
+/*!40000 ALTER TABLE `grade_period` ENABLE KEYS */;
+UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -38,4 +51,4 @@ CREATE TABLE `activity_types` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-11-30 17:06:26
+-- Dump completed on 2024-11-30 17:06:05

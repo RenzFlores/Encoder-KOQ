@@ -36,6 +36,16 @@ CREATE TABLE `activities` (
   CONSTRAINT `activities_ibfk_2` FOREIGN KEY (`activity_type_id`) REFERENCES `activity_types` (`activity_type_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=138 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `activities`
+--
+
+LOCK TABLES `activities` WRITE;
+/*!40000 ALTER TABLE `activities` DISABLE KEYS */;
+INSERT INTO `activities` VALUES (62,1,'Quarterly Exam',50,3,1),(64,1,'Quarterly Exam',50,3,2),(101,1,'Test 1',20,1,2),(103,1,'PT 1',10,2,1),(108,1,'PT 2',10,1,2),(111,1,'3',10,1,1),(114,1,'PT 1',10,2,2),(119,10,'Quarterly Exam',50,3,1),(120,10,'Quarterly Exam',50,3,2),(121,11,'Quarterly Exam',50,3,1),(122,11,'Quarterly Exam',50,3,2),(123,12,'Quarterly Exam',50,3,1),(124,12,'Quarterly Exam',50,3,2),(125,13,'Quarterly Exam',50,3,1),(126,13,'Quarterly Exam',50,3,2),(127,14,'Quarterly Exam',50,3,1),(128,14,'Quarterly Exam',50,3,2),(129,14,'Seatwork 1',10,1,1),(130,14,'Performance Task 1',10,2,1),(131,14,'Seatwork 1',10,1,2),(132,14,'Group Report',10,2,2),(133,13,'Assignment #1',10,1,1),(134,13,'Long Quiz',30,2,1),(136,13,'Seatwork #1',10,1,2),(137,13,'Quiz 1',10,1,2);
+/*!40000 ALTER TABLE `activities` ENABLE KEYS */;
+UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -46,4 +56,4 @@ CREATE TABLE `activities` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-11-30 17:06:26
+-- Dump completed on 2024-11-30 17:06:04

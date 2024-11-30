@@ -16,18 +16,37 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `activity_types`
+-- Table structure for table `classes`
 --
 
-DROP TABLE IF EXISTS `activity_types`;
+DROP TABLE IF EXISTS `classes`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `activity_types` (
-  `activity_type_id` int NOT NULL,
-  `name` varchar(30) NOT NULL,
-  PRIMARY KEY (`activity_type_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE `classes` (
+  `class_id` int NOT NULL AUTO_INCREMENT,
+  `faculty_id` int NOT NULL,
+  `subject_id` int NOT NULL,
+  `grade_level` int NOT NULL,
+  `section` varchar(50) NOT NULL,
+  `semester` int NOT NULL,
+  `academic_year` varchar(10) NOT NULL,
+  PRIMARY KEY (`class_id`),
+  KEY `faculty_id_idx` (`faculty_id`),
+  KEY `subject_id_idx` (`subject_id`),
+  CONSTRAINT `faculty_id` FOREIGN KEY (`faculty_id`) REFERENCES `faculty` (`faculty_id`),
+  CONSTRAINT `subject_id` FOREIGN KEY (`subject_id`) REFERENCES `subjects` (`subject_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `classes`
+--
+
+LOCK TABLES `classes` WRITE;
+/*!40000 ALTER TABLE `classes` DISABLE KEYS */;
+INSERT INTO `classes` VALUES (1,1,1,11,'Tesla',1,'2024-2025'),(10,1,3,11,'Tesla',2,'2024-2025'),(11,3,15,11,'Tesla',1,'2024-2025'),(12,3,16,11,'Tesla',2,'2024-2025'),(13,2,7,11,'Tesla',1,'2024-2025'),(14,2,9,11,'Tesla',2,'2024-2025');
+/*!40000 ALTER TABLE `classes` ENABLE KEYS */;
+UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -38,4 +57,4 @@ CREATE TABLE `activity_types` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-11-30 17:06:26
+-- Dump completed on 2024-11-30 17:06:04

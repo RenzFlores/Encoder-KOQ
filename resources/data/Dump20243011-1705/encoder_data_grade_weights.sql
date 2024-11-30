@@ -16,18 +16,33 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `activity_types`
+-- Table structure for table `grade_weights`
 --
 
-DROP TABLE IF EXISTS `activity_types`;
+DROP TABLE IF EXISTS `grade_weights`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `activity_types` (
-  `activity_type_id` int NOT NULL,
-  `name` varchar(30) NOT NULL,
-  PRIMARY KEY (`activity_type_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+CREATE TABLE `grade_weights` (
+  `grade_weight_id` int NOT NULL AUTO_INCREMENT,
+  `class_id` int NOT NULL,
+  `ww_weight` decimal(3,2) NOT NULL DEFAULT '0.25',
+  `pt_weight` decimal(3,2) NOT NULL DEFAULT '0.50',
+  `qa_weight` decimal(3,2) NOT NULL DEFAULT '0.25',
+  PRIMARY KEY (`grade_weight_id`),
+  KEY `class_id` (`class_id`),
+  CONSTRAINT `grade_weights_ibfk_1` FOREIGN KEY (`class_id`) REFERENCES `classes` (`class_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `grade_weights`
+--
+
+LOCK TABLES `grade_weights` WRITE;
+/*!40000 ALTER TABLE `grade_weights` DISABLE KEYS */;
+INSERT INTO `grade_weights` VALUES (1,1,0.25,0.50,0.25),(2,10,0.25,0.50,0.25),(3,11,0.25,0.50,0.25),(4,12,0.25,0.50,0.25),(5,13,0.25,0.50,0.25),(6,14,0.25,0.50,0.25);
+/*!40000 ALTER TABLE `grade_weights` ENABLE KEYS */;
+UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -38,4 +53,4 @@ CREATE TABLE `activity_types` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-11-30 17:06:26
+-- Dump completed on 2024-11-30 17:06:04
