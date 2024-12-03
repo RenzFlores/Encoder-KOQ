@@ -1,16 +1,8 @@
 package koq.encoder.components;
 
+import javax.swing.*;
 import java.awt.CardLayout;
-import java.awt.Color;
 import java.awt.FlowLayout;
-import javax.swing.Box;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JSeparator;
-import javax.swing.JTable;
-import javax.swing.JTextField;
 import koq.encoder.mvc.Model.Actions;
 import koq.encoder.mvc.Model.Fields;
 import koq.encoder.mvc.View;
@@ -33,10 +25,6 @@ public class EditPanel extends JPanel {
     private final JLabel gradeLabel;
     private final JTextField gradeField;
     private final JLabel maxGradeLabel;
-    
-    private final JLabel rearrangeLabel;
-    private final JButton moveDownButton;
-    private final JButton moveUpButton;
     
     public EditPanel() {
         setPreferredSize(new java.awt.Dimension(200, 710));
@@ -119,19 +107,10 @@ public class EditPanel extends JPanel {
         //maxGradeLabel.setBorder(new LineBorder(java.awt.Color.RED, 1));       // DEBUG
         containerPanel.add(maxGradeLabel);
         
-        rearrangeLabel = new JLabel("Rearrange:");
-        rearrangeLabel.setHorizontalAlignment(java.awt.FlowLayout.TRAILING);
-        rearrangeLabel.setPreferredSize(new java.awt.Dimension(110, 24));
-        //rearrangeLabel.setBorder(new LineBorder(java.awt.Color.RED, 1));      // DEBUG
-        moveUpButton = new JButton("↑");
-        moveDownButton = new JButton("↓");
-        
         outputTypeCombo.setName(Fields.SELECT_ACTIVITY_TYPE.name());
         outputNumberCombo.setName(Fields.SELECT_ACTIVITY.name());
         gradeField.setName(Fields.EDIT_GRADE.name());
         maxGradeLabel.setName(Fields.MAX_GRADE.name());
-        moveUpButton.setName(Actions.MOVE_ROW_UP.name());
-        moveDownButton.setName(Actions.MOVE_ROW_DOWN.name());
         
         add(containerPanel);
     }

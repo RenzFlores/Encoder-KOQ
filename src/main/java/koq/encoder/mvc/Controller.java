@@ -1,29 +1,16 @@
 package koq.encoder.mvc;
 
+import javax.swing.*;
+import java.awt.event.*;
 import koq.encoder.components.*;
 import koq.encoder.classes.*;
 import java.awt.Point;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.sql.SQLException;
-import javax.swing.AbstractAction;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JDialog;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JTable;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
+import java.util.ArrayList;
+import java.util.List;
 import javax.swing.border.LineBorder;
-import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumnModel;
-import javax.swing.table.TableModel;
 import javax.swing.text.AbstractDocument;
 import koq.encoder.mvc.Model.Actions;
 import koq.encoder.mvc.Model.Fields;
@@ -277,7 +264,7 @@ public class Controller {
         });
         
         // View about event
-        ( (JMenuItem) view.getComponent(Actions.VIEWABOUT.name()) ).addActionListener((ActionEvent ev) -> {
+        ( (JMenuItem) view.getComponent(Actions.VIEW_ABOUT.name()) ).addActionListener((ActionEvent ev) -> {
             view.showAbout();
         });
         
@@ -845,25 +832,54 @@ public class Controller {
             }
         });
         
-        // Action to move selected row up (UNUSED COMPONENT)
+        // Filter button pressed event
+        ( (JButton) view.getComponent( Actions.FILTER.name() ) ).addActionListener((ActionEvent e) -> {
+            FilterPanel panel = view.getFilterPanel();
+            
+            // Define multiple criteria
+            List<MultipleCriteriaSearch.SearchCriteria> criteriaList = new ArrayList<>();
+            
+            /*
+            String type = panel.getOutputType();
+            double min = panel.getGradeMinimum() / 100.0;
+            double max = panel.getGradeMaximum() / 100.0;
+            */
+            
+            MultipleCriteriaSearch example = new MultipleCriteriaSearch();
+            
+            criteriaList.add(new MultipleCriteriaSearch.SearchCriteria("Name", "John", false)); // Search for name containing "John"
+            criteriaList.add(new MultipleCriteriaSearch.SearchCriteria("Grade", "85", true)); // Search for grade equal to 85
+            
+            // Perform the search with the criteria
+            List<Integer> results = example.advancedSearch(criteriaList);
+    
+            
+            // panel.setResultText();
+        });
+         
+        // Action to select the previous search result
         /*
-        ( (JButton) view.getComponent( Actions.MOVE_ROW_UP.name() ) ).addActionListener((ActionEvent e) -> {
+        ( (JButton) view.getComponent( Actions.PREVIOUS_RESULT.name() ) ).addActionListener((ActionEvent e) -> {
             int selectedRow = selectedTable.getSelectedRow();
             if (selectedRow > 0) {
                 model.getGradePeriod().moveRow(selectedRow, selectedRow - 1);
                 selectedTable.setRowSelectionInterval(selectedRow - 1, selectedRow - 1);
             }
+        
+            panel.setResultText();
         });
         */
 
-        // Action to move selected row down (UNUSED COMPONENT)
+        // Action to select the next search result
         /*
-        ( (JButton) view.getComponent( Actions.MOVE_ROW_DOWN.name() ) ).addActionListener((ActionEvent e) -> {
+        ( (JButton) view.getComponent( Actions.NEXT_RESULT.name() ) ).addActionListener((ActionEvent e) -> {
             int selectedRow = selectedTable.getSelectedRow();
             if (selectedRow < model.getGradePeriod().getRowCount() - 1 && selectedRow >= 0) {
                 model.getGradePeriod().moveRow(selectedRow, selectedRow + 1);
                 selectedTable.setRowSelectionInterval(selectedRow + 1, selectedRow + 1);
             }
+        
+            panel.setResultText();
         });
         */
     }

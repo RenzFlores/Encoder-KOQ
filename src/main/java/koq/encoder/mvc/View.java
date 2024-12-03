@@ -188,6 +188,10 @@ public class View {
         return menuBar;
     }
     
+    public FilterPanel getFilterPanel() {
+        return (FilterPanel) facultyWindow.getFilter();
+    }
+    
     public JDialog createPopupDialog(String message) {
         JDialog dialog = new JDialog(frame, "Processing", true);
         JLabel label = new JLabel(message);
@@ -489,8 +493,8 @@ class MenuBar extends JMenuBar {
         menuExportFile.setName(Actions.EXPORTFILE.name());
         menuLogout.setName(Actions.LOGOUT.name());
         menuExit.setName(Actions.EXIT.name());
-        menuKeyboardShortcuts.setName(Actions.VIEWSHORTCUTS.name());
-        menuAbout.setName(Actions.VIEWABOUT.name());
+        menuKeyboardShortcuts.setName(Actions.VIEW_SHORTCUTS.name());
+        menuAbout.setName(Actions.VIEW_ABOUT.name());
         
         // Add all menus to menu bar
         add(menuFile);

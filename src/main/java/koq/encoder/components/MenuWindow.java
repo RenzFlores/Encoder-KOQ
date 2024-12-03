@@ -4,12 +4,9 @@
  */
 package koq.encoder.components;
 
-import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class MenuWindow extends JFrame {
 
@@ -33,7 +30,7 @@ public class MenuWindow extends JFrame {
         titleLabel.setFont(new java.awt.Font("Constantia", 1, 72)); // NOI18N
         titleLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         titleLabel.setVerticalAlignment(javax.swing.SwingConstants.BOTTOM);
-        titleLabel.setBackground(Constants.WINDOW_COLOR_LAYER_1);
+        titleLabel.setForeground(Constants.WINDOW_COLOR_LAYER_1);
         titleLabel.setPreferredSize(new Dimension(480, 120));
         
         radioButtonPanel = new JPanel();

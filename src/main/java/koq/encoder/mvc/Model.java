@@ -62,12 +62,13 @@ public class Model {
         ADDPT,
         ADDQUIZ,
         ADDEXAM,
+        FILTER,
         PREVIOUS_STUDENT,
         NEXT_STUDENT,
-        MOVE_ROW_DOWN,
-        MOVE_ROW_UP,
-        VIEWABOUT,
-        VIEWSHORTCUTS
+        NEXT_RESULT,
+        PREVIOUS_RESULT,
+        VIEW_ABOUT,
+        VIEW_SHORTCUTS
     };
     
     public Model() {
