@@ -1,14 +1,13 @@
 package koq.encoder.mvc;
 
+import koq.encoder.components.*;
+import javax.swing.*;
 import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.event.ActionListener;
-import javax.swing.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import koq.encoder.classes.Row;
-import koq.encoder.components.*;
 import koq.encoder.mvc.Model.Actions;
 import koq.encoder.mvc.Model.Fields;
 

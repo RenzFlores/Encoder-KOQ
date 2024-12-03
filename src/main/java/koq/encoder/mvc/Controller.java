@@ -44,7 +44,7 @@ public class Controller {
             }
         });
         
-        // Login button in menu window
+        // Login button in menu window for both student and faculty
         view.getMenuWindow().getLoginButton().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -115,7 +115,7 @@ public class Controller {
             }
         });
         
-        // Register button in menu window
+        // Register button in menu window fpr both student and faculty
         view.getMenuWindow().getRegisterButton().addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -198,21 +198,25 @@ public class Controller {
             }
         });
         
-        /**
-         * New Table event
-         */
-        ( (JMenuItem) view.getComponent(Actions.NEW_RECORD.name()) ).addActionListener((ActionEvent ev) -> {
-            AddClassRecordWindow window = new AddClassRecordWindow();
-            window.setVisible(true);
-            window.getButton().addActionListener(new AddClassRecordWindowListener(window));
-        });
-        
         // Logout event
         ( (JMenuItem) view.getComponent(Actions.LOGOUT.name()) ).addActionListener((ActionEvent ev) -> {
             model.setCurrentUser(null);
             model.setClassRecord(null);
             view.resetTables();
             view.setMenuWindow();
+        });
+        
+//--------------------------------
+//  Menu bar events
+//--------------------------------
+
+        /**
+         * New class record event
+         */
+        ( (JMenuItem) view.getComponent(Actions.NEW_RECORD.name()) ).addActionListener((ActionEvent ev) -> {
+            AddClassRecordWindow window = new AddClassRecordWindow();
+            window.setVisible(true);
+            window.getButton().addActionListener(new AddClassRecordWindowListener(window));
         });
         
         // Open class record event
@@ -252,9 +256,15 @@ public class Controller {
             });
         });
         
-        /** Export File event (UNUSED)
-        ( (JMenuItem) view.getComponent(Actions.EXPORTFILE.name()) ).addActionListener((ActionEvent ev) -> {});
-        */
+        // Register Student to System event
+        ( (JMenuItem) view.getComponent(Actions.REGISTER_STUDENT_SYSTEM.name()) ).addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                RegisterStudentToSystemWindow window = new RegisterStudentToSystemWindow();
+                window.setVisible(true);
+                window.getButton().addActionListener(new RegisterStudentToSystemWindowListener(window));
+            }
+        });
         
         // Exit event from the menu bar
         ( (JMenuItem) view.getComponent(Actions.EXIT.name()) ).addActionListener((ActionEvent ev) -> {
@@ -268,58 +278,10 @@ public class Controller {
             view.showAbout();
         });
         
-        // Tab selection listeners
-        view.getTabbedPane().addChangeListener(e -> {
-            int index = view.getTabbedPane().getSelectedIndex();
-            model.setSelectedTab(index);
-            
-            if (model.getClassRecord().getClassList().isEmpty()) {
-                return;
-            }
-            
-            switch (index) {
-                case 0:
-                    view.getTable(0).setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
-                    //System.out.println("Updating edit panel for tab: " + model.getSelectedTab());
-                    view.updateEditPanel(
-                            model.getSelectedTab(),
-                            0,
-                            model.getGradePeriod(1).getRowAt(view.getTable(0).getSelectedRow())
-                    );  
-                    break;
-                case 1:
-                    view.getTable(1).setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
-                    //System.out.println("Updating edit panel for tab: " + model.getSelectedTab());
-                    view.updateEditPanel(
-                            model.getSelectedTab(),
-                            0,
-                            model.getGradePeriod(2).getRowAt(view.getTable(1).getSelectedRow())
-                    );
-                    break;
-                default:
-                    view.getTable(index).setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
-                    break;
-            }
-            // Set focus to grade text field
-            ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).requestFocusInWindow();
-        });
-        
-        // Activity selection listener
-        ( (JComboBox) view.getComponent(Fields.SELECT_ACTIVITY.name()) ).addActionListener((ActionEvent ev) -> {
-            model.setSelectedActivity(
-                ((JComboBox) view.getComponent(Fields.SELECT_ACTIVITY.name())).getSelectedIndex()
-            );
-            //System.out.println("Updating edit panel for activity: " + model.getSelectedActivity());
-            view.updateEditPanel(
-                model.getSelectedTab(), 
-                model.getSelectedActivity(), 
-                model.getGradePeriod(model.getSelectedTab()+1).getRowAt(model.getSelectedRow())
-            );
-            
-            // Set focus to grade text field
-            ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).requestFocusInWindow();
-        });
-        
+//--------------------------------
+//  Edit panel events
+//--------------------------------
+
         // Select previous student keystroke event
         ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).getActionMap().put("previousStudent", new AbstractAction() {
             @Override
@@ -371,7 +333,7 @@ public class Controller {
             }
         });
         
-        // Select previous activity keystroke event
+        // Select next activity keystroke event
         ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).getActionMap().put("nextActivity", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -388,7 +350,7 @@ public class Controller {
             }
         });
         
-        // Grade text field DocumentListener
+        // Event for when grade is entered in the grade text field
         ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).addActionListener((ActionEvent ev) -> {
             int row = model.getSelectedRow();
             int col = model.getSelectedActivity();
@@ -453,10 +415,66 @@ public class Controller {
             }
         });
         
-        // Add document filter so this field can only receive numeric values
+        // Grade text field document filter to receive numeric input only
         ( (AbstractDocument) 
                 ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).getDocument()
         ).setDocumentFilter(new NumericDocumentFilter());
+
+//--------------------------------
+//  Table events and listeners
+//--------------------------------
+        
+        // Tab selection change listeners
+        view.getTabbedPane().addChangeListener(e -> {
+            int index = view.getTabbedPane().getSelectedIndex();
+            model.setSelectedTab(index);
+            
+            if (model.getClassRecord().getClassList().isEmpty()) {
+                return;
+            }
+            
+            switch (index) {
+                case 0:
+                    view.getTable(0).setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
+                    //System.out.println("Updating edit panel for tab: " + model.getSelectedTab());
+                    view.updateEditPanel(
+                            model.getSelectedTab(),
+                            0,
+                            model.getGradePeriod(1).getRowAt(view.getTable(0).getSelectedRow())
+                    );  
+                    break;
+                case 1:
+                    view.getTable(1).setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
+                    //System.out.println("Updating edit panel for tab: " + model.getSelectedTab());
+                    view.updateEditPanel(
+                            model.getSelectedTab(),
+                            0,
+                            model.getGradePeriod(2).getRowAt(view.getTable(1).getSelectedRow())
+                    );
+                    break;
+                default:
+                    view.getTable(index).setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
+                    break;
+            }
+            // Set focus to grade text field
+            ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).requestFocusInWindow();
+        });
+        
+        // Activity selection listener
+        ( (JComboBox) view.getComponent(Fields.SELECT_ACTIVITY.name()) ).addActionListener((ActionEvent ev) -> {
+            model.setSelectedActivity(
+                ((JComboBox) view.getComponent(Fields.SELECT_ACTIVITY.name())).getSelectedIndex()
+            );
+            //System.out.println("Updating edit panel for activity: " + model.getSelectedActivity());
+            view.updateEditPanel(
+                model.getSelectedTab(), 
+                model.getSelectedActivity(), 
+                model.getGradePeriod(model.getSelectedTab()+1).getRowAt(model.getSelectedRow())
+            );
+            
+            // Set focus to grade text field
+            ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).requestFocusInWindow();
+        });
         
         // List selection listener for Grade Period Q1 table
         tableQ1.getSelectionModel().addListSelectionListener(event -> {
@@ -498,6 +516,10 @@ public class Controller {
             ( (JTextField) view.getComponent(Fields.EDIT_GRADE.name()) ).requestFocusInWindow();
         });
         
+//--------------------------------
+//  Toolbar events
+//--------------------------------
+
         // Add to Table button clicked event
         ( (JButton) view.getComponent(Actions.ADD_TO_TABLE.name()) ).addActionListener((ActionEvent e) -> {
             if (model.getClassRecord() != null) {
@@ -674,7 +696,7 @@ public class Controller {
             }
         });
         
-        // Add ActionListener to menu items to detect clicks
+        // ActionListener to menu items to detect clicks
         ActionListener menuListener = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -698,16 +720,6 @@ public class Controller {
                 view.resizeTable(model.getSelectedTab());
             }
         };
-
-        // Register Student to System event
-        ( (JMenuItem) view.getComponent(Actions.REGISTER_STUDENT_SYSTEM.name()) ).addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                RegisterStudentToSystemWindow window = new RegisterStudentToSystemWindow();
-                window.setVisible(true);
-                window.getButton().addActionListener(new RegisterStudentToSystemWindowListener(window));
-            }
-        });
         
         // Add Student to class record event
         ( (JMenuItem) view.getComponent(Actions.ADDSTUDENT.name()) ).addActionListener(menuListener);
@@ -774,6 +786,76 @@ public class Controller {
                 }
             }
         });
+
+//--------------------------------
+//  Filter panel events
+//--------------------------------
+        
+        // Filter button pressed event
+        ( (JButton) view.getComponent( Actions.FILTER.name() ) ).addActionListener((ActionEvent e) -> {
+            FilterPanel panel = view.getFilterPanel();
+            
+            if (model.getClassRecord() == null) {
+                return;
+            }
+            
+            MultipleCriteriaSearch search = new MultipleCriteriaSearch(model.getGradePeriod(1));
+            
+            // Define multiple criteria
+            List<MultipleCriteriaSearch.SearchCriteria> criteriaList = new ArrayList<>();
+            
+            String name = panel.getStudentName();
+            String type = panel.getOutputType();
+            String minString = panel.getGradeMinimum();
+            String maxString = panel.getGradeMaximum();
+            
+            // Do not search if all text fields are empty
+            if (name.isBlank() && minString.isBlank() && maxString.isBlank()) {
+                return;
+            }
+            
+            if (!name.isBlank()) {
+                criteriaList.add(new MultipleCriteriaSearch.SearchCriteria(name));
+            } else {
+                criteriaList.add(null);
+            }
+            
+            if (!minString.isBlank()) {
+                double min = Integer.parseInt(minString) / 100.0;
+                criteriaList.add(new MultipleCriteriaSearch.SearchCriteria(String.valueOf(min)));
+            } else {
+                criteriaList.add(null);
+            }
+            
+            if (!maxString.isBlank()) {
+                double max = Integer.parseInt(maxString) / 100.0;
+                criteriaList.add(new MultipleCriteriaSearch.SearchCriteria(String.valueOf(max)));
+            } else {
+                criteriaList.add(null);
+            }
+            
+            switch (type) {
+                case "Written Work":
+                    criteriaList.add(new MultipleCriteriaSearch.SearchCriteria("1"));
+                    break;
+                case "Performance Task":
+                    criteriaList.add(new MultipleCriteriaSearch.SearchCriteria("2"));
+                    break;
+                case "Quarterly Assessment":
+                    criteriaList.add(new MultipleCriteriaSearch.SearchCriteria("3"));
+                    break;
+                default:
+                    criteriaList.add(new MultipleCriteriaSearch.SearchCriteria("-1"));
+            }
+            
+            // Perform the search with the criteria
+            List<Integer> results = search.advancedSearchCustomTable(criteriaList);
+    
+            System.out.print("Results:");
+            for (int i : results) { System.out.print(i); }
+            
+            // panel.setResultText();
+        });
         
         // Preview report card button event in student window
         view.getStudentWindow().getPreviewReportCardButton().addActionListener(new ActionListener() {
@@ -831,31 +913,6 @@ public class Controller {
                 }
             }
         });
-        
-        // Filter button pressed event
-        ( (JButton) view.getComponent( Actions.FILTER.name() ) ).addActionListener((ActionEvent e) -> {
-            FilterPanel panel = view.getFilterPanel();
-            
-            // Define multiple criteria
-            List<MultipleCriteriaSearch.SearchCriteria> criteriaList = new ArrayList<>();
-            
-            /*
-            String type = panel.getOutputType();
-            double min = panel.getGradeMinimum() / 100.0;
-            double max = panel.getGradeMaximum() / 100.0;
-            */
-            
-            MultipleCriteriaSearch example = new MultipleCriteriaSearch();
-            
-            criteriaList.add(new MultipleCriteriaSearch.SearchCriteria("Name", "John", false)); // Search for name containing "John"
-            criteriaList.add(new MultipleCriteriaSearch.SearchCriteria("Grade", "85", true)); // Search for grade equal to 85
-            
-            // Perform the search with the criteria
-            List<Integer> results = example.advancedSearch(criteriaList);
-    
-            
-            // panel.setResultText();
-        });
          
         // Action to select the previous search result
         /*
@@ -903,8 +960,12 @@ public class Controller {
             ((JTextField) view.getComponent(Fields.EDIT_GRADE.name())).requestFocusInWindow();
         });
     }
-        
-    // Listener for the confirmation button in AddStudentWindow
+
+//--------------------------------
+//  External form events
+//--------------------------------
+    
+    // Listener for the submit button in AddStudentWindow
     class AddStudentWindowListener implements ActionListener {
 
         AddStudentWindow window;
@@ -972,7 +1033,7 @@ public class Controller {
         }
     }
     
-    // Listener for the confirmation button in AddActivityWindow
+    // Listener for the submit button in AddActivityWindow
     class AddActivityWindowListener implements ActionListener {
 
         AddActivityWindow window;
@@ -1066,7 +1127,7 @@ public class Controller {
         }
     }
     
-    // Listener for the confirmation button in RegisterStudentToSystemWindow
+    // Listener for the submit button in RegisterStudentToSystemWindow
     class RegisterStudentToSystemWindowListener implements ActionListener {
 
         RegisterStudentToSystemWindow window;
@@ -1116,7 +1177,7 @@ public class Controller {
         }
     }
     
-    // Listener for the confirmation button in SetGradeWeightsWindow
+    // Listener for the submit button in SetGradeWeightsWindow
     class SetGradeWeightsWindowListener implements ActionListener {
 
         SetGradeWeightsWindow window;
@@ -1179,7 +1240,7 @@ public class Controller {
         }
     }
     
-    // Listener for the confirmation button in AddClassRecordWindow
+    // Listener for the submit button in AddClassRecordWindow
     class AddClassRecordWindowListener implements ActionListener {
 
         AddClassRecordWindow window;
@@ -1254,6 +1315,9 @@ public class Controller {
     }
 }
 
+/**
+ * Custom mouse listener for table, allowing column selection when headers are clicked
+ */
 class HeaderSelector extends MouseAdapter
 {
     JTable table;
@@ -1283,6 +1347,9 @@ class HeaderSelector extends MouseAdapter
     }
 }
 
+/**
+ * Custom mouse listener for table, defaulting to row selection when cells are clicked
+ */
 class RowSelector extends MouseAdapter
 {
     JTable table;

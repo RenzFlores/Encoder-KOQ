@@ -50,7 +50,7 @@ public class FacultyWindow extends JPanel {
         add(BorderLayout.NORTH, toolbar);
         add(BorderLayout.CENTER, tableView);
         add(BorderLayout.WEST, editPanel);
-        add(BorderLayout.EAST, filterPanel);
+        //add(BorderLayout.EAST, filterPanel);
     }
     
     public void enableWindow() {

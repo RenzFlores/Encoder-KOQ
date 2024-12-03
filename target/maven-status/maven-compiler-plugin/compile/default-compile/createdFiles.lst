@@ -6,6 +6,7 @@ koq\encoder\components\RegisterStudentToSystemWindow.class
 koq\encoder\components\StudentWindow.class
 koq\encoder\mvc\MenuBar.class
 koq\encoder\mvc\Model$3.class
+SearchableTable.class
 koq\encoder\mvc\Controller$3$1.class
 koq\encoder\mvc\Controller$12.class
 koq\encoder\components\Constants.class
@@ -17,6 +18,7 @@ koq\encoder\mvc\Controller$AddStudentWindowListener.class
 koq\encoder\components\TableEditorPanel.class
 koq\encoder\classes\Student.class
 koq\encoder\mvc\HeaderSelector.class
+SearchableTable$1.class
 koq\encoder\classes\ClassRecord.class
 koq\encoder\mvc\Controller$9.class
 koq\encoder\components\SetGradeWeightsWindow.class
@@ -41,6 +43,7 @@ koq\encoder\classes\Row.class
 koq\encoder\components\RegisterFacultyWindow.class
 koq\encoder\components\AddClassRecordWindow.class
 koq\encoder\mvc\Controller$AddActivityWindowListener.class
+SearchableTable$MyTableModel.class
 koq\encoder\classes\GradeSheet.class
 koq\encoder\mvc\Controller$10.class
 koq\encoder\components\EditPanel.class

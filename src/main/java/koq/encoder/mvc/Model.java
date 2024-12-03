@@ -1,15 +1,6 @@
 package koq.encoder.mvc;
 
-import java.awt.Color;
-import java.io.File;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
-import koq.encoder.classes.Grade;
-import koq.encoder.classes.Student;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -18,7 +9,6 @@ import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.DefaultTableModel;
 import koq.encoder.classes.*;
-import koq.encoder.components.Constants;
 
 public class Model {
 
@@ -72,27 +62,18 @@ public class Model {
     };
     
     public Model() {
-        // Create data directory if it doesn't exist
-        File directory = new File(Constants.DATA_DIRECTORY);
-        if (!directory.exists()) {
-            boolean created = directory.mkdir(); // Creates the directory
-            if (created) {
-                System.out.println("Directory created successfully.");
-            } else {
-                System.out.println("Failed to create directory.");
-            }
-        }
-        
-        // NOTE: Placeholder values, change these later
+        // Local variables for tracking indexes and selections
         selectedRow = 0;
         selectedColumn = 0;
         selectedActivity = 0;
         selectedTab = 0;
         
+        // Connect to database upon program start
         try {
             db = connectToDB();
         } catch (SQLException e) { e.printStackTrace(); }
         
+        // Cache all students in array
         studentList = new ArrayList<>();
         getAllStudents();
         
@@ -109,6 +90,9 @@ public class Model {
         } catch (SQLException e) { e.printStackTrace(); }
     }
     
+    /**
+     * Login validation for faculty 
+     */
     public boolean checkForFacultyLogin(String name, char[] password) {
         String query = "SELECT teacher_id, password FROM faculty;";
         List<String> idList = new ArrayList<>();
@@ -134,6 +118,9 @@ public class Model {
         return false;           // No match
     }
     
+    /**
+    * Login validation for student
+    */
     public Student checkForStudentLogin(String email, char[] password) {
         for (Student s: studentList) {
             // Compare the arrays
@@ -145,6 +132,10 @@ public class Model {
         return null;           // No match
     }
     
+//--------------------------------
+//  Getter and setters
+//--------------------------------
+
     public GradePeriod getGradePeriod(int quarter) {
         return record.getGradePeriod(quarter);
     }
@@ -153,61 +144,8 @@ public class Model {
         return record;
     }
     
-    /**
-     * Creates a faculty object from the database given the teacher ID and password
-     * This function is for logging in and called after a successful login attempt
-     */
-    public Faculty getFacultyFromDatabase(String teacher_id, char[] password) {
-        String selectQuery = "SELECT * FROM faculty WHERE teacher_id = ? AND password = ?;";
-        Faculty f = null;
-        
-        try (PreparedStatement pstmt = getConnection().prepareStatement(selectQuery)) {
-            pstmt.setInt(1, Integer.parseInt(teacher_id));
-            pstmt.setString(2, String.valueOf(password));
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                f = new Faculty(
-                    rs.getInt("faculty_id"), 
-                    rs.getInt("teacher_id"), 
-                    rs.getString("name"),
-                    rs.getString("role"),
-                    rs.getString("password").toCharArray()
-                );
-            } else {
-                throw new SQLException("Faculty not found");
-            }
-        } catch (SQLException e) { e.printStackTrace(); }
-        
-        if (f != null) {
-            return f;
-        } else {
-            throw new NullPointerException("Faculty object is null");
-        }
-    }
-    
     public void setClassRecord(ClassRecord record) {
         this.record = record;
-    }
-    
-    /**
-     * Initializes a class record, fetching all records
-     */
-    public void initClassRecord(ClassRecord record) {
-        try {
-            record.setClassList(fetchStudentsInClassRecord(record.getClassId()));
-            System.out.println("Student records retrieved. Size: " + record.getClassList().size());
-        } catch(SQLException e) { e.printStackTrace(); }
-        
-        record.getGradePeriod(1).setColumnNames(getActivitiesInDB(record.getClassId(), 1));
-        record.setGradePeriod(1, getGradePeriodInDB(record.getClassList(), record.getClassId(), 1));
-        record.getGradePeriod(2).setColumnNames(getActivitiesInDB(record.getClassId(), 2));
-        record.setGradePeriod(2, getGradePeriodInDB(record.getClassList(), record.getClassId(), 2));
-        System.out.println("Grade records retrieved. Q1 columns=" + record.getGradePeriod(1).getColumns().size() + 
-                ", Q2 columns=" + record.getGradePeriod(2).getColumns().size());
-    }
-    
-    public List<Student> getStudentList() {
-        return studentList;
     }
     
     public int getSelectedRow() {
@@ -235,6 +173,10 @@ public class Model {
         return selectedTab;
     }
     
+    public List<Student> getStudentList() {
+        return studentList;
+    }
+    
     public void setCurrentUser(Object user) {
         if (user instanceof Faculty) {
             currentFaculty = (Faculty) user;
@@ -256,38 +198,25 @@ public class Model {
         }
     }
     
+//--------------------------------
+//  JDBC methods and all MySQL queries
+//--------------------------------
+    
     /**
-     * Get a student object from LRN
+     * Initializes a class record, fetching all records
      */
-    public Student getStudentInDB(int lrn) {
-        String selectQuery = 
-            "SELECT * " +
-            "FROM students s " +
-            "WHERE s.lrn = ?;";
+    public void initClassRecord(ClassRecord record) {
+        try {
+            record.setClassList(fetchStudentsInClassRecord(record.getClassId()));
+            System.out.println("Student records retrieved. Size: " + record.getClassList().size());
+        } catch(SQLException e) { e.printStackTrace(); }
         
-        try (PreparedStatement pstmt = getConnection().prepareStatement(selectQuery)) {
-            pstmt.setInt(1, lrn);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                return new Student(
-                    rs.getInt("student_id"),
-                    rs.getString("first_name"),
-                    rs.getString("middle_name"),
-                    rs.getString("last_name"),
-                    rs.getInt("lrn"),
-                    rs.getString("gender"),
-                    rs.getString("date_of_birth"),
-                    rs.getString("strand"), 
-                    rs.getString("email"), 
-                    rs.getString("password") == null ? null : rs.getString("password").toCharArray(),
-                    rs.getInt("grade_level")
-                );
-            } else {
-                throw new NullPointerException("Error: Student does not exist.");
-            }
-        } catch (SQLException e) { e.printStackTrace(); }
-        
-        return null;
+        record.getGradePeriod(1).setColumnNames(getActivitiesInDB(record.getClassId(), 1));
+        record.setGradePeriod(1, getGradePeriodInDB(record.getClassList(), record.getClassId(), 1));
+        record.getGradePeriod(2).setColumnNames(getActivitiesInDB(record.getClassId(), 2));
+        record.setGradePeriod(2, getGradePeriodInDB(record.getClassList(), record.getClassId(), 2));
+        System.out.println("Grade records retrieved. Q1 columns=" + record.getGradePeriod(1).getColumns().size() + 
+                ", Q2 columns=" + record.getGradePeriod(2).getColumns().size());
     }
     
     /**
@@ -333,25 +262,6 @@ public class Model {
             getGradePeriod(quarter).insertColumn(index, name);
             
         } catch (SQLException e) { e.printStackTrace(); }            
-    }
-    
-    public int getGradeIdInDB(int studentId, int classId, int activityId) throws SQLException {
-        String selectQuery = 
-            "SELECT grade_id " +
-            "FROM grades g " +
-            "WHERE g.student_id = ? AND g.class_id = ? AND g.activity_id = ?;";
-        
-        try (PreparedStatement pstmt = getConnection().prepareStatement(selectQuery)) {
-            pstmt.setInt(1, studentId);
-            pstmt.setInt(2, classId);
-            pstmt.setInt(3, activityId);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                return rs.getInt("grade_id");
-            } else {
-                throw new SQLException("Error: Grade does not exist.");
-            }
-        }
     }
     
     public void updateGrade(int gradeId, int value) {
@@ -416,27 +326,6 @@ public class Model {
         
         try (PreparedStatement pstmt = getConnection().prepareStatement(selectQuery)) {
             pstmt.setInt(1, classId);
-            ResultSet rs = pstmt.executeQuery();
-            
-            if (rs.next()) {
-                return new double[]{rs.getDouble("ww_weight"), rs.getDouble("pt_weight"), rs.getDouble("qa_weight")};
-            }
-        } catch (SQLException e) { e.printStackTrace(); }
-        
-        return null;
-    }
-    
-    public double[] getGradeWeights(int studentId, int classId) {
-        String selectQuery = """
-            SELECT *
-            FROM calculated_grades cg
-            JOIN grade_weights gw ON gw.class_id = cg.class_id
-            WHERE cg.class_id = ? AND cg.student_id = ?;
-        """;
-        
-        try (PreparedStatement pstmt = getConnection().prepareStatement(selectQuery)) {
-            pstmt.setInt(1, classId);
-            pstmt.setInt(2, studentId);
             ResultSet rs = pstmt.executeQuery();
             
             if (rs.next()) {
@@ -587,6 +476,7 @@ public class Model {
                 .filter(e -> e.contains("PT")).collect(Collectors.toList());
         }
         
+        // Note: Possibly redundant, remove later
         if (columns.isEmpty()) {
             columns = getGradePeriod(getSelectedTab()+1).getColumns().stream()
                 .filter(e -> e.contains("WW")).collect(Collectors.toList());
@@ -1342,7 +1232,6 @@ public class Model {
             pstmt.executeUpdate();
         } catch(SQLException e) { e.printStackTrace(); }
     }
-    
     
     /**
      * OUTDATED DOCUMENTATION
