@@ -15,7 +15,7 @@ public class FacultyWindow extends JPanel {
     // private final TableEditorPanel tableEditorPanel;
     private final Toolbar toolbar;
     private final TableView tableView;
-    private final FilterPanel filterPanel;
+    //private final FilterPanel filterPanel;
     
     public JPanel getGradeEditor() {
         return editPanel;
@@ -33,9 +33,11 @@ public class FacultyWindow extends JPanel {
         return tableView;
     }
     
+    /*
     public JPanel getFilter() {
         return filterPanel;
     }
+    */
     
     public FacultyWindow() {
         setPreferredSize(new Dimension(1300, 720));
@@ -45,7 +47,7 @@ public class FacultyWindow extends JPanel {
         editPanel = new EditPanel();
         toolbar = new Toolbar();
         tableView = new TableView();
-        filterPanel = new FilterPanel();
+        //filterPanel = new FilterPanel();
         
         add(BorderLayout.NORTH, toolbar);
         add(BorderLayout.CENTER, tableView);
@@ -57,14 +59,14 @@ public class FacultyWindow extends JPanel {
         editPanel.setEnabled(true);
         toolbar.setEnabled(true);
         tableView.setEnabled(true);
-        filterPanel.setEnabled(true);
+        //filterPanel.setEnabled(true);
     }
     
     public void disableWindow() {
         editPanel.setEnabled(false);
         toolbar.setEnabled(false);
         tableView.setEnabled(false);
-        filterPanel.setEnabled(false);
+        //filterPanel.setEnabled(false);
     }
 }
 

@@ -22,12 +22,10 @@ C:\Users\Ronnel\Documents\NetBeansProjects\Encoder-KOQ\src\main\java\koq\encoder
 C:\Users\Ronnel\Documents\NetBeansProjects\Encoder-KOQ\src\main\java\koq\encoder\classes\Row.java
 C:\Users\Ronnel\Documents\NetBeansProjects\Encoder-KOQ\src\main\java\koq\encoder\classes\Grade.java
 C:\Users\Ronnel\Documents\NetBeansProjects\Encoder-KOQ\src\main\java\koq\encoder\classes\GradeWeights.java
-C:\Users\Ronnel\Documents\NetBeansProjects\Encoder-KOQ\src\main\java\SearchableTable.java
 C:\Users\Ronnel\Documents\NetBeansProjects\Encoder-KOQ\src\main\java\koq\encoder\components\ReportCardWindow.java
 C:\Users\Ronnel\Documents\NetBeansProjects\Encoder-KOQ\src\main\java\koq\encoder\components\LoginStudentWindow.java
 C:\Users\Ronnel\Documents\NetBeansProjects\Encoder-KOQ\src\main\java\koq\encoder\components\AddActivityWindow.java
 C:\Users\Ronnel\Documents\NetBeansProjects\Encoder-KOQ\src\main\java\koq\encoder\mvc\View.java
-C:\Users\Ronnel\Documents\NetBeansProjects\Encoder-KOQ\src\main\java\koq\encoder\components\FilterPanel.java
 C:\Users\Ronnel\Documents\NetBeansProjects\Encoder-KOQ\src\main\java\koq\encoder\components\TableEditorPanel.java
 C:\Users\Ronnel\Documents\NetBeansProjects\Encoder-KOQ\src\main\java\koq\encoder\classes\Faculty.java
 C:\Users\Ronnel\Documents\NetBeansProjects\Encoder-KOQ\src\main\java\koq\encoder\components\SetGradeWeightsWindow.java
@@ -35,6 +33,5 @@ C:\Users\Ronnel\Documents\NetBeansProjects\Encoder-KOQ\src\main\java\koq\encoder
 C:\Users\Ronnel\Documents\NetBeansProjects\Encoder-KOQ\src\main\java\koq\encoder\components\LoginFacultyWindow.java
 C:\Users\Ronnel\Documents\NetBeansProjects\Encoder-KOQ\src\main\java\koq\encoder\components\Constants.java
 C:\Users\Ronnel\Documents\NetBeansProjects\Encoder-KOQ\src\main\java\koq\encoder\classes\FinalGradeSheet.java
-C:\Users\Ronnel\Documents\NetBeansProjects\Encoder-KOQ\src\main\java\koq\encoder\components\MultipleCriteriaSearch.java
 C:\Users\Ronnel\Documents\NetBeansProjects\Encoder-KOQ\src\main\java\koq\encoder\components\WrappedHeaderRenderer.java
 C:\Users\Ronnel\Documents\NetBeansProjects\Encoder-KOQ\src\main\java\koq\encoder\components\ViewGradesWindow.java

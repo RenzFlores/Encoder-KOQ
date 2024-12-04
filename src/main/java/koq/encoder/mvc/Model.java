@@ -1219,8 +1219,8 @@ public class Model {
         } catch(SQLException e) { e.printStackTrace(); }
     }
     
-    public void addStudentToDb(String firstName, String middleName, String lastName, long lrn, String gender, String dateOfBirth, String strand) {
-        String insertQuery = "INSERT INTO students (first_name, middle_name, last_name, lrn, gender, date_of_birth, strand) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    public void addStudentToDb(String firstName, String middleName, String lastName, long lrn, String gender, String dateOfBirth, String strand, int grade_level) {
+        String insertQuery = "INSERT INTO students (first_name, middle_name, last_name, lrn, gender, date_of_birth, strand, grade_level) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         try (PreparedStatement pstmt = getConnection().prepareStatement(insertQuery)) {
             pstmt.setString(1, firstName);
             pstmt.setString(2, middleName);
@@ -1229,6 +1229,7 @@ public class Model {
             pstmt.setString(5, gender);
             pstmt.setString(6, dateOfBirth);
             pstmt.setString(7, strand);
+            pstmt.setInt(8, grade_level);
             pstmt.executeUpdate();
         } catch(SQLException e) { e.printStackTrace(); }
     }

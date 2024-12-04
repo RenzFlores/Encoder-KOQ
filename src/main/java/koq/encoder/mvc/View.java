@@ -116,10 +116,7 @@ public class View {
 
         // Table view
         // componentList.add(( (TableView) tableEditor).getTab());
-        
-        // Filter
-        componentList.addAll(Arrays.asList(( (FilterPanel) facultyWindow.getFilter() ).getContainer().getComponents()));
-        
+
         // "Add to table" context menu
         componentList.add(addContextMenu);
         componentList.addAll(Arrays.asList(addContextMenu.getComponents()));
@@ -185,10 +182,6 @@ public class View {
     
     public JMenuBar getMenuBar() {
         return menuBar;
-    }
-    
-    public FilterPanel getFilterPanel() {
-        return (FilterPanel) facultyWindow.getFilter();
     }
     
     public JDialog createPopupDialog(String message) {

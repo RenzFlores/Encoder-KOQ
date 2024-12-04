@@ -174,6 +174,7 @@ public class Controller {
                             } else {
                                 try {
                                     model.registerStudentToDb(Long.parseLong(lrn), email, password);
+                                    model.getAllStudents();
                                 } catch (NullPointerException err) {
                                     JOptionPane.showMessageDialog(
                                         null,
@@ -787,76 +788,6 @@ public class Controller {
             }
         });
 
-//--------------------------------
-//  Filter panel events
-//--------------------------------
-        
-        // Filter button pressed event
-        ( (JButton) view.getComponent( Actions.FILTER.name() ) ).addActionListener((ActionEvent e) -> {
-            FilterPanel panel = view.getFilterPanel();
-            
-            if (model.getClassRecord() == null) {
-                return;
-            }
-            
-            MultipleCriteriaSearch search = new MultipleCriteriaSearch(model.getGradePeriod(1));
-            
-            // Define multiple criteria
-            List<MultipleCriteriaSearch.SearchCriteria> criteriaList = new ArrayList<>();
-            
-            String name = panel.getStudentName();
-            String type = panel.getOutputType();
-            String minString = panel.getGradeMinimum();
-            String maxString = panel.getGradeMaximum();
-            
-            // Do not search if all text fields are empty
-            if (name.isBlank() && minString.isBlank() && maxString.isBlank()) {
-                return;
-            }
-            
-            if (!name.isBlank()) {
-                criteriaList.add(new MultipleCriteriaSearch.SearchCriteria(name));
-            } else {
-                criteriaList.add(null);
-            }
-            
-            if (!minString.isBlank()) {
-                double min = Integer.parseInt(minString) / 100.0;
-                criteriaList.add(new MultipleCriteriaSearch.SearchCriteria(String.valueOf(min)));
-            } else {
-                criteriaList.add(null);
-            }
-            
-            if (!maxString.isBlank()) {
-                double max = Integer.parseInt(maxString) / 100.0;
-                criteriaList.add(new MultipleCriteriaSearch.SearchCriteria(String.valueOf(max)));
-            } else {
-                criteriaList.add(null);
-            }
-            
-            switch (type) {
-                case "Written Work":
-                    criteriaList.add(new MultipleCriteriaSearch.SearchCriteria("1"));
-                    break;
-                case "Performance Task":
-                    criteriaList.add(new MultipleCriteriaSearch.SearchCriteria("2"));
-                    break;
-                case "Quarterly Assessment":
-                    criteriaList.add(new MultipleCriteriaSearch.SearchCriteria("3"));
-                    break;
-                default:
-                    criteriaList.add(new MultipleCriteriaSearch.SearchCriteria("-1"));
-            }
-            
-            // Perform the search with the criteria
-            List<Integer> results = search.advancedSearchCustomTable(criteriaList);
-    
-            System.out.print("Results:");
-            for (int i : results) { System.out.print(i); }
-            
-            // panel.setResultText();
-        });
-        
         // Preview report card button event in student window
         view.getStudentWindow().getPreviewReportCardButton().addActionListener(new ActionListener() {
             @Override
@@ -1119,7 +1050,7 @@ public class Controller {
                         model.initGradeSheetTable(view.getTable(quarter+1), model.getClassRecord().getGradePeriod(quarter).getRows(), model.getClassRecord().getClassId(), quarter);
                         model.initFinalGradeTable(view.getTable(4), model.getClassRecord().getGradePeriod(1).getRows(), model.getClassRecord().getClassId());
                         view.resizeTable(quarter-1);
-                        view.getTable(quarter-1).setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
+                        //view.getTable(quarter-1).setRowSelectionInterval(model.getSelectedRow(), model.getSelectedRow());
                         dialog.dispose();
                     });
                 }).start();
@@ -1161,7 +1092,7 @@ public class Controller {
             }
             
             if (validForm) {
-                model.addStudentToDb(firstName, middleName, lastName, Long.parseLong(lrn), gender, dob, strand);
+                model.addStudentToDb(firstName, middleName, lastName, Long.parseLong(lrn), gender, dob, strand, gradeLevel);
                 
                 JOptionPane.showMessageDialog(
                     null,
