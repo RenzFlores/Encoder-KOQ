@@ -1,8 +1,6 @@
 package koq.encoder.components;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Component;
 import java.awt.Dimension;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;

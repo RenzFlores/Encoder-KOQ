@@ -6,8 +6,6 @@ import koq.encoder.components.*;
 import koq.encoder.classes.*;
 import java.awt.Point;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
 import javax.swing.border.LineBorder;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableColumnModel;
@@ -844,32 +842,6 @@ public class Controller {
                 }
             }
         });
-         
-        // Action to select the previous search result
-        /*
-        ( (JButton) view.getComponent( Actions.PREVIOUS_RESULT.name() ) ).addActionListener((ActionEvent e) -> {
-            int selectedRow = selectedTable.getSelectedRow();
-            if (selectedRow > 0) {
-                model.getGradePeriod().moveRow(selectedRow, selectedRow - 1);
-                selectedTable.setRowSelectionInterval(selectedRow - 1, selectedRow - 1);
-            }
-        
-            panel.setResultText();
-        });
-        */
-
-        // Action to select the next search result
-        /*
-        ( (JButton) view.getComponent( Actions.NEXT_RESULT.name() ) ).addActionListener((ActionEvent e) -> {
-            int selectedRow = selectedTable.getSelectedRow();
-            if (selectedRow < model.getGradePeriod().getRowCount() - 1 && selectedRow >= 0) {
-                model.getGradePeriod().moveRow(selectedRow, selectedRow + 1);
-                selectedTable.setRowSelectionInterval(selectedRow + 1, selectedRow + 1);
-            }
-        
-            panel.setResultText();
-        });
-        */
     }
     
     // Method to handle selection changes for a table
@@ -1231,7 +1203,7 @@ public class Controller {
 
                     window.dispose();
                     
-                    System.out.println("Class Record set");
+                    //System.out.println("Class Record set");
                     window.dispose();
                 } else {
                     JOptionPane.showMessageDialog(

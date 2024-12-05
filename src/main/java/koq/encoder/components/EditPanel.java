@@ -3,7 +3,6 @@ package koq.encoder.components;
 import javax.swing.*;
 import java.awt.CardLayout;
 import java.awt.FlowLayout;
-import koq.encoder.mvc.Model.Actions;
 import koq.encoder.mvc.Model.Fields;
 import koq.encoder.mvc.View;
 

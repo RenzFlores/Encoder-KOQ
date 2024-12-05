@@ -1,5 +1,7 @@
 package koq.encoder.mvc;
 
+import java.awt.Color;
+import java.awt.Dimension;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -8,7 +10,9 @@ import java.util.stream.Collectors;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.JTableHeader;
 import koq.encoder.classes.*;
+import koq.encoder.components.WrappedHeaderRenderer;
 
 public class Model {
 
@@ -208,15 +212,15 @@ public class Model {
     public void initClassRecord(ClassRecord record) {
         try {
             record.setClassList(fetchStudentsInClassRecord(record.getClassId()));
-            System.out.println("Student records retrieved. Size: " + record.getClassList().size());
+            //System.out.println("Student records retrieved. Size: " + record.getClassList().size());
         } catch(SQLException e) { e.printStackTrace(); }
         
         record.getGradePeriod(1).setColumnNames(getActivitiesInDB(record.getClassId(), 1));
         record.setGradePeriod(1, getGradePeriodInDB(record.getClassList(), record.getClassId(), 1));
         record.getGradePeriod(2).setColumnNames(getActivitiesInDB(record.getClassId(), 2));
         record.setGradePeriod(2, getGradePeriodInDB(record.getClassList(), record.getClassId(), 2));
-        System.out.println("Grade records retrieved. Q1 columns=" + record.getGradePeriod(1).getColumns().size() + 
-                ", Q2 columns=" + record.getGradePeriod(2).getColumns().size());
+        //System.out.println("Grade records retrieved. Q1 columns=" + record.getGradePeriod(1).getColumns().size() + 
+        //        ", Q2 columns=" + record.getGradePeriod(2).getColumns().size());
     }
     
     /**
@@ -251,7 +255,7 @@ public class Model {
                     activityTypeId,                             // activity_type_id
                     quarter                                     // quarter
                 );
-                System.out.println(grade.toString());
+                //System.out.println(grade.toString());
                 // Fill all cells inside column to be empty
                 // Grade columns start at 4th column and 'index' is the selected column index in the table
                 // So we subtract 2 to achieve zero-based indexing
@@ -271,7 +275,7 @@ public class Model {
             pstmt.setInt(1, value);
             pstmt.setInt(2, gradeId);
             pstmt.executeUpdate();
-            System.out.println("Grade updated");
+            //System.out.println("Grade updated");
         } catch (SQLException e) { e.printStackTrace(); }
     }
     
@@ -312,7 +316,7 @@ public class Model {
         } else {
             double percentage = (double) rawScore / totalScore * 100.0;
             percentage = Math.round(percentage * 100.0) / 100.0; // Round to 2 decimal places
-            System.out.println("rawScore=" + rawScore + ", totalScore=" + totalScore + ", percentage=" + percentage);
+            //System.out.println("rawScore=" + rawScore + ", totalScore=" + totalScore + ", percentage=" + percentage);
             return percentage;
         }
     }
@@ -934,7 +938,7 @@ public class Model {
             ResultSet rs = pstmt.executeQuery();
             
             while (rs.next()) {
-                System.out.println("added row");
+                //System.out.println("added row");
                 model.addRow(new Object[]{
                     rs.getInt("grade_level"),
                     rs.getString("subject"),
@@ -961,6 +965,30 @@ public class Model {
             }
         };
         table.setModel(model);
+        table.setRowHeight(30);
+        
+        WrappedHeaderRenderer headerRenderer = new WrappedHeaderRenderer();
+
+        JTableHeader header = table.getTableHeader();
+
+        header.setPreferredSize(new Dimension(header.getWidth(), 60));
+        
+        for (int i = 0; i < table.getColumnModel().getColumnCount(); i++) {
+            table.getColumnModel().getColumn(i).setHeaderRenderer(headerRenderer);
+        }
+        
+        table.getTableHeader().setBackground(Color.LIGHT_GRAY);
+
+        // Set column 1 width 
+        table.getColumnModel().getColumn(0).setPreferredWidth(300);
+        table.getColumnModel().getColumn(0).setMaxWidth(300);
+        // Set column 2 width 
+        table.getColumnModel().getColumn(1).setPreferredWidth(100);
+        table.getColumnModel().getColumn(1).setMaxWidth(100);
+        // Set column 3 width 
+        table.getColumnModel().getColumn(2).setPreferredWidth(100);
+        table.getColumnModel().getColumn(2).setMaxWidth(100);
+
         
         String selectQuery = """
             SELECT su.name, su.type, cg.q1_raw_grade, cg.q2_raw_grade
@@ -1044,7 +1072,7 @@ public class Model {
             ResultSet rs = ps.executeQuery();
             
             while (rs.next()) {
-                System.out.println(rs.getInt("student_id"));
+                //System.out.println(rs.getInt("student_id"));
                 students.add(new Student(
                     rs.getInt("student_id"), 
                     rs.getString("first_name"), 
@@ -1083,7 +1111,7 @@ public class Model {
             ps.setInt(5, semester);
             ps.setString(6, schoolYear);
             ps.executeUpdate();
-            System.out.println("Added class record to database");
+            //System.out.println("Added class record to database");
         } catch (SQLException e) { e.printStackTrace(); }
     }
     
@@ -1129,7 +1157,7 @@ public class Model {
                     rs.getInt("semester"), 
                     rs.getString("academic_year")
                 );
-                System.out.println("Retrieved class record details. Class record object created");
+                //System.out.println("Retrieved class record details. Class record object created");
             }
         } catch (SQLException e) { e.printStackTrace(); }
         
@@ -1205,7 +1233,7 @@ public class Model {
             pstmt.setInt(1, studentId);
             pstmt.setInt(2, classId);
             pstmt.executeUpdate();
-            System.out.println("Student added to class successfully.");
+            //System.out.println("Student added to class successfully.");
         } catch(SQLException e) { e.printStackTrace(); }
     }
     
@@ -1215,7 +1243,7 @@ public class Model {
             pstmt.setInt(1, studentId);
             pstmt.setInt(2, classId);
             pstmt.executeUpdate();
-            System.out.println("Calculated grades added successfully.");
+            //System.out.println("Calculated grades added successfully.");
         } catch(SQLException e) { e.printStackTrace(); }
     }
     
@@ -1247,7 +1275,7 @@ public class Model {
                 pstmt.setString(2, String.valueOf(password));
                 pstmt.setLong(3, lrn);
                 pstmt.executeUpdate();
-                System.out.println("Student added successfully.");
+                //System.out.println("Student added successfully.");
             } catch (SQLException e) { e.printStackTrace(); }
         } else {
             throw new NullPointerException("Student not found");
@@ -1324,7 +1352,7 @@ public class Model {
             pstmt.setInt(1, studentId);
             pstmt.setInt(2, classId);
             pstmt.executeUpdate();
-            System.out.println("Student deleted from class successfully.");
+            //System.out.println("Student deleted from class successfully.");
         }
     }
     
@@ -1358,7 +1386,7 @@ public class Model {
             ResultSet rs = pstmt.executeQuery();
             
             if (rs.next()) {
-                System.out.println("activity_id: " + rs.getInt("activity_id"));
+                //System.out.println("activity_id: " + rs.getInt("activity_id"));
                 return rs.getInt("activity_id");
             } else {
                 throw new SQLException(
@@ -1422,7 +1450,7 @@ public class Model {
                 pstmt.setInt(4, activityTypeId);
                 pstmt.setInt(5, quarter);
                 pstmt.executeUpdate();
-                System.out.println("New activity added to DB");
+                //System.out.println("New activity added to DB");
         } catch (SQLException e) { e.printStackTrace(); }
     }
 
@@ -1488,11 +1516,11 @@ public class Model {
                 try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
                     while (generatedKeys.next()) {
                         results.add(generatedKeys.getInt(1));
-                        System.out.println(generatedKeys.getInt(1));
+                        //System.out.println(generatedKeys.getInt(1));
                     }
                 }
             } else {
-                System.out.println("Insert failed, no rows affected.");
+                //System.out.println("Insert failed, no rows affected.");
             }
             
             return results.toArray(Integer[]::new);
@@ -1517,7 +1545,7 @@ public class Model {
             pstmt.setInt(2, classId);
             ResultSet rs = pstmt.executeQuery();
          
-            System.out.println("studentId: " + studentId + "\t" + "classId: " + classId);
+            //System.out.println("studentId: " + studentId + "\t" + "classId: " + classId);
             
             while (rs.next()) {
                 if (rs.getString("grade") == null) {
@@ -1539,7 +1567,7 @@ public class Model {
             }
         } catch (SQLException e) { e.printStackTrace(); }
         
-        System.out.println("GradeList size: " + gradeList.size());
+        //System.out.println("GradeList size: " + gradeList.size());
         return gradeList;
     }
     
